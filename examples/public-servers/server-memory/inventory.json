@@ -1,6 +1,6 @@
 {
   "schema": "mcp-recon/v0.1/inventory",
-  "scanned_at": "2026-04-29T21:25:54.563Z",
+  "scanned_at": "2026-04-29T22:35:31.308Z",
   "server": {
     "name": "memory-server",
     "version": "0.6.3"

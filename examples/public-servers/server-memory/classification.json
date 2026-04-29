@@ -1,6 +1,6 @@
 {
   "schema": "mcp-recon/v0.1/classification",
-  "scanned_at": "2026-04-29T21:25:54.831Z",
+  "scanned_at": "2026-04-29T22:35:31.564Z",
   "server": {
     "name": "memory-server",
     "version": "0.6.3"
@@ -13,7 +13,7 @@
       "authority_level": "write",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(create[_-]?(entities|relations))\\b\" → metadata/write (0.70); fuzz: 1/15 accepted → +0.1",
+      "rationale": "name match \"\\b(create[_-]?(entities|relations))\\b\" → metadata/write (0.70); fuzz: 1/16 accepted → +0.1",
       "recommended_caveat": "tool == \"create_entities\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE metadata"
     },
     {
@@ -22,7 +22,7 @@
       "authority_level": "write",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(create[_-]?(entities|relations))\\b\" → metadata/write (0.70); fuzz: 1/15 accepted → +0.1",
+      "rationale": "name match \"\\b(create[_-]?(entities|relations))\\b\" → metadata/write (0.70); fuzz: 1/16 accepted → +0.1",
       "recommended_caveat": "tool == \"create_relations\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE metadata"
     },
     {
@@ -31,7 +31,7 @@
       "authority_level": "write",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(add[_-]?observations)\\b\" → metadata/write (0.70); fuzz: 1/15 accepted → +0.1",
+      "rationale": "name match \"\\b(add[_-]?observations)\\b\" → metadata/write (0.70); fuzz: 1/16 accepted → +0.1",
       "recommended_caveat": "tool == \"add_observations\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE metadata"
     },
     {
@@ -40,7 +40,7 @@
       "authority_level": "destructive",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(delete[_-]?(entities|relations|observations))\\b\" → metadata/destructive (0.70); fuzz: 1/15 accepted → +0.1; description has destructive verb → escalate to destructive",
+      "rationale": "name match \"\\b(delete[_-]?(entities|relations|observations))\\b\" → metadata/destructive (0.70); fuzz: 1/16 accepted → +0.1; description has destructive verb → escalate to destructive",
       "recommended_caveat": "tool == \"delete_entities\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>"
     },
     {
@@ -49,7 +49,7 @@
       "authority_level": "destructive",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(delete[_-]?(entities|relations|observations))\\b\" → metadata/destructive (0.70); fuzz: 1/15 accepted → +0.1; description has destructive verb → escalate to destructive",
+      "rationale": "name match \"\\b(delete[_-]?(entities|relations|observations))\\b\" → metadata/destructive (0.70); fuzz: 1/16 accepted → +0.1; description has destructive verb → escalate to destructive",
       "recommended_caveat": "tool == \"delete_observations\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>"
     },
     {
@@ -58,7 +58,7 @@
       "authority_level": "destructive",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(delete[_-]?(entities|relations|observations))\\b\" → metadata/destructive (0.70); fuzz: 1/15 accepted → +0.1; description has destructive verb → escalate to destructive",
+      "rationale": "name match \"\\b(delete[_-]?(entities|relations|observations))\\b\" → metadata/destructive (0.70); fuzz: 1/16 accepted → +0.1; description has destructive verb → escalate to destructive",
       "recommended_caveat": "tool == \"delete_relations\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>"
     },
     {
@@ -76,7 +76,7 @@
       "authority_level": "read",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(read[_-]?graph|search[_-]?nodes|open[_-]?nodes)\\b\" → metadata/read (0.70); fuzz: 7/15 accepted → +0.1",
+      "rationale": "name match \"\\b(read[_-]?graph|search[_-]?nodes|open[_-]?nodes)\\b\" → metadata/read (0.70); fuzz: 18/30 accepted → +0.1",
       "recommended_caveat": "tool == \"search_nodes\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
     },
     {
@@ -85,7 +85,7 @@
       "authority_level": "read",
       "confused_deputy_candidate": false,
       "confidence": 0.73,
-      "rationale": "name match \"\\b(read[_-]?graph|search[_-]?nodes|open[_-]?nodes)\\b\" → metadata/read (0.70); fuzz: 1/15 accepted → +0.1",
+      "rationale": "name match \"\\b(read[_-]?graph|search[_-]?nodes|open[_-]?nodes)\\b\" → metadata/read (0.70); fuzz: 1/16 accepted → +0.1",
       "recommended_caveat": "tool == \"open_nodes\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
     }
   ]

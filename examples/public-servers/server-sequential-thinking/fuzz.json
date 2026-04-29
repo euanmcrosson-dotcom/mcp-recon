@@ -1,18 +1,18 @@
 {
   "schema": "mcp-recon/v0.1/fuzz",
-  "scanned_at": "2026-04-29T21:25:59.395Z",
+  "scanned_at": "2026-04-29T22:35:35.831Z",
   "server": {
     "name": "sequential-thinking-server",
     "version": "0.2.0"
   },
   "seed": 12648430,
-  "budget": 15,
+  "budget": 200,
   "summary": [
     {
       "tool": "sequentialthinking",
-      "total": 15,
-      "ok": 9,
-      "protocol_error": 6,
+      "total": 134,
+      "ok": 22,
+      "protocol_error": 112,
       "runtime_error": 0
     }
   ],
@@ -240,6 +240,1979 @@
       "outcome": {
         "kind": "protocol_error",
         "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=345]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"thoughtNumber\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": null,
+        "totalThoughts": 1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=312]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"totalThoughts\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=345]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"totalThoughts\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": -1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=345]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"totalThoughts\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 9007199254740991
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 9007199254740991,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 10\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"totalThoughts\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 9007199254740992
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"code\\\": \\\"too_big\\\",\\n    \\\"maximum\\\": 9007199254740991,\\n    \\\"note\\\": \\…[len=433]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"totalThoughts\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": -9007199254740991
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=345]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"totalThoughts\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=312]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary boolean for arg \"isRevision\": boolean",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "isRevision": true
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 11\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary boolean for arg \"isRevision\": boolean",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "isRevision": false
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 12\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary boolean for arg \"isRevision\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "isRevision": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=311]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"revisesThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "revisesThought": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=346]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"revisesThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "revisesThought": -1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=346]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"revisesThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "revisesThought": 9007199254740991
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 13\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"revisesThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "revisesThought": 9007199254740992
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"code\\\": \\\"too_big\\\",\\n    \\\"maximum\\\": 9007199254740991,\\n    \\\"note\\\": \\…[len=434]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"revisesThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "revisesThought": -9007199254740991
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=346]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"revisesThought\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "revisesThought": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"branchFromThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchFromThought": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=349]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"branchFromThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchFromThought": -1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=349]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"branchFromThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchFromThought": 9007199254740991
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 14\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"branchFromThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchFromThought": 9007199254740992
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"code\\\": \\\"too_big\\\",\\n    \\\"maximum\\\": 9007199254740991,\\n    \\\"note\\\": \\…[len=437]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"branchFromThought\": number",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchFromThought": -9007199254740991
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"origin\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"too_small\\\",\\n    \\\"minimum\\\": 1,\\…[len=349]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary integer for arg \"branchFromThought\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchFromThought": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=316]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": empty string",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": ""
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 15\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": string len=65536",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 16\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": \"\\u0000\"",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": "\u0000"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 17\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": \"\\u0000\\u0000\\u0000\"",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": "\u0000\u0000\u0000"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 18\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": \" \"",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": " "
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 19\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": \"\\t\\n\\r\"",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": "\t\n\r"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 20\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary string for arg \"branchId\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "branchId": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=307]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary boolean for arg \"needsMoreThoughts\": boolean",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "needsMoreThoughts": true
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 21\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary boolean for arg \"needsMoreThoughts\": boolean",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "needsMoreThoughts": false
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"thoughtNumber\\\": 1,\\n  \\\"totalThoughts\\\": 1,\\n  \\\"nextThoughtNeeded\\\": false,\\n  \\\"branches\\\": [],\\n  \\\"thoughtHistoryLength\\\": 22\\n}\"}]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary boolean for arg \"needsMoreThoughts\": null",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1,
+        "needsMoreThoughts": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=318]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary: omit required field \"thought\"",
+      "arguments": {
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1,
+        "totalThoughts": 1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=311]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary: omit required field \"nextThoughtNeeded\"",
+      "arguments": {
+        "thought": "x",
+        "thoughtNumber": 1,
+        "totalThoughts": 1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=323]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary: omit required field \"thoughtNumber\"",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "totalThoughts": 1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=317]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "boundary_values",
+      "rationale": "boundary: omit required field \"totalThoughts\"",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": false,
+        "thoughtNumber": 1
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=317]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thought\" declared string, sent number",
+      "arguments": {
+        "thought": 3.14,
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=308]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thought\" declared string, sent integer",
+      "arguments": {
+        "thought": 42,
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=308]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thought\" declared string, sent boolean",
+      "arguments": {
+        "thought": true,
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=309]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thought\" declared string, sent array",
+      "arguments": {
+        "thought": [
+          "element"
+        ],
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=307]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thought\" declared string, sent object",
+      "arguments": {
+        "thought": {
+          "nested": true
+        },
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=308]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thought\" declared string, sent null",
+      "arguments": {
+        "thought": null,
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=306]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"nextThoughtNeeded\" declared boolean, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": "wrong-type-here",
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"nextThoughtNeeded\" declared boolean, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": 3.14,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"nextThoughtNeeded\" declared boolean, sent integer",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": 42,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"nextThoughtNeeded\" declared boolean, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": [
+          "element"
+        ],
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=319]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"nextThoughtNeeded\" declared boolean, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": {
+          "nested": true
+        },
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"nextThoughtNeeded\" declared boolean, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": null,
+        "thoughtNumber": 42,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=318]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thoughtNumber\" declared integer, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": "wrong-type-here",
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=314]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thoughtNumber\" declared integer, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 3.14,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"int\\\",\\n    \\\"format\\\": \\\"safeint\\\",\\n    \\\"code\\\": \\\"inval…[len=338]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thoughtNumber\" declared integer, sent boolean",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": true,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=315]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thoughtNumber\" declared integer, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": [
+          "element"
+        ],
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thoughtNumber\" declared integer, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": {
+          "nested": true
+        },
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=314]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"thoughtNumber\" declared integer, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": null,
+        "totalThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=312]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"totalThoughts\" declared integer, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": "wrong-type-here"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=314]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"totalThoughts\" declared integer, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 3.14
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"int\\\",\\n    \\\"format\\\": \\\"safeint\\\",\\n    \\\"code\\\": \\\"inval…[len=338]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"totalThoughts\" declared integer, sent boolean",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": true
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=315]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"totalThoughts\" declared integer, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": [
+          "element"
+        ]
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"totalThoughts\" declared integer, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": {
+          "nested": true
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=314]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"totalThoughts\" declared integer, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=312]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"isRevision\" declared boolean, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "isRevision": "wrong-type-here"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"isRevision\" declared boolean, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "isRevision": 3.14
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"isRevision\" declared boolean, sent integer",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "isRevision": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"isRevision\" declared boolean, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "isRevision": [
+          "element"
+        ]
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=312]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"isRevision\" declared boolean, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "isRevision": {
+          "nested": true
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"isRevision\" declared boolean, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "isRevision": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=311]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"revisesThought\" declared integer, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "revisesThought": "wrong-type-here"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=315]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"revisesThought\" declared integer, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "revisesThought": 3.14
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"int\\\",\\n    \\\"format\\\": \\\"safeint\\\",\\n    \\\"code\\\": \\\"inval…[len=339]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"revisesThought\" declared integer, sent boolean",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "revisesThought": true
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=316]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"revisesThought\" declared integer, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "revisesThought": [
+          "element"
+        ]
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=314]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"revisesThought\" declared integer, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "revisesThought": {
+          "nested": true
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=315]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"revisesThought\" declared integer, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "revisesThought": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=313]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchFromThought\" declared integer, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchFromThought": "wrong-type-here"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=318]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchFromThought\" declared integer, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchFromThought": 3.14
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"int\\\",\\n    \\\"format\\\": \\\"safeint\\\",\\n    \\\"code\\\": \\\"inval…[len=342]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchFromThought\" declared integer, sent boolean",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchFromThought": true
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=319]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchFromThought\" declared integer, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchFromThought": [
+          "element"
+        ]
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=317]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchFromThought\" declared integer, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchFromThought": {
+          "nested": true
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=318]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchFromThought\" declared integer, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchFromThought": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"number\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=316]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchId\" declared string, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchId": 3.14
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=309]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchId\" declared string, sent integer",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchId": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=309]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchId\" declared string, sent boolean",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchId": true
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=310]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchId\" declared string, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchId": [
+          "element"
+        ]
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=308]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchId\" declared string, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchId": {
+          "nested": true
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=309]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"branchId\" declared string, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "branchId": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=307]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"needsMoreThoughts\" declared boolean, sent string",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "needsMoreThoughts": "wrong-type-here"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"needsMoreThoughts\" declared boolean, sent number",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "needsMoreThoughts": 3.14
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"needsMoreThoughts\" declared boolean, sent integer",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "needsMoreThoughts": 42
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"needsMoreThoughts\" declared boolean, sent array",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "needsMoreThoughts": [
+          "element"
+        ]
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=319]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"needsMoreThoughts\" declared boolean, sent object",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "needsMoreThoughts": {
+          "nested": true
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=320]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "type_confusion",
+      "rationale": "type-confusion arg \"needsMoreThoughts\" declared boolean, sent null",
+      "arguments": {
+        "thought": "wrong-type-here",
+        "nextThoughtNeeded": true,
+        "thoughtNumber": 42,
+        "totalThoughts": 42,
+        "needsMoreThoughts": null
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=318]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": percent-encoded NUL",
+      "arguments": {
+        "thought": "%00",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": percent-encoded dot-dot",
+      "arguments": {
+        "thought": "%2e%2e",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": double-percent-encoded dot-dot",
+      "arguments": {
+        "thought": "%252e%252e",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": embedded NUL byte",
+      "arguments": {
+        "thought": "x\u0000y",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": Cyrillic-a homograph (admin)",
+      "arguments": {
+        "thought": "аdmin",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": RTL override (filename spoof)",
+      "arguments": {
+        "thought": "‮gnp.exe",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": backslash traversal",
+      "arguments": {
+        "thought": "\\..\\..\\..",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": mixed-separator path",
+      "arguments": {
+        "thought": "x\\y/z",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": combining diacritic (NFC vs NFD)",
+      "arguments": {
+        "thought": "café",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"thought\": long string with trailing NUL",
+      "arguments": {
+        "thought": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u0000",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": percent-encoded NUL",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "%00"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": percent-encoded dot-dot",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "%2e%2e"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": double-percent-encoded dot-dot",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "%252e%252e"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": embedded NUL byte",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "x\u0000y"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": Cyrillic-a homograph (admin)",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "аdmin"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": RTL override (filename spoof)",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "‮gnp.exe"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": backslash traversal",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "\\..\\..\\.."
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": mixed-separator path",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "x\\y/z"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": combining diacritic (NFC vs NFD)",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "café"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"branchId\": long string with trailing NUL",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "branchId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u0000"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: extra field on argless tool",
+      "arguments": {
+        "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=911]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: __proto__ pollution attempt",
+      "arguments": {},
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=911]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: 50-deep nested object",
+      "arguments": {
+        "deep": {
+          "nested": {
+            "nested": {
+              "nested": {
+                "nested": {
+                  "nested": {
+                    "nested": {
+                      "nested": {
+                        "nested": {
+                          "nested": {
+                            "nested": {
+                              "nested": {
+                                "nested": {
+                                  "nested": {
+                                    "nested": {
+                                      "nested": {
+                                        "nested": {
+                                          "nested": {
+                                            "nested": {
+                                              "nested": {
+                                                "nested": {
+                                                  "nested": {
+                                                    "nested": {
+                                                      "nested": {
+                                                        "nested": {
+                                                          "nested": {
+                                                            "nested": {
+                                                              "nested": {
+                                                                "nested": {
+                                                                  "nested": {
+                                                                    "nested": {
+                                                                      "nested": {
+                                                                        "nested": {
+                                                                          "nested": {
+                                                                            "nested": {
+                                                                              "nested": {
+                                                                                "nested": {
+                                                                                  "nested": {
+                                                                                    "nested": {
+                                                                                      "nested": {
+                                                                                        "nested": {
+                                                                                          "nested": {
+                                                                                            "nested": {
+                                                                                              "nested": {
+                                                                                                "nested": {
+                                                                                                  "nested": {
+                                                                                                    "nested": {
+                                                                                                      "nested": {
+                                                                                                        "nested": {
+                                                                                                          "nested": {
+                                                                                                            "nested": "leaf"
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=911]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: required \"thought\" omitted",
+      "arguments": {
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=964]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: required \"nextThoughtNeeded\" omitted",
+      "arguments": {
+        "thought": "x",
+        "thoughtNumber": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=775]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: required \"thoughtNumber\" omitted",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "totalThoughts": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=744]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: required \"totalThoughts\" omitted",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=744]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: extra field __injected",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
+      }
+    },
+    {
+      "tool": "sequentialthinking",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "thought": "x",
+        "nextThoughtNeeded": 0,
+        "thoughtNumber": 0,
+        "totalThoughts": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool sequentialthinking: [\\n  {\\n    \\\"expected\\\": \\\"boolean\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": …[len=772]"
       }
     }
   ]

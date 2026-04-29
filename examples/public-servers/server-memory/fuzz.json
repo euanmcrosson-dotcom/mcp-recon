@@ -1,53 +1,53 @@
 {
   "schema": "mcp-recon/v0.1/fuzz",
-  "scanned_at": "2026-04-29T21:25:54.820Z",
+  "scanned_at": "2026-04-29T22:35:31.555Z",
   "server": {
     "name": "memory-server",
     "version": "0.6.3"
   },
   "seed": 12648430,
-  "budget": 15,
+  "budget": 200,
   "summary": [
     {
       "tool": "create_entities",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     },
     {
       "tool": "create_relations",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     },
     {
       "tool": "add_observations",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     },
     {
       "tool": "delete_entities",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     },
     {
       "tool": "delete_observations",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     },
     {
       "tool": "delete_relations",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     },
     {
@@ -59,16 +59,16 @@
     },
     {
       "tool": "search_nodes",
-      "total": 15,
-      "ok": 7,
-      "protocol_error": 8,
+      "total": 30,
+      "ok": 18,
+      "protocol_error": 12,
       "runtime_error": 0
     },
     {
       "tool": "open_nodes",
-      "total": 15,
+      "total": 16,
       "ok": 1,
-      "protocol_error": 14,
+      "protocol_error": 15,
       "runtime_error": 0
     }
   ],
@@ -1371,6 +1371,23 @@
       "arguments": {
         "entities": 0,
         "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool create_entities: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n  …[len=304]"
+      }
+    },
+    {
+      "tool": "create_entities",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "entities": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
       },
       "outcome": {
         "kind": "protocol_error",
@@ -2682,6 +2699,23 @@
       }
     },
     {
+      "tool": "create_relations",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "relations": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool create_relations: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n …[len=306]"
+      }
+    },
+    {
       "tool": "add_observations",
       "axis": "boundary_values",
       "rationale": "boundary array for arg \"observations\": array len=0",
@@ -3979,6 +4013,23 @@
       "arguments": {
         "observations": 0,
         "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool add_observations: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n …[len=309]"
+      }
+    },
+    {
+      "tool": "add_observations",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "observations": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
       },
       "outcome": {
         "kind": "protocol_error",
@@ -5290,6 +5341,23 @@
       }
     },
     {
+      "tool": "delete_entities",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "entityNames": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool delete_entities: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n  …[len=307]"
+      }
+    },
+    {
       "tool": "delete_observations",
       "axis": "boundary_values",
       "rationale": "boundary array for arg \"deletions\": array len=0",
@@ -6587,6 +6655,23 @@
       "arguments": {
         "deletions": 0,
         "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool delete_observations: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": […[len=309]"
+      }
+    },
+    {
+      "tool": "delete_observations",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "deletions": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
       },
       "outcome": {
         "kind": "protocol_error",
@@ -7898,6 +7983,23 @@
       }
     },
     {
+      "tool": "delete_relations",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "relations": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool delete_relations: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n …[len=306]"
+      }
+    },
+    {
       "tool": "read_graph",
       "axis": "boundary_values",
       "rationale": "argless tool: empty args object",
@@ -8217,6 +8319,288 @@
       "rationale": "encoding \"query\": percent-encoded NUL",
       "arguments": {
         "query": "%00"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": percent-encoded dot-dot",
+      "arguments": {
+        "query": "%2e%2e"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": double-percent-encoded dot-dot",
+      "arguments": {
+        "query": "%252e%252e"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": embedded NUL byte",
+      "arguments": {
+        "query": "x\u0000y"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": Cyrillic-a homograph (admin)",
+      "arguments": {
+        "query": "аdmin"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": RTL override (filename spoof)",
+      "arguments": {
+        "query": "‮gnp.exe"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": backslash traversal",
+      "arguments": {
+        "query": "\\..\\..\\.."
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": mixed-separator path",
+      "arguments": {
+        "query": "x\\y/z"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": combining diacritic (NFC vs NFD)",
+      "arguments": {
+        "query": "café"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "encoding_tricks",
+      "rationale": "encoding \"query\": long string with trailing NUL",
+      "arguments": {
+        "query": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u0000"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: extra field on argless tool",
+      "arguments": {
+        "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool search_nodes: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n    …[len=303]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: __proto__ pollution attempt",
+      "arguments": {},
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool search_nodes: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n    …[len=303]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: 50-deep nested object",
+      "arguments": {
+        "deep": {
+          "nested": {
+            "nested": {
+              "nested": {
+                "nested": {
+                  "nested": {
+                    "nested": {
+                      "nested": {
+                        "nested": {
+                          "nested": {
+                            "nested": {
+                              "nested": {
+                                "nested": {
+                                  "nested": {
+                                    "nested": {
+                                      "nested": {
+                                        "nested": {
+                                          "nested": {
+                                            "nested": {
+                                              "nested": {
+                                                "nested": {
+                                                  "nested": {
+                                                    "nested": {
+                                                      "nested": {
+                                                        "nested": {
+                                                          "nested": {
+                                                            "nested": {
+                                                              "nested": {
+                                                                "nested": {
+                                                                  "nested": {
+                                                                    "nested": {
+                                                                      "nested": {
+                                                                        "nested": {
+                                                                          "nested": {
+                                                                            "nested": {
+                                                                              "nested": {
+                                                                                "nested": {
+                                                                                  "nested": {
+                                                                                    "nested": {
+                                                                                      "nested": {
+                                                                                        "nested": {
+                                                                                          "nested": {
+                                                                                            "nested": {
+                                                                                              "nested": {
+                                                                                                "nested": {
+                                                                                                  "nested": {
+                                                                                                    "nested": {
+                                                                                                      "nested": {
+                                                                                                        "nested": {
+                                                                                                          "nested": {
+                                                                                                            "nested": "leaf"
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool search_nodes: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n    …[len=303]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: required \"query\" omitted",
+      "arguments": {},
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool search_nodes: [\\n  {\\n    \\\"expected\\\": \\\"string\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n    …[len=303]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: extra field __injected",
+      "arguments": {
+        "query": "x",
+        "__injected": "x"
+      },
+      "outcome": {
+        "kind": "ok",
+        "snippet": "[{\"type\":\"text\",\"text\":\"{\\n  \\\"entities\\\": [],\\n  \\\"relations\\\": []\\n}\"}]"
+      }
+    },
+    {
+      "tool": "search_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "query": "x",
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
       },
       "outcome": {
         "kind": "ok",
@@ -9521,6 +9905,23 @@
       "arguments": {
         "names": 0,
         "__injected": "x"
+      },
+      "outcome": {
+        "kind": "protocol_error",
+        "message": "[{\"type\":\"text\",\"text\":\"MCP error -32602: Input validation error: Invalid arguments for tool open_nodes: [\\n  {\\n    \\\"expected\\\": \\\"array\\\",\\n    \\\"code\\\": \\\"invalid_type\\\",\\n    \\\"path\\\": [\\n      \\…[len=296]"
+      }
+    },
+    {
+      "tool": "open_nodes",
+      "axis": "schema_violation",
+      "rationale": "schema-violation: constructor.prototype pollution attempt",
+      "arguments": {
+        "names": 0,
+        "constructor": {
+          "prototype": {
+            "polluted": true
+          }
+        }
       },
       "outcome": {
         "kind": "protocol_error",

@@ -7,25 +7,27 @@ these as the base.
 
 | Server | npm package | Tools | Fuzz calls | ok | protocol_error | runtime_error |
 |---|---|---|---|---|---|---|
-| `secure-filesystem-server` | `@modelcontextprotocol/server-filesystem` | 14 | 199 | 4 | 195 | 0 |
-| `memory-server` | `@modelcontextprotocol/server-memory` | 9 | 124 | 18 | 106 | 0 |
-| `sequential-thinking-server` | `@modelcontextprotocol/server-sequential-thinking` | 1 | 15 | 9 | 6 | 0 |
-| `example-servers/everything` | `@modelcontextprotocol/server-everything` | 13 | 151 | 51 | 99 | **1** |
+| `secure-filesystem-server` | `@modelcontextprotocol/server-filesystem` | 14 | 723 | 4 | 719 | 0 |
+| `memory-server` | `@modelcontextprotocol/server-memory` | 9 | 146 | 29 | 117 | 0 |
+| `sequential-thinking-server` | `@modelcontextprotocol/server-sequential-thinking` | 1 | 134 | 22 | 112 | 0 |
+| `example-servers/everything` | `@modelcontextprotocol/server-everything` | 13 | 371 | 86 | 278 | **7** |
 
-**Totals: 4 servers, 37 tools, 489 fuzz calls.** Fuzz budget: 15
-calls/tool. Default seed (`0xC0FFEE`).
+**Totals: 4 servers, 37 tools, 1374 fuzz calls.** Default fuzz budget
+(200 calls/tool). Default seed (`0xC0FFEE`). Note: per-tool generated
+inputs cap at min(generators, budget); not every tool has 200 axes
+of input shapes, so totals are smaller than 37 × 200.
 
 ## Notable findings (preview for the v0.1 writeup)
 
-- **`example-servers/everything` has a DoS-shaped surface on
-  `trigger-long-running-operation`.** Fuzzing with `steps:
-  9007199254740992` (Number.MAX_SAFE_INTEGER + 1) caused the call
-  to time out at 5s — the server faithfully attempts the requested
-  iteration count rather than rejecting it as out-of-range. Not a
-  validation crash; a missing upper-bound check that lets a
-  prompt-injected agent burn CPU. Recorded in
-  `server-everything.fuzz.json` as the only runtime_error in the
-  dataset (the other 3 servers produced 0).
+- **`example-servers/everything` has a reliable DoS-shaped surface
+  on `trigger-long-running-operation`.** At budget=200 the
+  boundary-axis fuzzer hits 7 separate timeout events (vs the
+  N=15 preview's 1) — the server faithfully attempts arbitrary
+  iteration counts rather than rejecting out-of-range values.
+  Not a one-off; a reproducible missing upper-bound check that
+  lets a prompt-injected agent burn server CPU on demand.
+  Recorded in `server-everything/fuzz.json`; the other 3 servers
+  produced 0 runtime_errors out of 1003 calls.
 - **filesystem is the most strict** at 98% protocol_error rate.
   This matches its production role.
 - **sequential-thinking accepts ~60% of inputs.** Single tool with

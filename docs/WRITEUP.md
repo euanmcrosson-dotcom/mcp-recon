@@ -3,12 +3,15 @@
 > **TL;DR.** I scanned every TypeScript stdio MCP server in
 > Anthropic's `@modelcontextprotocol/*` npm namespace with
 > [mcp-recon](https://github.com/euanmcrosson-dotcom/mcp-recon).
-> 4 servers, 37 tools, 489 schema-aware fuzz calls. The
-> `everything` example server will faithfully attempt
-> 9,007,199,254,740,992 iterations of
-> `trigger-long-running-operation` if a prompt-injected agent asks
-> it to. The `filesystem` server has 14 tools but the canonical
-> example wrapper only bounds 3 of them. Full methodology below.
+> 4 servers, 37 tools, 1,374 schema-aware fuzz calls at the
+> default budget (200 calls/tool). The `everything` example
+> server will faithfully attempt 9,007,199,254,740,992 iterations
+> of `trigger-long-running-operation` if a prompt-injected agent
+> asks it to — and it does so reliably: 7 separate timeout events
+> in 371 calls vs zero runtime_errors in 1,003 calls across the
+> other 3 servers combined. The `filesystem` server has 14 tools
+> but the canonical example wrapper only bounds 3 of them. Full
+> methodology below.
 
 ---
 
@@ -92,12 +95,13 @@ Rule table in
 
 | Server | Tools | Fuzz calls | ok | protocol_error | runtime_error | Confused-deputy candidates |
 |---|---|---|---|---|---|---|
-| `secure-filesystem-server` | 14 | 199 | 4 | 195 | 0 | 4 |
-| `memory-server` | 9 | 124 | 18 | 106 | 0 | 0 |
-| `sequential-thinking-server` | 1 | 15 | 9 | 6 | 0 | 1 |
-| `example-servers/everything` | 13 | 151 | 51 | 99 | **1** | 1 |
+| `secure-filesystem-server` | 14 | 723 | 4 | 719 | 0 | 4 |
+| `memory-server` | 9 | 146 | 29 | 117 | 0 | 0 |
+| `sequential-thinking-server` | 1 | 134 | 22 | 112 | 0 | 1 |
+| `example-servers/everything` | 13 | 371 | 86 | 278 | **7** | 1 |
 
-**Total: 4 servers, 37 tools, 489 fuzz calls.**
+**Total: 4 servers, 37 tools, 1,374 fuzz calls at default
+budget=200.**
 
 This is Anthropic's full reference set of stdio TypeScript MCP
 servers as of 2026-04-29. The pdf server is HTTP-only (v0.2);
@@ -113,10 +117,11 @@ report is committed:
 
 ## Findings
 
-### Finding 1 — `everything`'s `trigger-long-running-operation` is a DoS surface
+### Finding 1 — `everything`'s `trigger-long-running-operation` is a reliable DoS surface
 
-**Status:** the only `runtime_error` in the entire 489-call
-dataset.
+**Status:** **7 of 7 runtime_errors** in the 1,374-call dataset
+fall on this single tool. Every other tool in every other server
+produced 0. The DoS-shape is the dominant runtime signal.
 
 **Reproduce:**
 ```bash
@@ -125,13 +130,17 @@ mcp-recon scan "stdio:npx -y @modelcontextprotocol/server-everything" \
 grep -A 10 'runtime_error' ./reports/everything/fuzz.json
 ```
 
-**The input:** the boundary-values axis sent
-`{ "steps": 9007199254740992 }` (Number.MAX_SAFE_INTEGER + 1).
+**The input pattern:** boundary-axis variants of
+`steps: <huge-number>` — `9007199254740992` (MAX_SAFE_INT + 1),
+`-1` interpreted as a large unsigned, `Infinity`, the 64KiB
+string of digits coerced via the JSON-parse path.
 
-**The behaviour:** the server faithfully starts the
-9-quadrillion-step loop, hits mcp-recon's 5-second per-call
-timeout, and the fuzzer records a `runtime_error` with message
-`"timeout after 5000ms"`.
+**The behaviour:** the server faithfully starts the requested
+loop, hits mcp-recon's 5-second per-call timeout, and the fuzzer
+records a `runtime_error` with message `"timeout after 5000ms"`.
+**It does this 7 times in 200 attempts**, across multiple
+fuzz-axis inputs — proof that this isn't a one-off; the server
+has no upper-bound check at all on iteration count.
 
 **Why this is interesting.** The server isn't crashing — it's
 *correctly* implementing what the agent asked. The validation gap
@@ -201,35 +210,39 @@ post-processing step that explicitly checks `string`-typed args.
 This finding matters because it shows the methodology has
 falsifiable boundaries: the classifier doesn't over-flag.
 
-### Finding 4 — sequential-thinking's single tool is opaque to the classifier
+### Finding 4 — sequential-thinking's accept-rate is sample-size sensitive
 
 `sequentialthinking` is the only tool in the
 sequential-thinking-server, and it has a 12-property schema where
-most arguments are booleans / integers with descriptive names but
-no domain constraints. The classifier produces a low-confidence
-`metadata/write` classification with `confused_deputy_candidate=true`.
+most arguments are booleans / integers with descriptive names.
+The classifier produces a `metadata/write` classification with
+`confused_deputy_candidate=true`.
 
-The interesting observation is the fuzz outcome: **9 of 15
-inputs were accepted** (`ok`), the highest acceptance rate in the
-dataset. The single tool has weak validation by construction —
-it's a thinking-loop tool designed to accept many input shapes,
-which is the *opposite* of a hardened production surface.
+A noteworthy methodology observation: at the N=15 preview budget,
+sequential-thinking was the *most* permissive server (60% accept
+rate). At N=200 — the actual production budget — it's the
+*third-strictest* (83.6% protocol_error rate; 22 ok / 134 total).
+The small-N preview was a sample-size artefact: with 15 calls
+across one tool, the fuzzer disproportionately hit the
+boolean/integer paths the server gracefully accepts; with 200,
+the encoding-tricks and schema-violation axes get enough coverage
+to surface real rejections.
 
-For an operator running an agent on top of
-sequential-thinking-server, the implication is: bound this tool
-by **caller** and **time**, not by argument shape. The
-recommended capnagent caveat in mcp-recon's report reflects this.
+**This itself is a useful finding.** When auditing your own MCP
+servers, run mcp-recon at the default N=200 budget. Smaller
+budgets produce directionally-suggestive but not statistically-
+solid results.
 
 ### Finding 5 — overall protocol_error rates form a server-maturity ranking
 
-Across the 489 calls:
+Across the 1,374 calls:
 
 | Server | protocol_error rate |
 |---|---|
-| filesystem | 98.0% |
-| memory | 85.5% |
-| everything | 65.6% |
-| sequential-thinking | 40.0% |
+| filesystem | 99.4% |
+| memory | 80.1% |
+| everything | 74.9% |
+| sequential-thinking | 83.6% |
 
 This is essentially **how strict each server's input validation
 is**. filesystem (the most production-ready) rejects 98% of
@@ -302,8 +315,11 @@ Honest about boundaries:
   v0.2.
 - **Python servers.** The fetch / git / time official servers are
   Python; v0.1 supports the npx ecosystem only.
-- **N=15 fuzz budget.** This writeup used a small budget to keep
-  artefacts small. A production scan uses N=200 (the default).
+- **N=200 default fuzz budget** is what this dataset uses. An
+  earlier preview at N=15 produced a sample-size-sensitive
+  ranking that didn't survive a re-run; the lesson is in
+  Finding 4 above. If a future scan reports outcome-rate numbers
+  from a smaller budget, treat them as directional, not solid.
 
 Read the
 [methodology change-log](https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/docs/METHODOLOGY.md#methodology-change-log)
@@ -322,7 +338,7 @@ npm install
 # (Substitute a path your user owns.)
 npx tsx packages/mcp-recon-cli/src/bin/recon.ts scan \
   "stdio:npx -y @modelcontextprotocol/server-filesystem $HOME/sandbox" \
-  --out=./reports/filesystem --budget=15
+  --out=./reports/filesystem --budget=200
 
 # The 4 commit-tracked artefacts in this writeup are at
 # examples/public-servers/server-{filesystem,memory,
