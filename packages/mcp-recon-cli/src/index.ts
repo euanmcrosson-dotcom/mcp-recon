@@ -10,8 +10,9 @@
  *   - parseServerSpec(spec)           — string → ServerSpec
  *   - openClient(spec)                — ServerSpec → connected SDK Client
  *   - enumerate(client)               → ToolInventory (one tool inventory document)
+ *   - fuzz(client, inventory)         → FuzzResults (one fuzz document)
  *
- * v0.2+ will add `fuzz`, `classify`, `report`, `scan` exports here.
+ * v0.1 weeks 3+ will add `classify`, `report`, `scan` exports here.
  */
 
 export {
@@ -27,3 +28,14 @@ export {
   enumerate,
   INVENTORY_SCHEMA,
 } from "./enumerate.js";
+
+export {
+  type FuzzAxis,
+  type FuzzCall,
+  type FuzzOutcome,
+  type FuzzResults,
+  type FuzzToolSummary,
+  type FuzzOptions,
+  fuzz,
+  FUZZ_SCHEMA,
+} from "./fuzz/index.js";

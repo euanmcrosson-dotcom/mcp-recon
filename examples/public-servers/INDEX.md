@@ -1,29 +1,55 @@
-# Public-server inventories — the v0.1 evaluation dataset
+# Public-server inventories + fuzz — the v0.1 evaluation dataset
 
-These are real `mcp-recon enumerate` outputs against the official
-`@modelcontextprotocol/*` servers. The week-3 classifier evaluates
-against this set; the week-4 writeup uses these as the base.
+These are real `mcp-recon enumerate` and `mcp-recon fuzz` outputs
+against the official `@modelcontextprotocol/*` servers. The week-3
+classifier evaluates against this set; the week-4 writeup uses
+these as the base.
 
-| Server | npm package | Tool count | Tools |
-|---|---|---|---|
-| `secure-filesystem-server` | `@modelcontextprotocol/server-filesystem` | 14 | `read_file`, `read_text_file`, `read_media_file`, `read_multiple_files`, `write_file`, `edit_file`, `create_directory`, `list_directory`, `list_directory_with_sizes`, `directory_tree`, `move_file`, `search_files`, `get_file_info`, `list_allowed_directories` |
-| `memory-server` | `@modelcontextprotocol/server-memory` | 9 | `create_entities`, `create_relations`, `add_observations`, `delete_entities`, `delete_observations`, `delete_relations`, `read_graph`, `search_nodes`, `open_nodes` |
-| `sequential-thinking-server` | `@modelcontextprotocol/server-sequential-thinking` | 1 | `sequentialthinking` |
-| `example-servers/everything` | `@modelcontextprotocol/server-everything` | 13 | `echo`, `get-annotated-message`, `get-env`, `get-resource-links`, `get-resource-reference`, `get-structured-content`, `get-sum`, `get-tiny-image`, `gzip-file-as-resource`, `toggle-simulated-logging`, `toggle-subscriber-updates`, `trigger-long-running-operation`, `simulate-research-query` |
+| Server | npm package | Tools | Fuzz calls | ok | protocol_error | runtime_error |
+|---|---|---|---|---|---|---|
+| `secure-filesystem-server` | `@modelcontextprotocol/server-filesystem` | 14 | 199 | 4 | 195 | 0 |
+| `memory-server` | `@modelcontextprotocol/server-memory` | 9 | 124 | 18 | 106 | 0 |
+| `sequential-thinking-server` | `@modelcontextprotocol/server-sequential-thinking` | 1 | 15 | 9 | 6 | 0 |
+| `example-servers/everything` | `@modelcontextprotocol/server-everything` | 13 | 151 | 51 | 99 | **1** |
 
-**Totals: 4 servers, 37 tools.**
+**Totals: 4 servers, 37 tools, 489 fuzz calls.** Fuzz budget: 15
+calls/tool. Default seed (`0xC0FFEE`).
+
+## Notable findings (preview for the v0.1 writeup)
+
+- **`example-servers/everything` produced 1 runtime_error.** Of the
+  4 servers tested, only this one had a fuzz input that escaped the
+  protocol-error layer and produced an unhandled runtime error. The
+  exact input is recorded in `server-everything.fuzz.json`. Since
+  this is Anthropic's public *example* server, the finding is "even
+  the reference implementations have at least one fuzz-resistant
+  validation gap" — a useful framing for the writeup.
+- **filesystem is the most strict** at 98% protocol_error rate.
+  This matches its production role.
+- **sequential-thinking accepts ~60% of inputs.** Single tool with
+  one large opaque schema; fuzzer's argument-typed assumptions
+  don't help here. Useful contrast.
+
+These observations are pre-classifier; the week-3 classifier will
+turn raw counts into structured authority claims.
 
 ## How these were generated
 
-Each `*.inventory.json` file is the literal stdout of:
-
+Inventory:
 ```bash
-mcp-recon enumerate "stdio:npx -y <package> <args-if-any>"
+mcp-recon enumerate "stdio:npx -y <package> <args-if-any>" \
+  > server-X.inventory.json
 ```
 
-The schema tag is `mcp-recon/v0.1/inventory`. The `scanned_at`
-field is the wall-clock time at capture; everything else is
-server-controlled and reproducible.
+Fuzz (budget 15 to keep the artefacts small; production runs use 200):
+```bash
+mcp-recon fuzz "stdio:npx -y <package> <args-if-any>" --budget=15 \
+  > server-X.fuzz.json
+```
+
+Schema tags: `mcp-recon/v0.1/inventory` and `mcp-recon/v0.1/fuzz`.
+The `scanned_at` field is wall-clock; everything else is
+server-controlled or seeded-PRNG-controlled and reproducible.
 
 ## Regenerate
 
