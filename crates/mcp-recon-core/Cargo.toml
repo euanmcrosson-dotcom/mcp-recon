@@ -1,0 +1,19 @@
+[package]
+name = "mcp-recon-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Rule-based authority classifier and schema-aware fuzzer for MCP tool surfaces. The Rust core of mcp-recon."
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+[dev-dependencies]
+serde_json = "1"

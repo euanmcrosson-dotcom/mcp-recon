@@ -1,0 +1,32 @@
+# Rust
+/target/
+**/target/
+**/*.rs.bk
+
+# Node / npm workspaces
+node_modules/
+packages/*/dist/
+packages/*/node_modules/
+
+# Build artefacts
+crates/*/pkg/
+
+# Local env
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Claude Code session state
+.claude/
+
+# Generated reports (committed selectively under examples/public-servers/)
+/scratch/
+/tmp/

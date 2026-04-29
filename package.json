@@ -1,0 +1,21 @@
+{
+  "name": "mcp-recon-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root for mcp-recon. CLI + library that reverse-engineers MCP server tool surfaces — enumerate, fuzz, classify, report. Companion to capnagent (the defensive side).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run -ws --if-present build",
+    "test": "npm run -ws --if-present test",
+    "lint": "npm run -ws --if-present lint",
+    "typecheck": "npm run -ws --if-present typecheck",
+    "recon": "npm run -w @mcp-recon/cli -- "
+  }
+}
