@@ -17,21 +17,30 @@ calls/tool. Default seed (`0xC0FFEE`).
 
 ## Notable findings (preview for the v0.1 writeup)
 
-- **`example-servers/everything` produced 1 runtime_error.** Of the
-  4 servers tested, only this one had a fuzz input that escaped the
-  protocol-error layer and produced an unhandled runtime error. The
-  exact input is recorded in `server-everything.fuzz.json`. Since
-  this is Anthropic's public *example* server, the finding is "even
-  the reference implementations have at least one fuzz-resistant
-  validation gap" — a useful framing for the writeup.
+- **`example-servers/everything` has a DoS-shaped surface on
+  `trigger-long-running-operation`.** Fuzzing with `steps:
+  9007199254740992` (Number.MAX_SAFE_INTEGER + 1) caused the call
+  to time out at 5s — the server faithfully attempts the requested
+  iteration count rather than rejecting it as out-of-range. Not a
+  validation crash; a missing upper-bound check that lets a
+  prompt-injected agent burn CPU. Recorded in
+  `server-everything.fuzz.json` as the only runtime_error in the
+  dataset (the other 3 servers produced 0).
 - **filesystem is the most strict** at 98% protocol_error rate.
   This matches its production role.
 - **sequential-thinking accepts ~60% of inputs.** Single tool with
   one large opaque schema; fuzzer's argument-typed assumptions
-  don't help here. Useful contrast.
+  don't help here. Useful contrast for the writeup.
+- **memory's `delete_*` tools are NOT flagged confused-deputy** by
+  the v0.1 classifier — they take object/array args (entity-name
+  lists), not free-form strings. This is the classifier behaving
+  correctly on a non-string-arg destructive tool: capnagent's
+  threat model differs.
 
-These observations are pre-classifier; the week-3 classifier will
-turn raw counts into structured authority claims.
+These observations come from running both the fuzzer (week 2) and
+the classifier (week 3) against each server. The full
+`*.classification.json` and `*.report.md` for each are committed
+alongside the inventories and fuzz outputs.
 
 ## How these were generated
 

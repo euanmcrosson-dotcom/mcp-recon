@@ -15,7 +15,22 @@
  * works without contamination.
  */
 
-import { closeClient, enumerate, fuzz, openClient, parseServerSpec } from "../index.js";
+import * as fs from "node:fs";
+
+import {
+  CLASSIFICATION_SCHEMA,
+  classify,
+  closeClient,
+  enumerate,
+  fuzz,
+  openClient,
+  parseServerSpec,
+  renderMarkdown,
+} from "../index.js";
+
+import type { ToolInventory } from "../enumerate.js";
+import type { FuzzResults } from "../fuzz/types.js";
+import type { ClassificationResults } from "../classify/types.js";
 
 function usage(): never {
   process.stderr.write(
@@ -25,8 +40,8 @@ function usage(): never {
       "Usage:",
       "  mcp-recon enumerate <server-spec>",
       "  mcp-recon fuzz <server-spec> [--budget=N] [--seed=N]",
-      "  mcp-recon classify <inventory.json>            (v0.1 week 3)",
-      "  mcp-recon report <inventory.json> <fuzz.json> <classification.json>",
+      "  mcp-recon classify <inventory.json> [--fuzz=<fuzz.json>]",
+      "  mcp-recon report <inventory.json> <classification.json> [--fuzz=<fuzz.json>]",
       "  mcp-recon scan <server-spec>                   (v0.1 week 4)",
       "",
       "Server-spec forms:",
@@ -36,6 +51,8 @@ function usage(): never {
       "Examples:",
       "  mcp-recon enumerate stdio:npx -y @modelcontextprotocol/server-filesystem /tmp",
       "  mcp-recon fuzz stdio:npx -y @modelcontextprotocol/server-filesystem /tmp --budget=20",
+      "  mcp-recon classify inv.json --fuzz=fz.json > class.json",
+      "  mcp-recon report inv.json class.json --fuzz=fz.json > report.md",
       "",
     ].join("\n"),
   );
@@ -56,7 +73,9 @@ async function main(): Promise<number> {
     case "fuzz":
       return await runFuzz(argv.slice(1));
     case "classify":
+      return runClassify(argv.slice(1));
     case "report":
+      return runReport(argv.slice(1));
     case "scan":
       process.stderr.write(
         `mcp-recon: '${cmd}' is not implemented in the v0.1 scaffold yet.\n` +
@@ -150,6 +169,80 @@ async function runFuzz(args: string[]): Promise<number> {
   } finally {
     await closeClient(client);
   }
+}
+
+function runClassify(args: string[]): number {
+  let inventoryPath: string | undefined;
+  let fuzzPath: string | undefined;
+  for (const arg of args) {
+    if (arg.startsWith("--fuzz=")) {
+      fuzzPath = arg.slice("--fuzz=".length);
+    } else if (!inventoryPath) {
+      inventoryPath = arg;
+    } else {
+      process.stderr.write(`mcp-recon classify: unexpected argument ${arg}\n`);
+      return 2;
+    }
+  }
+  if (!inventoryPath) {
+    process.stderr.write("mcp-recon classify: missing <inventory.json>\n");
+    return 2;
+  }
+
+  const inventory = readJson<ToolInventory>(inventoryPath);
+  const fuzzData = fuzzPath ? readJson<FuzzResults>(fuzzPath) : undefined;
+  const result = classify(inventory, fuzzData);
+
+  process.stderr.write(
+    `mcp-recon: classified ${result.classifications.length} tools (fuzz_informed=${result.fuzz_informed})\n`,
+  );
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  return 0;
+}
+
+function runReport(args: string[]): number {
+  let inventoryPath: string | undefined;
+  let classificationPath: string | undefined;
+  let fuzzPath: string | undefined;
+  for (const arg of args) {
+    if (arg.startsWith("--fuzz=")) {
+      fuzzPath = arg.slice("--fuzz=".length);
+    } else if (!inventoryPath) {
+      inventoryPath = arg;
+    } else if (!classificationPath) {
+      classificationPath = arg;
+    } else {
+      process.stderr.write(`mcp-recon report: unexpected argument ${arg}\n`);
+      return 2;
+    }
+  }
+  if (!inventoryPath || !classificationPath) {
+    process.stderr.write(
+      "mcp-recon report: missing arguments — needs <inventory.json> <classification.json>\n",
+    );
+    return 2;
+  }
+
+  const inventory = readJson<ToolInventory>(inventoryPath);
+  const classification = readJson<ClassificationResults>(classificationPath);
+  if (classification.schema !== CLASSIFICATION_SCHEMA) {
+    process.stderr.write(
+      `mcp-recon report: classification.json schema is "${classification.schema}", expected "${CLASSIFICATION_SCHEMA}"\n`,
+    );
+    return 64;
+  }
+  const fuzzData = fuzzPath ? readJson<FuzzResults>(fuzzPath) : undefined;
+  const md = renderMarkdown(
+    fuzzData ? { inventory, classification, fuzz: fuzzData } : { inventory, classification },
+  );
+  process.stdout.write(md);
+  if (!md.endsWith("\n")) process.stdout.write("\n");
+  return 0;
+}
+
+function readJson<T>(filePath: string): T {
+  const text = fs.readFileSync(filePath, "utf8");
+  return JSON.parse(text) as T;
 }
 
 main()

@@ -1,0 +1,137 @@
+{
+  "schema": "mcp-recon/v0.1/classification",
+  "scanned_at": "2026-04-29T20:48:56.647Z",
+  "server": {
+    "name": "secure-filesystem-server",
+    "version": "0.2.0"
+  },
+  "fuzz_informed": true,
+  "classifications": [
+    {
+      "tool": "read_file",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(read[_-]?(file|text[_-]?file|media[_-]?file|multiple[_-]?files))\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"read_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "read_text_file",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(read[_-]?(file|text[_-]?file|media[_-]?file|multiple[_-]?files))\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"read_text_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "read_media_file",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(read[_-]?(file|text[_-]?file|media[_-]?file|multiple[_-]?files))\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"read_media_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "read_multiple_files",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(read[_-]?(file|text[_-]?file|media[_-]?file|multiple[_-]?files))\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"paths\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"read_multiple_files\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "write_file",
+      "data_class": "filesystem",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(write[_-]?file|edit[_-]?file|create[_-]?directory|move[_-]?file)\\b\" → filesystem/write (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40); user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"write_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // WRITE filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "edit_file",
+      "data_class": "filesystem",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(write[_-]?file|edit[_-]?file|create[_-]?directory|move[_-]?file)\\b\" → filesystem/write (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40); user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"edit_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // WRITE filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "create_directory",
+      "data_class": "filesystem",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(write[_-]?file|edit[_-]?file|create[_-]?directory|move[_-]?file)\\b\" → filesystem/write (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40); user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"create_directory\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // WRITE filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "list_directory",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(list[_-]?(directory|directory[_-]?with[_-]?sizes)|directory[_-]?tree)\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"list_directory\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "list_directory_with_sizes",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(list[_-]?(directory|directory[_-]?with[_-]?sizes)|directory[_-]?tree)\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"list_directory_with_sizes\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "directory_tree",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(list[_-]?(directory|directory[_-]?with[_-]?sizes)|directory[_-]?tree)\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"directory_tree\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "move_file",
+      "data_class": "filesystem",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.946,
+      "rationale": "name match \"\\b(write[_-]?file|edit[_-]?file|create[_-]?directory|move[_-]?file)\\b\" → filesystem/write (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"source\" is path-shaped → filesystem (0.40); schema: arg \"destination\" is path-shaped → filesystem (0.40); user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"move_file\" AND caller == \"<your-caller-id>\" AND arg.source starts_with \"<your-sandbox-prefix>/\" AND arg.destination starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // WRITE filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "search_files",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(get[_-]?file[_-]?info|search[_-]?files|list[_-]?allowed[_-]?directories)\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"search_files\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "get_file_info",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(get[_-]?file[_-]?info|search[_-]?files|list[_-]?allowed[_-]?directories)\\b\" → filesystem/read (0.70); description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"get_file_info\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "list_allowed_directories",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(get[_-]?file[_-]?info|search[_-]?files|list[_-]?allowed[_-]?directories)\\b\" → filesystem/read (0.70); fuzz: 4/4 accepted → +0.1",
+      "recommended_caveat": "tool == \"list_allowed_directories\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    }
+  ]
+}

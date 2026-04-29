@@ -39,3 +39,19 @@ export {
   fuzz,
   FUZZ_SCHEMA,
 } from "./fuzz/index.js";
+
+export {
+  type AuthorityLevel,
+  type Classification,
+  type ClassificationResults,
+  type DataClass,
+  classify,
+  noisyOr,
+  synthesizeCaveat,
+  CLASSIFICATION_SCHEMA,
+} from "./classify/index.js";
+
+export {
+  type RenderInput,
+  renderMarkdown,
+} from "./report/index.js";

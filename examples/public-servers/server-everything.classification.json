@@ -1,0 +1,128 @@
+{
+  "schema": "mcp-recon/v0.1/classification",
+  "scanned_at": "2026-04-29T20:49:10.241Z",
+  "server": {
+    "name": "mcp-servers/everything",
+    "version": "2.0.0"
+  },
+  "fuzz_informed": true,
+  "classifications": [
+    {
+      "tool": "echo",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70); fuzz: 7/15 accepted → +0.1",
+      "recommended_caveat": "tool == \"echo\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "get-annotated-message",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.7,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70)",
+      "recommended_caveat": "tool == \"get-annotated-message\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "get-env",
+      "data_class": "system",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.865,
+      "rationale": "name match \"\\b(get[_-]?env|environ(ment)?|process[_-]?(info|status)|sysinfo|system[_-]?info|hostname)\\b\" → system/read (0.70); description match \"\\b(get[_-]?env|environ(ment)?|process[_-]?(info|status)|sysinfo|system[_-]?info|hostname)\\b\" → system/read (0.50); fuzz: 4/4 accepted → +0.1",
+      "recommended_caveat": "tool == \"get-env\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ system; usually safe but verify env-var exposure"
+    },
+    {
+      "tool": "get-resource-links",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.7,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70)",
+      "recommended_caveat": "tool == \"get-resource-links\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "get-resource-reference",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70); fuzz: 1/15 accepted → +0.1",
+      "recommended_caveat": "tool == \"get-resource-reference\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "get-structured-content",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.7,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70)",
+      "recommended_caveat": "tool == \"get-structured-content\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "get-sum",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70); fuzz: 11/15 accepted → +0.1",
+      "recommended_caveat": "tool == \"get-sum\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "get-tiny-image",
+      "data_class": "metadata",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(echo|get[_-]?(structured[_-]?content|annotated[_-]?message|resource[_-]?(links|reference)|sum|tiny[_-]?image))\\b\" → metadata/read (0.70); fuzz: 4/4 accepted → +0.1",
+      "recommended_caveat": "tool == \"get-tiny-image\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ metadata"
+    },
+    {
+      "tool": "gzip-file-as-resource",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.55,
+      "rationale": "description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); description match \"\\b(http|https|fetch|request|webhook|api[_-]?call|url|origin)\\b\" → network/read (0.50); fuzz: 6/15 accepted → +0.1",
+      "recommended_caveat": "tool == \"gzip-file-as-resource\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "toggle-simulated-logging",
+      "data_class": "system",
+      "authority_level": "write",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(toggle[_-]?(simulated[_-]?logging|subscriber[_-]?updates))\\b\" → system/write (0.70); fuzz: 4/4 accepted → +0.1",
+      "recommended_caveat": "tool == \"toggle-simulated-logging\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE system; usually safe but verify env-var exposure"
+    },
+    {
+      "tool": "toggle-subscriber-updates",
+      "data_class": "system",
+      "authority_level": "write",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(toggle[_-]?(simulated[_-]?logging|subscriber[_-]?updates))\\b\" → system/write (0.70); fuzz: 4/4 accepted → +0.1",
+      "recommended_caveat": "tool == \"toggle-subscriber-updates\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE system; usually safe but verify env-var exposure"
+    },
+    {
+      "tool": "trigger-long-running-operation",
+      "data_class": "metadata",
+      "authority_level": "write",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(trigger[_-]?(long[_-]?running[_-]?operation)?|simulate[_-]?(research[_-]?query))\\b\" → metadata/write (0.70); fuzz: 10/15 accepted → +0.1",
+      "recommended_caveat": "tool == \"trigger-long-running-operation\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE metadata"
+    },
+    {
+      "tool": "simulate-research-query",
+      "data_class": "metadata",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.7,
+      "rationale": "description match \"\\b(http|https|fetch|request|webhook|api[_-]?call|url|origin)\\b\" → network/read (0.50); name match \"\\b(trigger[_-]?(long[_-]?running[_-]?operation)?|simulate[_-]?(research[_-]?query))\\b\" → metadata/write (0.70); user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"simulate-research-query\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE metadata"
+    }
+  ]
+}

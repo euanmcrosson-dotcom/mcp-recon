@@ -1,0 +1,20 @@
+{
+  "schema": "mcp-recon/v0.1/classification",
+  "scanned_at": "2026-04-29T20:49:05.881Z",
+  "server": {
+    "name": "sequential-thinking-server",
+    "version": "0.2.0"
+  },
+  "fuzz_informed": true,
+  "classifications": [
+    {
+      "tool": "sequentialthinking",
+      "data_class": "metadata",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.73,
+      "rationale": "name match \"\\b(sequentialthinking|reason|plan|think)\\b\" → metadata/read (0.70); fuzz: 9/15 accepted → +0.1; description has side-effect verb → escalate one step; user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"sequentialthinking\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE metadata"
+    }
+  ]
+}
