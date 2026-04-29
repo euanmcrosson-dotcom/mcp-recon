@@ -18,8 +18,8 @@ import { classify } from "../classify/index.js";
 import type { ClassificationResults } from "../classify/types.js";
 import { enumerate } from "../enumerate.js";
 import type { ToolInventory } from "../enumerate.js";
-import { fuzz } from "../fuzz/index.js";
-import type { FuzzOptions, FuzzResults } from "../fuzz/types.js";
+import { fuzz, type FuzzOptions } from "../fuzz/index.js";
+import type { FuzzResults } from "../fuzz/types.js";
 import { renderMarkdown } from "../report/index.js";
 
 export interface ScanResult {

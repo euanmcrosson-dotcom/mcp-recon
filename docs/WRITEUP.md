@@ -126,7 +126,7 @@ produced 0. The DoS-shape is the dominant runtime signal.
 **Reproduce:**
 ```bash
 mcp-recon scan "stdio:npx -y @modelcontextprotocol/server-everything" \
-  --out=./reports/everything --budget=15
+  --out=./reports/everything --budget=200
 grep -A 10 'runtime_error' ./reports/everything/fuzz.json
 ```
 
@@ -138,9 +138,11 @@ string of digits coerced via the JSON-parse path.
 **The behaviour:** the server faithfully starts the requested
 loop, hits mcp-recon's 5-second per-call timeout, and the fuzzer
 records a `runtime_error` with message `"timeout after 5000ms"`.
-**It does this 7 times in 200 attempts**, across multiple
-fuzz-axis inputs — proof that this isn't a one-off; the server
-has no upper-bound check at all on iteration count.
+**It does this 7 times in 37 fuzz calls against this single tool**
+(the budget of 200 caps to 37 because the boundary axis only has
+that many distinct inputs to throw at a `steps`-shaped arg) —
+proof that this isn't a one-off; the server has no upper-bound
+check at all on iteration count.
 
 **Why this is interesting.** The server isn't crashing — it's
 *correctly* implementing what the agent asked. The validation gap
@@ -245,11 +247,13 @@ Across the 1,374 calls:
 | sequential-thinking | 83.6% |
 
 This is essentially **how strict each server's input validation
-is**. filesystem (the most production-ready) rejects 98% of
-adversarial inputs; sequential-thinking (the most permissive)
-rejects only 40%. Neither extreme is wrong on its own — they
-reflect different deployment intents — but a reader auditing an
-agent stack now has a quantitative number to compare against.
+is**. filesystem (the most production-ready) rejects 99.4% of
+adversarial inputs; everything (the most permissive of the four)
+rejects 74.9%, mostly because its tools are deliberately
+permissive examples. Neither extreme is wrong on its own —
+they reflect different deployment intents — but a reader
+auditing an agent stack now has a quantitative number to
+compare against.
 
 For agent operators: the fuzz profile is a more honest signal of
 "how much can prompt injection actually do here?" than the

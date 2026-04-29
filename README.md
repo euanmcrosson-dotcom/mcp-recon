@@ -17,28 +17,31 @@ is the recon side of that gap. [capnagent](https://github.com/euanmcrosson-dotco
 is the defensive side: take a recon report, derive a tight
 capability caveat, deny everything outside it.
 
-> **Status:** pre-alpha scaffold. v0.1 ships in 4 weeks against
-> the [SPEC](docs/SPEC.md). Don't depend on the surface yet.
+> **Status:** v0.1.1 shipped 2026-04-30. Public dataset of every
+> stdio TypeScript MCP server in Anthropic's `@modelcontextprotocol/*`
+> namespace audited. See [`docs/WRITEUP.md`](docs/WRITEUP.md) for the
+> headline findings (DoS surface on `everything`,
+> missing-bounds finding on `filesystem` example wrapper, full
+> server-maturity ranking).
 
 ## What you get
 
 ```bash
-$ mcp-recon scan stdio:npx @modelcontextprotocol/server-filesystem /tmp
+$ mcp-recon scan "stdio:npx -y @modelcontextprotocol/server-filesystem /tmp" \
+    --out=./reports/filesystem --budget=200
 
-# 6 tools enumerated:
-#   read_file        — filesystem (read)        — confused-deputy candidate
-#   list_directory   — filesystem (read)        — safe
-#   directory_tree   — filesystem (read)        — safe
-#   write_file       — filesystem (write)       — high-risk; bound aggressively
-#   create_directory — filesystem (write)       — moderate
-#   delete_path      — filesystem (write)       — high-risk
-#
-# Fuzzer ran 1200 calls (200/tool). 14 schema-violations passed
-# through to the underlying tool — see scratch/fuzz-results.json
-#
-# Threat profile: scratch/report.md
-# Suggested capnagent caveats: scratch/caveats.txt
+mcp-recon: 14 tools, 4 confused-deputy candidates
+mcp-recon: fuzz — ok=4 protocol_error=719 runtime_error=0
+mcp-recon: wrote 4 artefacts to ./reports/filesystem/
+
+$ ls ./reports/filesystem/
+inventory.json   fuzz.json   classification.json   report.md
 ```
+
+Run against any of the 4 servers in the public dataset and your
+output matches `examples/public-servers/server-<name>/` byte-for-
+byte. See [`docs/EVALUATION.md` (in capnagent)](https://github.com/euanmcrosson-dotcom/capnagent/blob/master/docs/EVALUATION.md)
+for the reproducibility contract.
 
 The `scratch/report.md` is the deliverable a security reviewer or
 developer-on-call actually reads. The JSON files are the machine-
@@ -63,18 +66,19 @@ input to round-N writeups in the
 [capnagent purple-team corpus](https://github.com/euanmcrosson-dotcom/capnagent/tree/master/docs/purple-team).
 Recon → capability gap → attack PoC → fix → CLOSED.
 
-## Installation (when v0.1 ships)
+## Installation
 
 ```bash
-# From npm (pending v0.1 release)
-npm install -g @mcp-recon/cli
-
-# From source (today)
+# From source (the recommended path today; npm package is post-v0.2)
 git clone https://github.com/euanmcrosson-dotcom/mcp-recon
 cd mcp-recon
 npm install
-npm run build
-node packages/mcp-recon-cli/dist/bin/recon.js scan stdio:...
+npm run -w @mcp-recon/cli build
+
+# Run the CLI directly via tsx (no build step needed for development)
+npx tsx packages/mcp-recon-cli/src/bin/recon.ts scan \
+  "stdio:npx -y @modelcontextprotocol/server-filesystem $HOME/sandbox" \
+  --out=./reports/filesystem --budget=200
 ```
 
 ## What this is NOT

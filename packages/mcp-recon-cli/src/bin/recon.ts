@@ -286,9 +286,11 @@ async function runScan(args: string[]): Promise<number> {
 
   const client = await openClient(parsed);
   try {
-    const opts: Parameters<typeof scan>[1] = { outDir };
-    if (budget !== undefined) opts.budget = budget;
-    if (seed !== undefined) opts.seed = seed;
+    const opts: Parameters<typeof scan>[1] = {
+      outDir,
+      ...(budget !== undefined ? { budget } : {}),
+      ...(seed !== undefined ? { seed } : {}),
+    };
     process.stderr.write(`mcp-recon: running enumerate → fuzz → classify → report...\n`);
     const result = await scan(client, opts);
 
