@@ -26,6 +26,7 @@ import {
   openClient,
   parseServerSpec,
   renderMarkdown,
+  scan,
 } from "../index.js";
 
 import type { ToolInventory } from "../enumerate.js";
@@ -42,7 +43,7 @@ function usage(): never {
       "  mcp-recon fuzz <server-spec> [--budget=N] [--seed=N]",
       "  mcp-recon classify <inventory.json> [--fuzz=<fuzz.json>]",
       "  mcp-recon report <inventory.json> <classification.json> [--fuzz=<fuzz.json>]",
-      "  mcp-recon scan <server-spec>                   (v0.1 week 4)",
+      "  mcp-recon scan <server-spec> --out=<dir> [--budget=N] [--seed=N]",
       "",
       "Server-spec forms:",
       "  stdio:<command> [args...]    — spawn process, talk over stdio",
@@ -77,11 +78,7 @@ async function main(): Promise<number> {
     case "report":
       return runReport(argv.slice(1));
     case "scan":
-      process.stderr.write(
-        `mcp-recon: '${cmd}' is not implemented in the v0.1 scaffold yet.\n` +
-          `See docs/SPEC.md for the milestone schedule.\n`,
-      );
-      return 64;
+      return await runScan(argv.slice(1));
     default:
       process.stderr.write(`mcp-recon: unknown command '${cmd}'.\n`);
       usage();
@@ -243,6 +240,76 @@ function runReport(args: string[]): number {
 function readJson<T>(filePath: string): T {
   const text = fs.readFileSync(filePath, "utf8");
   return JSON.parse(text) as T;
+}
+
+async function runScan(args: string[]): Promise<number> {
+  let spec: string | undefined;
+  let outDir: string | undefined;
+  let budget: number | undefined;
+  let seed: number | undefined;
+  for (const arg of args) {
+    if (arg.startsWith("--out=")) {
+      outDir = arg.slice("--out=".length);
+    } else if (arg.startsWith("--budget=")) {
+      const n = Number.parseInt(arg.slice("--budget=".length), 10);
+      if (Number.isNaN(n) || n <= 0) {
+        process.stderr.write("mcp-recon scan: invalid --budget value\n");
+        return 2;
+      }
+      budget = n;
+    } else if (arg.startsWith("--seed=")) {
+      const n = Number.parseInt(arg.slice("--seed=".length), 10);
+      if (Number.isNaN(n)) {
+        process.stderr.write("mcp-recon scan: invalid --seed value\n");
+        return 2;
+      }
+      seed = n;
+    } else if (!spec) {
+      spec = arg;
+    } else {
+      process.stderr.write(`mcp-recon scan: unexpected argument ${arg}\n`);
+      return 2;
+    }
+  }
+
+  if (!spec) {
+    process.stderr.write("mcp-recon scan: missing <server-spec>\n");
+    return 2;
+  }
+  if (!outDir) {
+    process.stderr.write("mcp-recon scan: --out=<dir> is required\n");
+    return 2;
+  }
+
+  const parsed = parseServerSpec(spec);
+  process.stderr.write(`mcp-recon: connecting to ${spec}...\n`);
+
+  const client = await openClient(parsed);
+  try {
+    const opts: Parameters<typeof scan>[1] = { outDir };
+    if (budget !== undefined) opts.budget = budget;
+    if (seed !== undefined) opts.seed = seed;
+    process.stderr.write(`mcp-recon: running enumerate → fuzz → classify → report...\n`);
+    const result = await scan(client, opts);
+
+    const totalOk = result.fuzz.summary.reduce((acc, s) => acc + s.ok, 0);
+    const totalProto = result.fuzz.summary.reduce((acc, s) => acc + s.protocol_error, 0);
+    const totalRuntime = result.fuzz.summary.reduce((acc, s) => acc + s.runtime_error, 0);
+    const cdpCount = result.classification.classifications.filter(
+      (c) => c.confused_deputy_candidate,
+    ).length;
+
+    process.stderr.write(
+      `mcp-recon: ${result.inventory.tools.length} tools, ${cdpCount} confused-deputy candidates\n`,
+    );
+    process.stderr.write(
+      `mcp-recon: fuzz — ok=${totalOk} protocol_error=${totalProto} runtime_error=${totalRuntime}\n`,
+    );
+    process.stderr.write(`mcp-recon: wrote 4 artefacts to ${outDir}/\n`);
+    return 0;
+  } finally {
+    await closeClient(client);
+  }
 }
 
 main()

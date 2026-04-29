@@ -55,3 +55,9 @@ export {
   type RenderInput,
   renderMarkdown,
 } from "./report/index.js";
+
+export {
+  type ScanResult,
+  type ScanOptions,
+  scan,
+} from "./scan/index.js";

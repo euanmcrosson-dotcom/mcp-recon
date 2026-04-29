@@ -1,6 +1,6 @@
 {
   "schema": "mcp-recon/v0.1/classification",
-  "scanned_at": "2026-04-29T20:48:56.647Z",
+  "scanned_at": "2026-04-29T21:25:36.509Z",
   "server": {
     "name": "secure-filesystem-server",
     "version": "0.2.0"

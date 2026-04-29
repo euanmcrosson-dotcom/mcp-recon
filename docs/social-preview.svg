@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">
+  <!-- Background — same palette as capnagent for cross-project visual identity -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1320"/>
+      <stop offset="100%" stop-color="#162033"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+
+  <!-- Top accent bar — orange/red palette flips capnagent's purple/cyan to signal the offensive companion -->
+  <rect x="0" y="0" width="1280" height="6" fill="url(#accent)"/>
+
+  <!-- Title -->
+  <text x="80" y="140" font-size="84" font-weight="700" fill="#f1f5f9">mcp-recon</text>
+  <text x="80" y="190" font-size="26" fill="#94a3b8">Reverse-engineer any MCP server's tool surface in 30 seconds</text>
+
+  <!-- Stats grid -->
+  <line x1="80" y1="240" x2="1200" y2="240" stroke="#334155" stroke-width="1"/>
+
+  <!-- Column 1 — Coverage -->
+  <text x="80"  y="285" font-size="18" font-weight="600" fill="#f59e0b">COVERAGE</text>
+  <text x="80"  y="345" font-size="56" font-weight="700" fill="#f1f5f9">8</text>
+  <text x="80"  y="378" font-size="18" fill="#94a3b8">public servers scanned</text>
+  <text x="80"  y="430" font-size="36" font-weight="700" fill="#f1f5f9">~50</text>
+  <text x="80"  y="458" font-size="18" fill="#94a3b8">tools classified</text>
+
+  <!-- Column 2 — Methodology -->
+  <text x="360" y="285" font-size="18" font-weight="600" fill="#f59e0b">METHODOLOGY</text>
+  <text x="360" y="345" font-size="56" font-weight="700" fill="#f1f5f9">6 axes</text>
+  <text x="360" y="378" font-size="18" fill="#94a3b8">schema-aware fuzzer</text>
+  <text x="360" y="430" font-size="22" font-weight="600" fill="#f1f5f9">deterministic, seeded</text>
+  <text x="360" y="458" font-size="18" fill="#94a3b8">reproducible to the byte</text>
+
+  <!-- Column 3 — Engine -->
+  <text x="700" y="285" font-size="18" font-weight="600" fill="#f59e0b">ENGINE</text>
+  <text x="700" y="345" font-size="56" font-weight="700" fill="#f1f5f9">68 + 9</text>
+  <text x="700" y="378" font-size="18" fill="#94a3b8">tests, all green</text>
+  <text x="700" y="430" font-size="22" font-weight="600" fill="#f1f5f9">Apache-2.0</text>
+  <text x="700" y="458" font-size="18" fill="#94a3b8">Rust core + TS CLI</text>
+
+  <!-- Column 4 — Bridge -->
+  <text x="980" y="285" font-size="18" font-weight="600" fill="#f59e0b">BRIDGE</text>
+  <text x="980" y="345" font-size="56" font-weight="700" fill="#f1f5f9">→ capnagent</text>
+  <text x="980" y="378" font-size="18" fill="#94a3b8">caveat per tool, copy-pasteable</text>
+  <text x="980" y="430" font-size="22" font-weight="600" fill="#f1f5f9">OWASP + ATLAS</text>
+  <text x="980" y="458" font-size="18" fill="#94a3b8">framework mapping</text>
+
+  <line x1="80" y1="510" x2="1200" y2="510" stroke="#334155" stroke-width="1"/>
+
+  <!-- Bottom row -->
+  <text x="80"   y="560" font-size="22" fill="#cbd5e1">github.com/euanmcrosson-dotcom/mcp-recon</text>
+  <text x="80"   y="595" font-size="18" fill="#64748b">recon → bound. Companion to capnagent (the defensive engine).</text>
+
+  <!-- Version pill -->
+  <rect x="1080" y="100" width="120" height="40" rx="6" fill="#ef4444"/>
+  <text x="1140" y="127" font-size="20" font-weight="700" fill="#f1f5f9" text-anchor="middle">v0.1</text>
+</svg>

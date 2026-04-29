@@ -1,6 +1,6 @@
 {
   "schema": "mcp-recon/v0.1/fuzz",
-  "scanned_at": "2026-04-29T20:34:01.240Z",
+  "scanned_at": "2026-04-29T21:25:59.395Z",
   "server": {
     "name": "sequential-thinking-server",
     "version": "0.2.0"

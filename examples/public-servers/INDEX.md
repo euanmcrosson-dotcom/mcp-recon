@@ -44,21 +44,42 @@ alongside the inventories and fuzz outputs.
 
 ## How these were generated
 
-Inventory:
 ```bash
-mcp-recon enumerate "stdio:npx -y <package> <args-if-any>" \
-  > server-X.inventory.json
+mcp-recon scan "stdio:npx -y <package> <args-if-any>" \
+  --out=examples/public-servers/server-X --budget=15
 ```
 
-Fuzz (budget 15 to keep the artefacts small; production runs use 200):
-```bash
-mcp-recon fuzz "stdio:npx -y <package> <args-if-any>" --budget=15 \
-  > server-X.fuzz.json
+The `scan` orchestrator runs enumerate → fuzz → classify → report
+in one shot, writing four files per server:
+
+```
+server-X/
+  inventory.json        mcp-recon/v0.1/inventory
+  fuzz.json             mcp-recon/v0.1/fuzz
+  classification.json   mcp-recon/v0.1/classification
+  report.md             Markdown threat profile (human-readable)
 ```
 
-Schema tags: `mcp-recon/v0.1/inventory` and `mcp-recon/v0.1/fuzz`.
-The `scanned_at` field is wall-clock; everything else is
+The `scanned_at` fields are wall-clock; everything else is
 server-controlled or seeded-PRNG-controlled and reproducible.
+
+## Why these four (and not more)
+
+mcp-recon v0.1 supports stdio transport only. As of 2026-04-29 the
+official `@modelcontextprotocol/*` npm namespace ships exactly five
+TypeScript stdio-transport servers: filesystem, memory,
+sequential-thinking, everything, and pdf. The pdf server actually
+listens on HTTP (port 3001) rather than stdio, so it's
+incompatible with v0.1 and queued for v0.2.
+
+The other "servers" referenced in MCP marketing materials
+(time, fetch, git, slack, github, postgres, etc.) are either
+Python-implemented (out of scope for an npx-based v0.1) or
+auth-required (a fair v0.1 audit doesn't need credentials).
+
+So **the dataset is Anthropic's full reference set of stdio
+TypeScript MCP servers**: 4 servers, 37 tools, 489 fuzz calls,
+all reproducible from a fresh checkout in <5 minutes.
 
 ## Regenerate
 

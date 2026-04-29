@@ -1,6 +1,6 @@
 {
   "schema": "mcp-recon/v0.1/fuzz",
-  "scanned_at": "2026-04-29T20:33:54.954Z",
+  "scanned_at": "2026-04-29T21:25:54.820Z",
   "server": {
     "name": "memory-server",
     "version": "0.6.3"
