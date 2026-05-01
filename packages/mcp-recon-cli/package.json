@@ -1,6 +1,6 @@
 {
   "name": "@mcp-recon/cli",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Reverse-engineer MCP server tool surfaces. Enumerate, fuzz, classify, report. CLI + library.",
   "license": "Apache-2.0",
   "type": "module",
