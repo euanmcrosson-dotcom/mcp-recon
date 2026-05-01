@@ -46,7 +46,6 @@ import {
 const LOW_CONFIDENCE_THRESHOLD = 0.5;
 
 const COMMENT_SPLIT = /\s*\/\/\s*/;
-const AND_SPLIT = /\s+AND\s+/i;
 const PLACEHOLDER_REMAINING = /<your-[a-z-]+>/i;
 const ARG_CONSTRAINT = /\barg\./i;
 
@@ -128,11 +127,56 @@ function parseRecommendedCaveat(raw: string): { caveats: string[]; comment?: str
   const parts = raw.split(COMMENT_SPLIT);
   const predicates_raw = parts[0] ?? "";
   const comment = parts[1]?.trim();
-  const caveats = predicates_raw
-    .split(AND_SPLIT)
+  const caveats = splitOnUnquotedAnd(predicates_raw)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   return comment ? { caveats, comment } : { caveats };
+}
+
+/**
+ * Split on ` AND ` only when not inside a double-quoted string literal.
+ *
+ * The naive `string.split(/\s+AND\s+/i)` mis-splits when a tool name
+ * (or other string-literal value) contains the word `AND` — e.g.
+ *
+ *     tool == "foo AND bar" AND caller == "x"
+ *
+ * would split into three fragments and break the tool predicate.
+ * Tool names propagate from the upstream MCP server, so a malicious
+ * server can synthesise this. This walker tracks an `inQuotes` flag
+ * and only treats ` AND ` as a separator when outside quotes.
+ *
+ * Pinned by `caveats.adversarial.test.ts` — cases 1 and 2.
+ */
+function splitOnUnquotedAnd(input: string): string[] {
+  const out: string[] = [];
+  let buf = "";
+  let inQuotes = false;
+  let i = 0;
+  while (i < input.length) {
+    const ch = input[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      buf += ch;
+      i++;
+      continue;
+    }
+    if (
+      !inQuotes &&
+      /\s/.test(ch ?? "") &&
+      input.slice(i).match(/^\s+AND\s+/i)
+    ) {
+      const m = input.slice(i).match(/^\s+AND\s+/i)!;
+      out.push(buf);
+      buf = "";
+      i += m[0].length;
+      continue;
+    }
+    buf += ch;
+    i++;
+  }
+  out.push(buf);
+  return out;
 }
 
 /**
