@@ -1,0 +1,205 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+# Cancel in-progress runs for the same ref when a newer commit lands.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test:
+    name: test (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (workspaces)
+        run: npm run --workspaces --if-present typecheck
+
+      # Lint is informational today — the repo has pre-existing Biome diagnostics
+      # that are tracked separately. Keep the signal visible without gating CI.
+      - name: Lint (workspaces, informational)
+        continue-on-error: true
+        run: npm run --workspaces --if-present lint
+
+      - name: Test (workspaces)
+        run: npm run --workspaces --if-present test
+
+      - name: Upload test results (best-effort)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-node${{ matrix.node }}
+          path: |
+            packages/*/coverage/**
+            packages/*/test-results/**
+            packages/*/junit.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+  rust-check:
+    name: rust (stable)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+
+      - name: Setup Rust toolchain (stable + rustfmt + clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      # rustfmt is informational today — there is one known import-order diff
+      # tracked separately from this CI bringup PR. Keep the signal visible
+      # without gating master.
+      - name: cargo fmt --check (informational)
+        continue-on-error: true
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --all-targets --workspace -- -D warnings
+
+      - name: cargo test --workspace
+        run: cargo test --workspace --no-fail-fast
+
+  dataset-validate:
+    name: dataset-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Validate examples/public-servers/* dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base=examples/public-servers
+          if [ ! -d "$base" ]; then
+            echo "::error::dataset directory $base missing"
+            exit 1
+          fi
+
+          # Map kind -> expected schema tag.
+          declare -A expected=(
+            [inventory]="mcp-recon/v0.1/inventory"
+            [classification]="mcp-recon/v0.1/classification"
+            [fuzz]="mcp-recon/v0.1/fuzz"
+          )
+
+          fail=0
+          shopt -s nullglob
+          servers=("$base"/*/)
+          if [ ${#servers[@]} -eq 0 ]; then
+            echo "::error::no servers under $base"
+            exit 1
+          fi
+
+          for server_dir in "${servers[@]}"; do
+            server="$(basename "$server_dir")"
+            for kind in inventory classification fuzz; do
+              file="${server_dir}${kind}.json"
+              if [ ! -f "$file" ]; then
+                echo "::error file=$file::missing $kind.json for $server"
+                fail=1
+                continue
+              fi
+
+              if ! jq empty "$file" >/dev/null 2>&1; then
+                echo "::error file=$file::invalid JSON"
+                fail=1
+                continue
+              fi
+
+              actual="$(jq -r '.schema // ""' "$file")"
+              want="${expected[$kind]}"
+              if [ "$actual" != "$want" ]; then
+                echo "::error file=$file::schema mismatch — got '$actual', want '$want'"
+                fail=1
+                continue
+              fi
+
+              echo "ok  $server/$kind.json  schema=$actual"
+            done
+          done
+
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "All public-server artifacts parse and carry expected schema tags."
+
+  pr-titles:
+    name: pr-titles (conventional commits)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            test
+            docs
+            refactor
+            build
+            ci
+            perf
+            style
+            revert
+          requireScope: false
+          subjectPattern: ^[A-Za-z0-9].+$
+          subjectPatternError: |
+            The PR title subject (after the type) must start with a letter or
+            digit and contain at least two characters.
