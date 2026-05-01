@@ -1,0 +1,22 @@
+{
+  "schema": "mcp-recon/v0.1/inventory",
+  "scanned_at": "2026-05-01T01:29:32.540Z",
+  "server": {
+    "name": "example-servers/postgres",
+    "version": "0.1.0"
+  },
+  "tools": [
+    {
+      "name": "query",
+      "description": "Run a read-only SQL query",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}
