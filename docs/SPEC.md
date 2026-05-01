@@ -29,12 +29,24 @@ mcp-recon report <inventory.json> <fuzz.json> <classification.json>
   → emits a Markdown threat profile per server
   → includes the recommended capnagent caveat per tool
 
+mcp-recon caveats <classification.json>
+                  [--caller=ID] [--sandbox-prefix=PATH] [--expiry=ISO]
+  → ingests a classification, applies operator-supplied bindings to
+    placeholder tokens (<your-caller-id>, <your-sandbox-prefix>,
+    <your-cap-expiry>), splits AND-joined predicates into individual
+    capnagent DSL caveats, flags plans that need review (unknown
+    classification, low confidence, confused-deputy without arg
+    constraint, unsubstituted placeholder)
+  → emits one JSON document (schema mcp-recon/v0.1/caveats) suitable
+    for direct ingestion by a capnagent issuer — one element per
+    Issuer.caveat(...) call
+
 mcp-recon scan <server-spec>
   → runs enumerate + fuzz + classify + report in one shot
   → the daily-driver command
 ```
 
-That's the entire surface for v0.1. Five commands.
+That's the entire surface for v0.1. Six commands.
 
 ## Server-spec syntax
 

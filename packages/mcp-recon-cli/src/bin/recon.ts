@@ -18,6 +18,7 @@
 import * as fs from "node:fs";
 
 import {
+  CAVEATS_SCHEMA,
   CLASSIFICATION_SCHEMA,
   classify,
   closeClient,
@@ -25,6 +26,7 @@ import {
   fuzz,
   openClient,
   parseServerSpec,
+  planCaveats,
   renderMarkdown,
   scan,
 } from "../index.js";
@@ -32,6 +34,7 @@ import {
 import type { ToolInventory } from "../enumerate.js";
 import type { FuzzResults } from "../fuzz/types.js";
 import type { ClassificationResults } from "../classify/types.js";
+import type { CaveatBindings } from "../caveats/types.js";
 
 function usage(): never {
   process.stderr.write(
@@ -43,6 +46,7 @@ function usage(): never {
       "  mcp-recon fuzz <server-spec> [--budget=N] [--seed=N]",
       "  mcp-recon classify <inventory.json> [--fuzz=<fuzz.json>]",
       "  mcp-recon report <inventory.json> <classification.json> [--fuzz=<fuzz.json>]",
+      "  mcp-recon caveats <classification.json> [--caller=ID] [--sandbox-prefix=PATH] [--expiry=ISO]",
       "  mcp-recon scan <server-spec> --out=<dir> [--budget=N] [--seed=N]",
       "",
       "Server-spec forms:",
@@ -54,6 +58,7 @@ function usage(): never {
       "  mcp-recon fuzz stdio:npx -y @modelcontextprotocol/server-filesystem /tmp --budget=20",
       "  mcp-recon classify inv.json --fuzz=fz.json > class.json",
       "  mcp-recon report inv.json class.json --fuzz=fz.json > report.md",
+      "  mcp-recon caveats class.json --caller=agent:planner --sandbox-prefix=/srv/sb --expiry=2026-12-31T23:59:59Z > caveats.json",
       "",
     ].join("\n"),
   );
@@ -77,6 +82,8 @@ async function main(): Promise<number> {
       return runClassify(argv.slice(1));
     case "report":
       return runReport(argv.slice(1));
+    case "caveats":
+      return runCaveats(argv.slice(1));
     case "scan":
       return await runScan(argv.slice(1));
     default:
@@ -240,6 +247,53 @@ function runReport(args: string[]): number {
 function readJson<T>(filePath: string): T {
   const text = fs.readFileSync(filePath, "utf8");
   return JSON.parse(text) as T;
+}
+
+function runCaveats(args: string[]): number {
+  let classificationPath: string | undefined;
+  const bindings: CaveatBindings = {};
+  for (const arg of args) {
+    if (arg.startsWith("--caller=")) {
+      bindings.caller = arg.slice("--caller=".length);
+    } else if (arg.startsWith("--sandbox-prefix=")) {
+      bindings.sandbox_prefix = arg.slice("--sandbox-prefix=".length);
+    } else if (arg.startsWith("--expiry=")) {
+      const expiry = arg.slice("--expiry=".length);
+      // Light validation: must parse as a date.
+      const parsed = new Date(expiry);
+      if (Number.isNaN(parsed.getTime())) {
+        process.stderr.write(`mcp-recon caveats: invalid --expiry value (must be ISO-8601)\n`);
+        return 2;
+      }
+      // Normalize to canonical ISO so downstream consumers see one shape.
+      bindings.expiry = parsed.toISOString();
+    } else if (!classificationPath) {
+      classificationPath = arg;
+    } else {
+      process.stderr.write(`mcp-recon caveats: unexpected argument ${arg}\n`);
+      return 2;
+    }
+  }
+
+  if (!classificationPath) {
+    process.stderr.write("mcp-recon caveats: missing <classification.json>\n");
+    return 2;
+  }
+
+  const classification = readJson<ClassificationResults>(classificationPath);
+  if (classification.schema !== CLASSIFICATION_SCHEMA) {
+    process.stderr.write(
+      `mcp-recon caveats: classification.json schema is "${classification.schema}", expected "${CLASSIFICATION_SCHEMA}"\n`,
+    );
+    return 64;
+  }
+
+  const result = planCaveats(classification, bindings);
+  process.stderr.write(
+    `mcp-recon: ${result.summary.total} plans (${result.summary.ready} ready, ${result.summary.flagged} flagged) — schema=${CAVEATS_SCHEMA}\n`,
+  );
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  return 0;
 }
 
 async function runScan(args: string[]): Promise<number> {
