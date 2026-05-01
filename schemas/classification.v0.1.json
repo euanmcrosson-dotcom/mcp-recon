@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/euanmcrosson-dotcom/mcp-recon/master/schemas/classification.v0.1.json",
+  "title": "mcp-recon v0.1 classification document",
+  "description": "Wire-format JSON Schema for the artifact emitted by `mcp-recon classify`. The TypeScript interface `ClassificationResults` (packages/mcp-recon-cli/src/classify/types.ts) is the source of truth for the shape; this JSON Schema is downstream and exists so any-language consumer can validate documents tagged `mcp-recon/v0.1/classification`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scanned_at", "server", "fuzz_informed", "classifications"],
+  "properties": {
+    "schema": {
+      "description": "Schema-version tag. The single enforceable invariant of the document.",
+      "const": "mcp-recon/v0.1/classification"
+    },
+    "scanned_at": {
+      "description": "ISO-8601 timestamp at which `mcp-recon classify` produced the document.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "fuzz_informed": {
+      "description": "Whether fuzz results were folded into confidence (raises confidence by 0.1).",
+      "type": "boolean"
+    },
+    "classifications": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Classification" }
+    }
+  },
+  "$defs": {
+    "DataClass": {
+      "description": "Top-level data classes, per docs/METHODOLOGY.md.",
+      "type": "string",
+      "enum": [
+        "filesystem",
+        "network",
+        "shell",
+        "payments",
+        "messaging",
+        "system",
+        "metadata",
+        "unknown"
+      ]
+    },
+    "AuthorityLevel": {
+      "description": "Authority levels, per docs/METHODOLOGY.md.",
+      "type": "string",
+      "enum": ["read", "write", "destructive", "privileged"]
+    },
+    "Classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "data_class",
+        "authority_level",
+        "confused_deputy_candidate",
+        "confidence",
+        "rationale",
+        "recommended_caveat"
+      ],
+      "properties": {
+        "tool": {
+          "description": "Tool name from the inventory.",
+          "type": "string"
+        },
+        "data_class": { "$ref": "#/$defs/DataClass" },
+        "authority_level": { "$ref": "#/$defs/AuthorityLevel" },
+        "confused_deputy_candidate": {
+          "description": "The load-bearing flag: tool takes user-controllable string args AND has write/destructive/privileged authority.",
+          "type": "boolean"
+        },
+        "confidence": {
+          "description": "Combined confidence in [0, 1] per noisy-OR over fired rules.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rationale": {
+          "description": "Free-form rationale listing every rule that fired and its weight.",
+          "type": "string"
+        },
+        "recommended_caveat": {
+          "description": "Suggested capnagent caveat for this tool — copy-pasteable, with `<your-...>` placeholders for operator bindings.",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema": "mcp-recon/v0.1/classification",
+      "scanned_at": "2026-04-29T22:35:27.187Z",
+      "server": { "name": "secure-filesystem-server", "version": "0.2.0" },
+      "fuzz_informed": true,
+      "classifications": [
+        {
+          "tool": "read_file",
+          "data_class": "filesystem",
+          "authority_level": "read",
+          "confused_deputy_candidate": false,
+          "confidence": 0.91,
+          "rationale": "name match → filesystem/read (0.70); description match → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40)",
+          "recommended_caveat": "tool == \"read_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem"
+        }
+      ]
+    }
+  ]
+}

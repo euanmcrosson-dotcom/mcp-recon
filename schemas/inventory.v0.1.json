@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/euanmcrosson-dotcom/mcp-recon/master/schemas/inventory.v0.1.json",
+  "title": "mcp-recon v0.1 inventory document",
+  "description": "Wire-format JSON Schema for the artifact emitted by `mcp-recon enumerate`. The TypeScript interface `ToolInventory` (packages/mcp-recon-cli/src/enumerate.ts) is the source of truth for the shape; this JSON Schema is downstream and exists so any-language consumer can validate documents tagged `mcp-recon/v0.1/inventory`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scanned_at", "server", "tools"],
+  "properties": {
+    "schema": {
+      "description": "Schema-version tag. The single enforceable invariant of the document — downstream parsers branch on this string.",
+      "const": "mcp-recon/v0.1/inventory"
+    },
+    "scanned_at": {
+      "description": "ISO-8601 timestamp at which `mcp-recon enumerate` produced the document.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "server": {
+      "description": "Server identity as self-reported via the MCP `initialize` handshake. Both fields are best-effort: a server may decline to send either.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "tools": {
+      "description": "Every tool the server exposed via `tools/list`, in the order the server returned them.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/EnumeratedTool" }
+    }
+  },
+  "$defs": {
+    "EnumeratedTool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "inputSchema"],
+      "properties": {
+        "name": {
+          "description": "Tool name as the server reported it.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Optional human-readable description from the server.",
+          "type": "string"
+        },
+        "inputSchema": {
+          "description": "JSON Schema for the tool's input arguments — opaque to v0.1 enumerate. Any JSON value is accepted here; the consumer (e.g. classifier) is responsible for further interpretation."
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema": "mcp-recon/v0.1/inventory",
+      "scanned_at": "2026-04-29T22:35:26.473Z",
+      "server": { "name": "secure-filesystem-server", "version": "0.2.0" },
+      "tools": [
+        {
+          "name": "read_file",
+          "description": "Read the complete contents of a file as text.",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "path": { "type": "string" } },
+            "required": ["path"]
+          }
+        }
+      ]
+    }
+  ]
+}
