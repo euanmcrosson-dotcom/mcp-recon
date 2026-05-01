@@ -48,6 +48,7 @@ function usage(): never {
       "  mcp-recon report <inventory.json> <classification.json> [--fuzz=<fuzz.json>]",
       "  mcp-recon caveats <classification.json> [--caller=ID] [--sandbox-prefix=PATH] [--expiry=ISO]",
       "  mcp-recon scan <server-spec> --out=<dir> [--budget=N] [--seed=N]",
+      "                                [--caller=ID] [--sandbox-prefix=PATH] [--expiry=ISO]",
       "",
       "Server-spec forms:",
       "  stdio:<command> [args...]    — spawn process, talk over stdio",
@@ -301,6 +302,7 @@ async function runScan(args: string[]): Promise<number> {
   let outDir: string | undefined;
   let budget: number | undefined;
   let seed: number | undefined;
+  const bindings: CaveatBindings = {};
   for (const arg of args) {
     if (arg.startsWith("--out=")) {
       outDir = arg.slice("--out=".length);
@@ -318,6 +320,18 @@ async function runScan(args: string[]): Promise<number> {
         return 2;
       }
       seed = n;
+    } else if (arg.startsWith("--caller=")) {
+      bindings.caller = arg.slice("--caller=".length);
+    } else if (arg.startsWith("--sandbox-prefix=")) {
+      bindings.sandbox_prefix = arg.slice("--sandbox-prefix=".length);
+    } else if (arg.startsWith("--expiry=")) {
+      const expiry = arg.slice("--expiry=".length);
+      const parsed = new Date(expiry);
+      if (Number.isNaN(parsed.getTime())) {
+        process.stderr.write("mcp-recon scan: invalid --expiry value (must be ISO-8601)\n");
+        return 2;
+      }
+      bindings.expiry = parsed.toISOString();
     } else if (!spec) {
       spec = arg;
     } else {
@@ -335,6 +349,11 @@ async function runScan(args: string[]): Promise<number> {
     return 2;
   }
 
+  const hasBindings =
+    bindings.caller !== undefined ||
+    bindings.sandbox_prefix !== undefined ||
+    bindings.expiry !== undefined;
+
   const parsed = parseServerSpec(spec);
   process.stderr.write(`mcp-recon: connecting to ${spec}...\n`);
 
@@ -344,6 +363,7 @@ async function runScan(args: string[]): Promise<number> {
       outDir,
       ...(budget !== undefined ? { budget } : {}),
       ...(seed !== undefined ? { seed } : {}),
+      ...(hasBindings ? { bindings } : {}),
     };
     process.stderr.write(`mcp-recon: running enumerate → fuzz → classify → report...\n`);
     const result = await scan(client, opts);
@@ -361,7 +381,8 @@ async function runScan(args: string[]): Promise<number> {
     process.stderr.write(
       `mcp-recon: fuzz — ok=${totalOk} protocol_error=${totalProto} runtime_error=${totalRuntime}\n`,
     );
-    process.stderr.write(`mcp-recon: wrote 4 artefacts to ${outDir}/\n`);
+    const artefactCount = result.caveats !== undefined ? 5 : 4;
+    process.stderr.write(`mcp-recon: wrote ${artefactCount} artefacts to ${outDir}/\n`);
     return 0;
   } finally {
     await closeClient(client);
