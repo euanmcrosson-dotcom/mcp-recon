@@ -65,6 +65,8 @@ export {
   CAVEATS_SCHEMA,
 } from "./caveats/index.js";
 
+export { renderCaveatsMarkdown } from "./caveats/render.js";
+
 export {
   type ScanResult,
   type ScanOptions,
