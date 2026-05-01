@@ -1,0 +1,108 @@
+name: Classifier finding
+description: Report a classifier mistake — a missed confused-deputy pattern, a false-positive, or a wrong authority level.
+labels:
+  - classifier
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when the classifier produced a result that doesn't
+        match the actual risk shape of the tool. The two common cases:
+
+        1. **False negative** — the tool is risky (e.g. confused-deputy,
+           ambient authority) but the classifier marked it benign or
+           low-authority.
+        2. **False positive** — the tool is benign but the classifier
+           flagged it as destructive / privileged / shell, etc.
+
+        Either case is useful. We use these reports to expand the rule
+        table in `packages/mcp-recon-cli/src/classify/rules.ts`.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of finding
+      options:
+        - False negative (classifier under-rated the tool)
+        - False positive (classifier over-rated the tool)
+        - Wrong data class (right authority, wrong category)
+        - Wrong authority level (right category, wrong authority)
+        - Other / unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: inventory
+    attributes:
+      label: Tool inventory snippet
+      description: |
+        Paste the offending tool's entry from your `inventory.json` (just
+        the one tool — `name`, `description`, `inputSchema`). If you can
+        share the full inventory, even better.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: classification
+    attributes:
+      label: Observed classification
+      description: |
+        Paste the classifier's output for this tool from
+        `classification.json`. We need `data_class`, `authority`,
+        `confidence`, and any rule names the classifier cited.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected classification
+      description: |
+        What should the classifier have emitted? `data_class` +
+        `authority` + (optional) `confused_deputy: true|false`.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: |
+        Why is the expected classification correct? Cite the tool's actual
+        behavior, schema shape, or prior art (e.g. "this matches the
+        confused-deputy pattern in METHODOLOGY.md §X").
+    validations:
+      required: true
+
+  - type: input
+    id: server
+    attributes:
+      label: Server name (if public)
+      description: e.g. `@modelcontextprotocol/server-filesystem`. Skip if private.
+      placeholder: "@modelcontextprotocol/server-everything"
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: mcp-recon version
+      placeholder: v0.1.2
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_rule
+    attributes:
+      label: Proposed rule change (optional)
+      description: |
+        If you've thought about the fix, sketch the rule edit here — new
+        regex, new `data_class`, etc. Not required; the maintainer will
+        propose one if you don't.
+      render: ts
+    validations:
+      required: false

@@ -1,0 +1,70 @@
+name: Feature request
+description: Propose a new feature, CLI command, fuzz axis, or rule category.
+labels:
+  - enhancement
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please skim [`docs/SPEC.md`](../docs/SPEC.md) — it
+        lists what `mcp-recon` does and, more importantly, what it
+        explicitly **does not** do (the non-goals). If your idea is a
+        non-goal by design, the answer is most likely "no, but a separate
+        tool could." We'd rather say that quickly than burn cycles
+        re-litigating scope.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: |
+        What problem are you trying to solve? Describe the situation, not
+        the solution. ("I'm scanning servers X, Y, Z and the classifier
+        can't tell apart A from B" beats "add feature foo".)
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: |
+        How would you solve it? CLI flag, new command, new classifier
+        category, new fuzz axis, etc. Be concrete enough that a reviewer
+        can poke at it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: |
+        What else did you consider? Why is the proposed solution better?
+        ("Could be a downstream tool" / "could be a flag on existing
+        command" / "could be a separate `crates/` library".)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope (per docs/SPEC.md non-goals)
+      description: |
+        Where do you think this lands relative to the v0.1 spec?
+      options:
+        - In scope for v0.1
+        - In scope for v0.2 backlog
+        - Maybe in scope (please discuss)
+        - Out of scope per non-goals — filing for visibility
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Links, prior art, related issues, mockups.
+    validations:
+      required: false
