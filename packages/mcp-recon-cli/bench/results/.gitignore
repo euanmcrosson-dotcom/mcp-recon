@@ -1,0 +1,5 @@
+# Per-run bench results — only `baseline.json` is committed.
+# New runs land here as `v<git-sha>.json` and `latest.json`; ignore both.
+v*.json
+latest.json
+!baseline.json

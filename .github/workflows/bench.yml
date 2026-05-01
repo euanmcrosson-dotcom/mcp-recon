@@ -1,0 +1,78 @@
+name: bench
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+# Cancel in-flight runs from the same PR / branch when a new push lands.
+concurrency:
+  group: bench-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: run benchmarks
+        id: bench
+        run: |
+          set -euo pipefail
+          npm run bench --workspace=@mcp-recon/cli | tee bench-output.txt
+
+      - name: upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-${{ github.sha }}
+          path: |
+            packages/mcp-recon-cli/bench/results/
+            bench-output.txt
+
+      - name: comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const out = fs.readFileSync('bench-output.txt', 'utf8');
+            const baselinePath = 'packages/mcp-recon-cli/bench/results/baseline.json';
+            let baselineNote = '';
+            if (fs.existsSync(baselinePath)) {
+              const b = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
+              baselineNote = `_(baseline: ${b.git_sha} on ${b.platform}, node ${b.node})_`;
+            }
+            const body = [
+              '### mcp-recon bench',
+              '',
+              baselineNote,
+              '',
+              '<details><summary>full bench output</summary>',
+              '',
+              '```',
+              out,
+              '```',
+              '',
+              '</details>',
+              '',
+              '_This run does not gate the PR — it is published for visibility. Compare against `bench/results/baseline.json` for regressions._',
+            ].join('\n');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
