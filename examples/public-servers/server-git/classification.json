@@ -1,0 +1,119 @@
+{
+  "schema": "mcp-recon/v0.1/classification",
+  "scanned_at": "2026-05-01T01:18:48.451Z",
+  "server": {
+    "name": "mcp-git",
+    "version": "1.27.0"
+  },
+  "fuzz_informed": true,
+  "classifications": [
+    {
+      "tool": "git_status",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_status\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_diff_unstaged",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.7,
+      "rationale": "description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_diff_unstaged\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_diff_staged",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_diff_staged\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_diff",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.64,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40); schema: arg \"target\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_diff\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND arg.target starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_commit",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_commit\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_add",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.82,
+      "rationale": "description match \"\\b(file|directory|folder|filesystem|filepath|dirent)\\b\" → filesystem/read (0.50); schema: arg \"repo_path\" is path-shaped → filesystem (0.40); schema: arg \"files\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_add\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_reset",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_reset\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_log",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_log\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_create_branch",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_create_branch\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_checkout",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_checkout\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_show",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_show\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    },
+    {
+      "tool": "git_branch",
+      "data_class": "filesystem",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.4,
+      "rationale": "schema: arg \"repo_path\" is path-shaped → filesystem (0.40)",
+      "recommended_caveat": "tool == \"git_branch\" AND caller == \"<your-caller-id>\" AND arg.repo_path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+    }
+  ]
+}

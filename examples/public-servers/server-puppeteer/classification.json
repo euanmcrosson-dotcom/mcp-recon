@@ -1,0 +1,74 @@
+{
+  "schema": "mcp-recon/v0.1/classification",
+  "scanned_at": "2026-05-01T01:28:43.378Z",
+  "server": {
+    "name": "example-servers/puppeteer",
+    "version": "0.1.0"
+  },
+  "fuzz_informed": true,
+  "classifications": [
+    {
+      "tool": "puppeteer_navigate",
+      "data_class": "network",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.73,
+      "rationale": "description match \"\\b(http|https|fetch|request|webhook|api[_-]?call|url|origin)\\b\" → network/read (0.50); schema: arg \"url\" is URL-shaped → network (0.40); fuzz: 3/63 accepted → +0.1",
+      "recommended_caveat": "tool == \"puppeteer_navigate\" AND caller == \"<your-caller-id>\" AND arg.url == \"https://<your-allowed-origin>\" AND now <= @<your-cap-expiry>  // READ network; allowlist exact origins (capnagent round 05/09)"
+    },
+    {
+      "tool": "puppeteer_screenshot",
+      "data_class": "messaging",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.55,
+      "rationale": "description match \"\\b(email|notification|message|chat|page|alert)\\b\" → messaging/read (0.50); fuzz: 58/94 accepted → +0.1; description has side-effect verb → escalate one step; user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"puppeteer_screenshot\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE messaging; bound recipient list + caller"
+    },
+    {
+      "tool": "puppeteer_click",
+      "data_class": "messaging",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.5,
+      "rationale": "description match \"\\b(email|notification|message|chat|page|alert)\\b\" → messaging/read (0.50); description has side-effect verb → escalate one step; user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"puppeteer_click\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE messaging; bound recipient list + caller"
+    },
+    {
+      "tool": "puppeteer_fill",
+      "data_class": "unknown",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0,
+      "rationale": "no rules fired",
+      "recommended_caveat": "tool == \"puppeteer_fill\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ unclassified — operator must review"
+    },
+    {
+      "tool": "puppeteer_select",
+      "data_class": "messaging",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.5,
+      "rationale": "description match \"\\b(email|notification|message|chat|page|alert)\\b\" → messaging/read (0.50); description has side-effect verb → escalate one step; user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"puppeteer_select\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE messaging; bound recipient list + caller"
+    },
+    {
+      "tool": "puppeteer_hover",
+      "data_class": "messaging",
+      "authority_level": "write",
+      "confused_deputy_candidate": true,
+      "confidence": 0.5,
+      "rationale": "description match \"\\b(email|notification|message|chat|page|alert)\\b\" → messaging/read (0.50); description has side-effect verb → escalate one step; user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool == \"puppeteer_hover\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // WRITE messaging; bound recipient list + caller"
+    },
+    {
+      "tool": "puppeteer_evaluate",
+      "data_class": "shell",
+      "authority_level": "privileged",
+      "confused_deputy_candidate": true,
+      "confidence": 0.55,
+      "rationale": "description match \"\\b(execute|shell|subprocess|invoke|launch[_-]?process)\\b\" → shell/privileged (0.50); fuzz: 3/30 accepted → +0.1; user-controllable string arg + non-read authority → confused-deputy candidate",
+      "recommended_caveat": "tool != \"puppeteer_evaluate\"  // PRIVILEGED — recommend deny outright; operator should hand-write argv allowlist if exposing"
+    }
+  ]
+}

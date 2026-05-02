@@ -1,0 +1,20 @@
+{
+  "schema": "mcp-recon/v0.1/classification",
+  "scanned_at": "2026-05-01T01:19:11.727Z",
+  "server": {
+    "name": "mcp-fetch",
+    "version": "1.27.0"
+  },
+  "fuzz_informed": true,
+  "classifications": [
+    {
+      "tool": "fetch",
+      "data_class": "network",
+      "authority_level": "read",
+      "confused_deputy_candidate": false,
+      "confidence": 0.91,
+      "rationale": "name match \"\\b(http[_-]?(get|post|put|delete)|fetch|request)\\b\" → network/read (0.70); description match \"\\b(http|https|fetch|request|webhook|api[_-]?call|url|origin)\\b\" → network/read (0.50); schema: arg \"url\" is URL-shaped → network (0.40)",
+      "recommended_caveat": "tool == \"fetch\" AND caller == \"<your-caller-id>\" AND arg.url == \"https://<your-allowed-origin>\" AND now <= @<your-cap-expiry>  // READ network; allowlist exact origins (capnagent round 05/09)"
+    }
+  ]
+}
