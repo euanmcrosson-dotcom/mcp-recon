@@ -27,6 +27,7 @@ import {
   openClient,
   parseServerSpec,
   planCaveats,
+  renderCaveatsMarkdown,
   renderMarkdown,
   scan,
 } from "../index.js";
@@ -46,7 +47,7 @@ function usage(): never {
       "  mcp-recon fuzz <server-spec> [--budget=N] [--seed=N]",
       "  mcp-recon classify <inventory.json> [--fuzz=<fuzz.json>]",
       "  mcp-recon report <inventory.json> <classification.json> [--fuzz=<fuzz.json>]",
-      "  mcp-recon caveats <classification.json> [--caller=ID] [--sandbox-prefix=PATH] [--expiry=ISO]",
+      "  mcp-recon caveats <classification.json> [--caller=ID] [--sandbox-prefix=PATH] [--expiry=ISO] [--markdown]",
       "  mcp-recon scan <server-spec> --out=<dir> [--budget=N] [--seed=N]",
       "",
       "Server-spec forms:",
@@ -59,6 +60,7 @@ function usage(): never {
       "  mcp-recon classify inv.json --fuzz=fz.json > class.json",
       "  mcp-recon report inv.json class.json --fuzz=fz.json > report.md",
       "  mcp-recon caveats class.json --caller=agent:planner --sandbox-prefix=/srv/sb --expiry=2026-12-31T23:59:59Z > caveats.json",
+      "  mcp-recon caveats class.json --caller=agent:planner --sandbox-prefix=/srv/sb --expiry=2026-12-31T23:59:59Z --markdown > caveats.md",
       "",
     ].join("\n"),
   );
@@ -251,9 +253,12 @@ function readJson<T>(filePath: string): T {
 
 function runCaveats(args: string[]): number {
   let classificationPath: string | undefined;
+  let markdown = false;
   const bindings: CaveatBindings = {};
   for (const arg of args) {
-    if (arg.startsWith("--caller=")) {
+    if (arg === "--markdown") {
+      markdown = true;
+    } else if (arg.startsWith("--caller=")) {
       bindings.caller = arg.slice("--caller=".length);
     } else if (arg.startsWith("--sandbox-prefix=")) {
       bindings.sandbox_prefix = arg.slice("--sandbox-prefix=".length);
@@ -292,7 +297,13 @@ function runCaveats(args: string[]): number {
   process.stderr.write(
     `mcp-recon: ${result.summary.total} plans (${result.summary.ready} ready, ${result.summary.flagged} flagged) — schema=${CAVEATS_SCHEMA}\n`,
   );
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (markdown) {
+    const md = renderCaveatsMarkdown(result);
+    process.stdout.write(md);
+    if (!md.endsWith("\n")) process.stdout.write("\n");
+  } else {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  }
   return 0;
 }
 
