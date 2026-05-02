@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/euanmcrosson-dotcom/mcp-recon/master/schemas/caveats.v0.1.json",
+  "title": "mcp-recon v0.1 caveats document",
+  "description": "Wire-format JSON Schema for the artifact emitted by `mcp-recon caveats`. The TypeScript interface `CaveatsResults` (packages/mcp-recon-cli/src/caveats/types.ts on `feat/caveats-command` / PR #1) is the source of truth for the shape; this JSON Schema is downstream and exists so any-language consumer can validate documents tagged `mcp-recon/v0.1/caveats`. The caveats document is the importable artifact that bridges mcp-recon to capnagent: machine-readable issuance plans with placeholder substitution applied (or flagged when bindings are missing).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scanned_at", "server", "bindings", "plans", "summary"],
+  "properties": {
+    "schema": {
+      "description": "Schema-version tag. The single enforceable invariant of the document.",
+      "const": "mcp-recon/v0.1/caveats"
+    },
+    "scanned_at": {
+      "description": "ISO-8601 timestamp at which `mcp-recon caveats` produced the document.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "bindings": { "$ref": "#/$defs/CaveatBindings" },
+    "plans": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/CaveatPlan" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "ready", "flagged"],
+      "properties": {
+        "total": {
+          "description": "Total plans (one per classified tool).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "ready": {
+          "description": "Plans with `flagged === false` — directly issuable.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "flagged": {
+          "description": "Plans with `flagged === true` — review required.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "DataClass": {
+      "type": "string",
+      "enum": [
+        "filesystem",
+        "network",
+        "shell",
+        "payments",
+        "messaging",
+        "system",
+        "metadata",
+        "unknown"
+      ]
+    },
+    "AuthorityLevel": {
+      "type": "string",
+      "enum": ["read", "write", "destructive", "privileged"]
+    },
+    "FlagReason": {
+      "description": "Why a plan was flagged (zero or more reasons).",
+      "type": "string",
+      "enum": [
+        "classification_unknown",
+        "low_confidence",
+        "cdc_without_arg_constraint",
+        "unsubstituted_placeholder"
+      ]
+    },
+    "CaveatBindings": {
+      "description": "Operator-supplied bindings for placeholder tokens. Any binding may be omitted; omitted bindings leave their placeholders unsubstituted AND flag the affected plan for review.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "caller": {
+          "description": "Substitutes `<your-caller-id>`.",
+          "type": "string"
+        },
+        "sandbox_prefix": {
+          "description": "Substitutes `<your-sandbox-prefix>`.",
+          "type": "string"
+        },
+        "expiry": {
+          "description": "Substitutes `<your-cap-expiry>`. ISO-8601 string.",
+          "type": "string"
+        },
+        "per_tool_overrides": {
+          "description": "Optional per-tool caveat overrides. Each entry's caveats are appended after the substituted ones.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "CaveatPlan": {
+      "description": "One issuance plan per classified tool.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "data_class",
+        "authority_level",
+        "confused_deputy_candidate",
+        "purpose",
+        "caveats",
+        "flagged",
+        "flag_reasons"
+      ],
+      "properties": {
+        "tool": {
+          "description": "Tool name from the classification.",
+          "type": "string"
+        },
+        "data_class": { "$ref": "#/$defs/DataClass" },
+        "authority_level": { "$ref": "#/$defs/AuthorityLevel" },
+        "confused_deputy_candidate": { "type": "boolean" },
+        "purpose": {
+          "description": "Operator-readable purpose string for the issuer.",
+          "type": "string"
+        },
+        "caveats": {
+          "description": "Caveats to apply to the issuer, one DSL predicate per array entry.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "flagged": {
+          "description": "True if the plan needs review before issuance.",
+          "type": "boolean"
+        },
+        "flag_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FlagReason" }
+        },
+        "comment": {
+          "description": "Free-form trailing comment from the classifier's `recommended_caveat`.",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema": "mcp-recon/v0.1/caveats",
+      "scanned_at": "2026-04-30T12:00:00.000Z",
+      "server": { "name": "secure-filesystem-server", "version": "0.2.0" },
+      "bindings": {
+        "caller": "agent-sandbox-1",
+        "sandbox_prefix": "/tmp/sandbox",
+        "expiry": "2026-05-01T00:00:00Z"
+      },
+      "plans": [
+        {
+          "tool": "read_file",
+          "data_class": "filesystem",
+          "authority_level": "read",
+          "confused_deputy_candidate": false,
+          "purpose": "READ filesystem",
+          "caveats": [
+            "tool == \"read_file\"",
+            "caller == \"agent-sandbox-1\"",
+            "arg.path starts_with \"/tmp/sandbox/\"",
+            "now <= @2026-05-01T00:00:00Z"
+          ],
+          "flagged": false,
+          "flag_reasons": [],
+          "comment": "READ filesystem; bound the sandbox prefix tightly"
+        }
+      ],
+      "summary": { "total": 1, "ready": 1, "flagged": 0 }
+    }
+  ]
+}

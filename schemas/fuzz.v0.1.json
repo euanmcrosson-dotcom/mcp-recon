@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/euanmcrosson-dotcom/mcp-recon/master/schemas/fuzz.v0.1.json",
+  "title": "mcp-recon v0.1 fuzz document",
+  "description": "Wire-format JSON Schema for the artifact emitted by `mcp-recon fuzz`. The TypeScript interface `FuzzResults` (packages/mcp-recon-cli/src/fuzz/types.ts) is the source of truth for the shape; this JSON Schema is downstream and exists so any-language consumer can validate documents tagged `mcp-recon/v0.1/fuzz`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scanned_at", "server", "seed", "budget", "summary", "calls"],
+  "properties": {
+    "schema": {
+      "description": "Schema-version tag. The single enforceable invariant of the document.",
+      "const": "mcp-recon/v0.1/fuzz"
+    },
+    "scanned_at": {
+      "description": "ISO-8601 timestamp at which `mcp-recon fuzz` produced the document.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "seed": {
+      "description": "Deterministic PRNG seed; same seed + same inventory => identical fuzz corpus.",
+      "type": "integer"
+    },
+    "budget": {
+      "description": "Maximum number of fuzz calls per run, as configured.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "summary": {
+      "description": "Per-tool counts; one entry per tool that the fuzzer attempted.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/FuzzToolSummary" }
+    },
+    "calls": {
+      "description": "Every recorded fuzz interaction in the order the fuzzer issued them.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/FuzzCall" }
+    }
+  },
+  "$defs": {
+    "FuzzAxis": {
+      "description": "Six categorical axes (per docs/SPEC.md §\"Fuzzing strategy\").",
+      "type": "string",
+      "enum": [
+        "boundary_values",
+        "type_confusion",
+        "encoding_tricks",
+        "path_traversal",
+        "url_hostility",
+        "schema_violation"
+      ]
+    },
+    "FuzzOutcome": {
+      "description": "What the underlying tool / transport did with the fuzz input. Discriminated union on `kind`.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "snippet"],
+          "properties": {
+            "kind": { "const": "ok" },
+            "snippet": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "message"],
+          "properties": {
+            "kind": { "const": "protocol_error" },
+            "message": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "message"],
+          "properties": {
+            "kind": { "const": "runtime_error" },
+            "message": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "FuzzCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "axis", "rationale", "arguments", "outcome"],
+      "properties": {
+        "tool": { "type": "string" },
+        "axis": { "$ref": "#/$defs/FuzzAxis" },
+        "rationale": {
+          "description": "Human-readable reason this fuzz input was chosen.",
+          "type": "string"
+        },
+        "arguments": {
+          "description": "Arguments dispatched to the tool. Free-form record — the v0.1 contract does not constrain values.",
+          "type": "object"
+        },
+        "outcome": { "$ref": "#/$defs/FuzzOutcome" }
+      }
+    },
+    "FuzzToolSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "total", "ok", "protocol_error", "runtime_error"],
+      "properties": {
+        "tool": { "type": "string" },
+        "total": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "integer", "minimum": 0 },
+        "protocol_error": { "type": "integer", "minimum": 0 },
+        "runtime_error": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema": "mcp-recon/v0.1/fuzz",
+      "scanned_at": "2026-04-29T22:35:27.180Z",
+      "server": { "name": "secure-filesystem-server", "version": "0.2.0" },
+      "seed": 12648430,
+      "budget": 200,
+      "summary": [
+        { "tool": "read_file", "total": 73, "ok": 0, "protocol_error": 73, "runtime_error": 0 }
+      ],
+      "calls": [
+        {
+          "tool": "read_file",
+          "axis": "boundary_values",
+          "rationale": "boundary string for arg \"path\": empty string",
+          "arguments": { "path": "" },
+          "outcome": { "kind": "protocol_error", "message": "Access denied" }
+        }
+      ]
+    }
+  ]
+}
