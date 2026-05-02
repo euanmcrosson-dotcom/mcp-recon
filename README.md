@@ -1,7 +1,10 @@
 # mcp-recon
 
+[![CI](https://github.com/euanmcrosson-dotcom/mcp-recon/actions/workflows/ci.yml/badge.svg)](https://github.com/euanmcrosson-dotcom/mcp-recon/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange.svg)](docs/SPEC.md)
+[![Tests: 68 passing](https://img.shields.io/badge/tests-68_passing-success.svg)](#tests)
+[![Companion: capnagent](https://img.shields.io/badge/companion-capnagent-9cf.svg)](https://github.com/euanmcrosson-dotcom/capnagent)
 
 > **Reverse-engineer any MCP server's tool surface in 30 seconds.**
 > Connects to an MCP server (stdio or HTTP), enumerates its tools,
@@ -17,14 +20,63 @@ is the recon side of that gap. [capnagent](https://github.com/euanmcrosson-dotco
 is the defensive side: take a recon report, derive a tight
 capability caveat, deny everything outside it.
 
-> **Status:** v0.1.1 shipped 2026-04-30. Public dataset of every
+> **Status:** v0.1.2 shipped 2026-04-30. Public dataset of every
 > stdio TypeScript MCP server in Anthropic's `@modelcontextprotocol/*`
 > namespace audited. See [`docs/WRITEUP.md`](docs/WRITEUP.md) for the
 > headline findings (DoS surface on `everything`,
 > missing-bounds finding on `filesystem` example wrapper, full
 > server-maturity ranking).
 
+## Contents
+
+- [At a glance](#at-a-glance)
+- [What you get](#what-you-get)
+- [Command cheatsheet](#command-cheatsheet)
+- [Sample output](#sample-output)
+- [Recon → capnagent in one pipe](#recon--capnagent-in-one-pipe)
+- [Why this exists](#why-this-exists)
+- [Installation](#installation)
+- [How it compares](#how-it-compares)
+- [What this is NOT](#what-this-is-not)
+- [Tests](#tests)
+- [Companion project — capnagent](#companion-project--capnagent)
+- [License](#license)
+
+## At a glance
+
+| Coverage | Surface | Performance |
+|---|---|---|
+| **4 / 4** Anthropic reference servers scanned | **5** commands · **4** schema-tagged artefacts | scan budget=200 in <60s on 14-tool server |
+| **37 tools classified** across the public dataset | enumerate · fuzz · classify · report · scan | deterministic (seeded PRNG, default `0xC0FFEE`) |
+| **1374 fuzz calls** across the dataset (1 confirmed DoS finding) | rules-based, not LLM-mediated | <256MB memory on 100-tool server |
+
+Maps tools to **OWASP LLM01 / LLM06 / LLM08** and **MITRE ATLAS** categories. Every output ships with a copy-pasteable [capnagent](https://github.com/euanmcrosson-dotcom/capnagent) caveat per tool. Reproducibility contract in
+[capnagent's `docs/EVALUATION.md`](https://github.com/euanmcrosson-dotcom/capnagent/blob/master/docs/EVALUATION.md).
+
 ## What you get
+
+Run `mcp-recon scan` against any MCP server (stdio or HTTP) and get a
+folder of evidence: a tool inventory, a fuzz transcript, a
+classification, and a Markdown threat profile that a security reviewer
+or developer-on-call can actually read. The JSON files are the
+machine-parseable evidence the writeup links to. Run against any of
+the 4 servers in the public dataset and your output matches
+`examples/public-servers/server-<name>/` byte-for-byte.
+
+## Command cheatsheet
+
+```bash
+mcp-recon enumerate <server-spec>                                # → inventory.json
+mcp-recon fuzz      <server-spec> [--budget=N] [--seed=N]        # → fuzz.json
+mcp-recon classify  <inventory.json> [--fuzz=<fuzz.json>]        # → classification.json
+mcp-recon report    <inventory.json> <classification.json> [--fuzz=<fuzz.json>]  # → report.md
+mcp-recon scan      <server-spec> --out=<dir> [--budget=N] [--seed=N]            # → 4 artefacts
+```
+
+Server-spec forms: `stdio:<command> [args...]` (spawn process, talk
+over stdio) or `http://host:port` (HTTP transport).
+
+## Sample output
 
 ```bash
 $ mcp-recon scan "stdio:npx -y @modelcontextprotocol/server-filesystem /tmp" \
@@ -38,14 +90,44 @@ $ ls ./reports/filesystem/
 inventory.json   fuzz.json   classification.json   report.md
 ```
 
-Run against any of the 4 servers in the public dataset and your
-output matches `examples/public-servers/server-<name>/` byte-for-
-byte. See [`docs/EVALUATION.md` (in capnagent)](https://github.com/euanmcrosson-dotcom/capnagent/blob/master/docs/EVALUATION.md)
-for the reproducibility contract.
+A snippet from the resulting `classification.json` — every tool gets
+a class, an authority level, a confused-deputy verdict, and a
+copy-pasteable capnagent caveat:
 
-The `scratch/report.md` is the deliverable a security reviewer or
-developer-on-call actually reads. The JSON files are the machine-
-parseable evidence the writeup links to.
+```json
+{
+  "tool": "edit_file",
+  "data_class": "filesystem",
+  "authority_level": "write",
+  "confused_deputy_candidate": true,
+  "confidence": 0.91,
+  "rationale": "name match \"\\b(write[_-]?file|edit[_-]?file|create[_-]?directory|move[_-]?file)\\b\" → filesystem/write (0.70); description match → filesystem/read (0.50); schema: arg \"path\" is path-shaped → filesystem (0.40); user-controllable string arg + non-read authority → confused-deputy candidate",
+  "recommended_caveat": "tool == \"edit_file\" AND caller == \"<your-caller-id>\" AND arg.path starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // WRITE filesystem"
+}
+```
+
+The full headline findings — including the `everything` server's DoS
+surface and the `filesystem` wrapper's missing-bounds — are in
+[`docs/WRITEUP.md`](docs/WRITEUP.md).
+
+## Recon → capnagent in one pipe
+
+```
+   ┌──────────────┐    inventory.json     ┌──────────────┐
+   │              │    fuzz.json          │              │
+   │  MCP server  │ ──▶  classification ──▶│  capnagent   │ ──▶ deny anything
+   │              │      .json            │   issuer     │     outside scope
+   │              │      report.md        │              │
+   └──────────────┘                       └──────────────┘
+        ▲                                       │
+        │                                       ▼
+        └────────── scoped caller ◀──────  signed capability
+```
+
+mcp-recon documents the tool surface; capnagent enforces the bound.
+Each project stands alone. Together they're a single security
+posture for any MCP-shaped agent. Run mcp-recon first, paste the
+suggested caveats into your capnagent issuer, ship.
 
 ### From recon to a capnagent issuer in one pipe
 
@@ -80,7 +162,7 @@ classifier didn't constrain.
 ## Why this exists
 
 **For the developer adopting MCP.** Before you wire a third-party
-MCP server into your agent, run mcp-recon against it. You get a
+MCP server into your agent, run mcp-recon against it. You get an
 honest threat profile in 30 seconds — what does this thing
 *actually* let an agent do, and what's the smallest cap that
 preserves utility?
@@ -111,6 +193,22 @@ npx tsx packages/mcp-recon-cli/src/bin/recon.ts scan \
   --out=./reports/filesystem --budget=200
 ```
 
+## How it compares
+
+|   | mcp-recon | [NVIDIA garak](https://github.com/NVIDIA/garak) | Burp / ZAP | manual review |
+|---|---|---|---|---|
+| **Scope** | MCP server tool surfaces | model-behavior testing | HTTP fuzzing | everything |
+| **Output** | structured JSON + Markdown | reports | proxy logs | human prose |
+| **Determinism** | yes (seeded PRNG) | partial | no | no |
+| **LLM in the loop** | no (rules-based) | yes | no | yes |
+| **OWASP LLM / MITRE ATLAS mapping** | yes (per-tool) | partial | no | author-dependent |
+| **Companion enforcement** | [capnagent](https://github.com/euanmcrosson-dotcom/capnagent) | none | none | none |
+
+mcp-recon is **not** a replacement for any of those — it's the
+piece nobody else is building: a deterministic, schema-aware
+characterization of an MCP server's tool surface, in a format
+that wires straight into a capability-bounded enforcement layer.
+
 ## What this is NOT
 
 - **Not a replacement for capnagent.** mcp-recon documents what's
@@ -122,6 +220,22 @@ npx tsx packages/mcp-recon-cli/src/bin/recon.ts scan \
   to characterize handling, not actual exploits.
 - **Not a proxy / MITM tool.** Out of scope. See
   [`docs/SPEC.md`](docs/SPEC.md) §"What v0.1 does NOT do."
+
+## Tests
+
+The workspace has **68 unit + property-based tests** passing today
+(`npm test`), covering schema parsing, the seeded PRNG, fuzz
+generators along all six adversarial axes, the classification
+rules, the Markdown report renderer, and end-to-end `scan` flow.
+Two additional integration test files (`enumerate.integration.test.ts`,
+`fuzz.integration.test.ts`) exercise live transport against a
+locally-spawned MCP server when the dev environment provides one.
+
+```bash
+npm test           # all packages, vitest
+npm run typecheck  # tsc --noEmit, strict mode
+npm run lint       # biome check
+```
 
 ## Companion project — capnagent
 
