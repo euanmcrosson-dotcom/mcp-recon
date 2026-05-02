@@ -47,6 +47,36 @@ The `scratch/report.md` is the deliverable a security reviewer or
 developer-on-call actually reads. The JSON files are the machine-
 parseable evidence the writeup links to.
 
+### From recon to a capnagent issuer in one pipe
+
+`classification.json` ships a copy-pasteable caveat per tool, but
+manual paste is its own foot-gun. The `caveats` command produces a
+machine-readable issuance plan ready to feed straight into a capnagent
+issuer:
+
+```bash
+$ mcp-recon caveats ./reports/filesystem/classification.json \
+    --caller=agent:planner \
+    --sandbox-prefix=/var/agent-sandbox/tenant-42 \
+    --expiry=2026-12-31T23:59:59Z \
+    > ./reports/filesystem/caveats.json
+
+mcp-recon: 14 plans (14 ready, 0 flagged) — schema=mcp-recon/v0.1/caveats
+```
+
+The output document (schema `mcp-recon/v0.1/caveats`) is one entry per
+tool, with `caveats: string[]` already split into individual capnagent
+DSL predicates and operator bindings substituted. Plans get flagged
+with a structured reason set (`classification_unknown`, `low_confidence`,
+`cdc_without_arg_constraint`, `unsubstituted_placeholder`) so the
+review surface is machine-checkable.
+
+Run with no bindings to get a "review pass" — every plan is flagged,
+but you can see exactly which placeholders need binding before
+committing values. Per-tool overrides (`per_tool_overrides` in the
+library API) let you tighten confused-deputy candidates the
+classifier didn't constrain.
+
 ## Why this exists
 
 **For the developer adopting MCP.** Before you wire a third-party

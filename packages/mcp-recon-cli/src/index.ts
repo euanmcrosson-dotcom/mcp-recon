@@ -57,6 +57,15 @@ export {
 } from "./report/index.js";
 
 export {
+  type CaveatBindings,
+  type CaveatPlan,
+  type CaveatsResults,
+  type FlagReason,
+  planCaveats,
+  CAVEATS_SCHEMA,
+} from "./caveats/index.js";
+
+export {
   type ScanResult,
   type ScanOptions,
   scan,
