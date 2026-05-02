@@ -25,8 +25,12 @@ export {
 export {
   type ToolInventory,
   type EnumeratedTool,
+  type EnumerateOptions,
   enumerate,
   INVENTORY_SCHEMA,
+  DEFAULT_ENUMERATE_TIMEOUT_MS,
+  DEFAULT_MAX_DESCRIPTION_CHARS,
+  TRUNCATION_MARKER,
 } from "./enumerate.js";
 
 export {
