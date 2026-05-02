@@ -101,6 +101,14 @@ function pickType(declared: unknown): SchemaType | "unknown" {
 }
 
 function looksPathy(argName: string): boolean {
+  // Suppress when the arg name carries a non-path semantic that the
+  // path-name list (`source`, `target`, `destination`, ...) would otherwise
+  // false-positive on. Canonical case: `source_timezone` / `target_timezone`
+  // on `mcp-server-time` (F006). Add additional stop words here as new
+  // false-positive shapes surface.
+  if (/(^|_)(timezone|tz|zone|region|locale|currency|country|language)($|_|s$)/i.test(argName)) {
+    return false;
+  }
   return /(^|_)(path|file|dir|directory|src|source|destination|dest|target)($|_|s$)/i.test(
     argName,
   );
