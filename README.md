@@ -193,6 +193,18 @@ npx tsx packages/mcp-recon-cli/src/bin/recon.ts scan \
   --out=./reports/filesystem --budget=200
 ```
 
+> **Windows / Git Bash users:** prefix path-shaped flags with `MSYS_NO_PATHCONV=1` to prevent leading-slash path mangling. Example: `MSYS_NO_PATHCONV=1 mcp-recon caveats classification.json --sandbox-prefix=/var/sandbox --expiry=2026-12-31T23:59:59Z`
+
+## Documentation
+
+- [`docs/SPEC.md`](docs/SPEC.md) — v0.1 surface, server-spec syntax, output schemas
+- [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) — classifier rules, fuzz axes, signals, falsifiability
+- [`docs/WRITEUP.md`](docs/WRITEUP.md) — public-dataset findings + headline observations
+- [`schemas/`](schemas/) — formal JSON Schema files for the four wire formats
+- [`findings/`](findings/) — corpus of documented findings (F001–F006)
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting policy
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to add classifier rules, fuzz axes, dataset entries
+
 ## How it compares
 
 |   | mcp-recon | [NVIDIA garak](https://github.com/NVIDIA/garak) | Burp / ZAP | manual review |
