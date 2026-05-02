@@ -1,0 +1,99 @@
+header:
+  schema-version: 1.0.0
+  expiration-date: '2027-05-02T00:00:00Z'
+  last-updated: '2026-05-02'
+  last-reviewed: '2026-05-02'
+  project-url: https://github.com/euanmcrosson-dotcom/mcp-recon
+  project-release: '0.0.1'
+  changelog: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/CHANGELOG.md
+  license: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/LICENSE
+
+project-lifecycle:
+  status: active
+  roadmap: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/README.md
+  bug-fixes-only: false
+  core-maintainers:
+    - https://github.com/euanmcrosson-dotcom
+  release-cycle: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/CHANGELOG.md
+  release-process: >-
+    Releases are tagged on master after CI passes. Pre-release versions
+    (0.0.x, 0.1.x) ship under a relaxed SLA; 0.2.0 onwards follows the
+    supported-versions policy in SECURITY.md.
+
+contribution-policy:
+  accepts-pull-requests: true
+  accepts-automated-pull-requests: true
+  contributing-policy: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/CONTRIBUTING.md
+
+documentation:
+  - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/README.md
+  - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/CONTRIBUTING.md
+  - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/SECURITY.md
+
+distribution-points:
+  - https://github.com/euanmcrosson-dotcom/mcp-recon
+
+security-artifacts:
+  threat-model:
+    threat-model-created: false
+    evidence-url:
+      - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/SECURITY.md
+  self-assessment:
+    self-assessment-created: false
+    evidence-url:
+      - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/SECURITY.md
+
+security-testing:
+  - tool-type: sca
+    tool-name: Dependabot
+    tool-version: latest
+    integration:
+      ad-hoc: false
+      ci: true
+      before-release: true
+    tool-rulesets:
+      - default
+  - tool-type: sast
+    tool-name: CodeQL
+    tool-version: latest
+    integration:
+      ad-hoc: false
+      ci: true
+      before-release: true
+    tool-rulesets:
+      - default
+
+security-contacts:
+  - type: email
+    value: euanmcrosson@gmail.com
+    primary: true
+
+vulnerability-reporting:
+  accepts-vulnerability-reports: true
+  email-contact: euanmcrosson@gmail.com
+  security-policy: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/SECURITY.md
+  bug-bounty-available: false
+  comment: >-
+    Preferred channel is a private security advisory on GitHub
+    (https://github.com/euanmcrosson-dotcom/mcp-recon/security/advisories/new).
+    See SECURITY.md for in-scope vs out-of-scope categories, the third-party
+    MCP server reporting flow, and the supported-versions table.
+
+dependencies:
+  third-party-packages: true
+  dependencies-lists:
+    - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/package-lock.json
+    - https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/Cargo.lock
+  dependencies-lifecycle:
+    policy-url: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/SECURITY.md
+    comment: >-
+      Locked via package-lock.json (npm) and Cargo.lock (Rust workspace).
+      Supply-chain compromises observable from either lockfile are in scope
+      per SECURITY.md.
+  env-dependencies-policy:
+    policy-url: https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/SECURITY.md
+    comment: >-
+      mcp-recon executes adversarial input against third-party MCP servers
+      under test. Recon-process isolation (transport-layer integrity, child
+      process control, error-handling paths) is one of the three load-bearing
+      legs of the security model documented in SECURITY.md.

@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: >-
+  If you use mcp-recon in your research, please cite it using the metadata
+  below. Findings emitted against specific MCP servers should additionally
+  cite the upstream server they were discovered against.
+title: mcp-recon
+abstract: >-
+  A reconnaissance and classification tool for the Model Context Protocol
+  (MCP) ecosystem. Enumerates tool surfaces, fuzzes them with schema-aware
+  adversarial inputs, classifies tools by reviewer-relevant risk
+  (privileged, confused-deputy, etc.), and emits capability caveats that
+  downstream issuers (e.g. capnagent) accept. Companion to capnagent on
+  the defensive side.
+type: software
+authors:
+  - given-names: Euan
+    family-names: Crosson
+    email: euanmcrosson@gmail.com
+    alias: euanmcrosson-dotcom
+license: Apache-2.0
+repository-code: https://github.com/euanmcrosson-dotcom/mcp-recon
+url: https://github.com/euanmcrosson-dotcom/mcp-recon
+version: 0.0.1
+date-released: '2026-05-02'
+keywords:
+  - mcp
+  - model-context-protocol
+  - security
+  - reconnaissance
+  - fuzzing
+  - capability-security
+  - capnagent
