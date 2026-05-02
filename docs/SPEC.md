@@ -148,11 +148,24 @@ detection.
 ## Performance targets
 
 - **Enumerate:** finishes in < 5 seconds against any reasonable
-  server.
+  server. *(Not yet covered by the bench suite — transport-bound.)*
 - **Fuzz with default budget:** finishes in < 60 seconds for a
-  10-tool server.
+  10-tool server. *(Not yet covered by the bench suite —
+  transport-bound + budget-driven.)*
 - **Classify + report:** O(tools), < 1 second.
-- **Memory:** under 256 MB even on a 100-tool server.
+  **Confirmed by `bench/run.ts`:** at the baseline (commit
+  `dc98e83`, Node 24, win32/x64), `classify` of the 14-tool
+  filesystem reference server runs in ~0.25 ms, and the
+  synthetic-scale sweep shows linear growth — 100 tools in ~1 ms,
+  1 000 tools in ~11 ms, 10 000 tools in ~94 ms. See
+  `packages/mcp-recon-cli/bench/RESULTS.md`.
+- **Memory:** under 256 MB even on a 100-tool server. *(Not yet
+  covered by the bench suite — pending an allocation profile.)*
+
+The benchmark harness lives at `packages/mcp-recon-cli/bench/` and
+runs via `npm run bench --workspace=@mcp-recon/cli`. Results are
+written as JSON under `bench/results/v<git-sha>.json` so future PRs
+can diff against `bench/results/baseline.json`.
 
 ## Determinism
 

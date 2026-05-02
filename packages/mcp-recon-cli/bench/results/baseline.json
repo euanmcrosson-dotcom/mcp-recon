@@ -1,0 +1,226 @@
+{
+  "schema": "mcp-recon/v0.1/bench-results",
+  "git_sha": "dc98e83",
+  "node": "v24.14.1",
+  "platform": "win32/x64",
+  "started_at": "2026-05-01T01:15:54.271Z",
+  "wall_clock_seconds": 15.345,
+  "rows": [
+    {
+      "group": "classify",
+      "task": "classify(server-filesystem)",
+      "meanMs": 0.24582576204522855,
+      "medianMs": 0.22469999999998436,
+      "p95Ms": 0.34809999999993124,
+      "opsPerSec": 4067.9218958996407,
+      "samples": 1017
+    },
+    {
+      "group": "classify",
+      "task": "classify(server-everything)",
+      "meanMs": 0.07852320979899385,
+      "medianMs": 0.06669999999985521,
+      "p95Ms": 0.13720000000012078,
+      "opsPerSec": 12735.088167687376,
+      "samples": 3184
+    },
+    {
+      "group": "classify",
+      "task": "classify(server-memory)",
+      "meanMs": 0.044815934755334616,
+      "medianMs": 0.03870000000006257,
+      "p95Ms": 0.07389999999986685,
+      "opsPerSec": 22313.49196350225,
+      "samples": 5579
+    },
+    {
+      "group": "classify",
+      "task": "classify(server-sequential-thinking)",
+      "meanMs": 0.05938152457848117,
+      "medianMs": 0.05540000000019063,
+      "p95Ms": 0.07899999999972351,
+      "opsPerSec": 16840.2547273497,
+      "samples": 4211
+    },
+    {
+      "group": "classify+fuzz",
+      "task": "classify+fuzz(server-filesystem)",
+      "meanMs": 0.27337707423580676,
+      "medianMs": 0.20730000000003201,
+      "p95Ms": 0.5107000000002699,
+      "opsPerSec": 3657.9512118760563,
+      "samples": 916
+    },
+    {
+      "group": "classify+fuzz",
+      "task": "classify+fuzz(server-everything)",
+      "meanMs": 0.15940471637986253,
+      "medianMs": 0.1493000000000393,
+      "p95Ms": 0.2561000000000604,
+      "opsPerSec": 6273.340103795882,
+      "samples": 1569
+    },
+    {
+      "group": "classify+fuzz",
+      "task": "classify+fuzz(server-memory)",
+      "meanMs": 0.0942259984928424,
+      "medianMs": 0.09820000000036089,
+      "p95Ms": 0.14289999999982683,
+      "opsPerSec": 10612.782204435458,
+      "samples": 2654
+    },
+    {
+      "group": "classify+fuzz",
+      "task": "classify+fuzz(server-sequential-thinking)",
+      "meanMs": 0.11183573345259408,
+      "medianMs": 0.10519999999996799,
+      "p95Ms": 0.15910000000030777,
+      "opsPerSec": 8941.685891691217,
+      "samples": 2236
+    },
+    {
+      "group": "renderMarkdown",
+      "task": "renderMarkdown(server-filesystem)",
+      "meanMs": 0.12742742099897184,
+      "medianMs": 0.11329999999998108,
+      "p95Ms": 0.1959999999999127,
+      "opsPerSec": 7847.6044807347125,
+      "samples": 1962
+    },
+    {
+      "group": "renderMarkdown",
+      "task": "renderMarkdown(server-everything)",
+      "meanMs": 0.07894196400378835,
+      "medianMs": 0.07440000000042346,
+      "p95Ms": 0.1180000000003929,
+      "opsPerSec": 12667.533834754997,
+      "samples": 3167
+    },
+    {
+      "group": "renderMarkdown",
+      "task": "renderMarkdown(server-memory)",
+      "meanMs": 0.046871091113615766,
+      "medianMs": 0.044799999999668216,
+      "p95Ms": 0.06769999999960419,
+      "opsPerSec": 21335.112459319433,
+      "samples": 5334
+    },
+    {
+      "group": "renderMarkdown",
+      "task": "renderMarkdown(server-sequential-thinking)",
+      "meanMs": 0.016042177874744195,
+      "medianMs": 0.016099999999823922,
+      "p95Ms": 0.02190000000064174,
+      "opsPerSec": 62335.67585448218,
+      "samples": 15584
+    },
+    {
+      "group": "planCaveats",
+      "task": "planCaveats(server-filesystem)",
+      "meanMs": 0.09126562043794519,
+      "medianMs": 0.08140000000003056,
+      "p95Ms": 0.134900000000016,
+      "opsPerSec": 10957.02845388463,
+      "samples": 2740
+    },
+    {
+      "group": "planCaveats",
+      "task": "planCaveats(server-everything)",
+      "meanMs": 0.08096356865284841,
+      "medianMs": 0.08389999999963038,
+      "p95Ms": 0.11589999999978318,
+      "opsPerSec": 12351.234223478346,
+      "samples": 3088
+    },
+    {
+      "group": "planCaveats",
+      "task": "planCaveats(server-memory)",
+      "meanMs": 0.05687016147373586,
+      "medianMs": 0.05909999999948923,
+      "p95Ms": 0.08170000000063737,
+      "opsPerSec": 17583.913498501784,
+      "samples": 4397
+    },
+    {
+      "group": "planCaveats",
+      "task": "planCaveats(server-sequential-thinking)",
+      "meanMs": 0.012852192463887574,
+      "medianMs": 0.012899999999717693,
+      "p95Ms": 0.020199999999931606,
+      "opsPerSec": 77807.7361360582,
+      "samples": 19453
+    },
+    {
+      "group": "scale-classify",
+      "task": "classify(synthetic-n=10)",
+      "meanMs": 0.11967638190954966,
+      "medianMs": 0.12550000000010186,
+      "p95Ms": 0.17929999999978463,
+      "opsPerSec": 8355.867582592788,
+      "samples": 4179
+    },
+    {
+      "group": "scale-classify",
+      "task": "classify(synthetic-n=100)",
+      "meanMs": 1.0554065400843522,
+      "medianMs": 1.1062000000001717,
+      "p95Ms": 1.6132999999990716,
+      "opsPerSec": 947.5021823534238,
+      "samples": 474
+    },
+    {
+      "group": "scale-classify",
+      "task": "classify(synthetic-n=1000)",
+      "meanMs": 11.361615555555586,
+      "medianMs": 11.769599999999627,
+      "p95Ms": 14.960699999999633,
+      "opsPerSec": 88.01565192117607,
+      "samples": 45
+    },
+    {
+      "group": "scale-classify",
+      "task": "classify(synthetic-n=10000)",
+      "meanMs": 94.11098333333315,
+      "medianMs": 93.04720000000088,
+      "p95Ms": 120.8190999999988,
+      "opsPerSec": 10.625752325401644,
+      "samples": 30
+    },
+    {
+      "group": "scale-planCaveats",
+      "task": "planCaveats(synthetic-n=10)",
+      "meanMs": 0.06471488287821599,
+      "medianMs": 0.06819999999970605,
+      "p95Ms": 0.09479999999894062,
+      "opsPerSec": 15452.39604129169,
+      "samples": 7727
+    },
+    {
+      "group": "scale-planCaveats",
+      "task": "planCaveats(synthetic-n=100)",
+      "meanMs": 0.58246426076833,
+      "medianMs": 0.5431000000007771,
+      "p95Ms": 0.8616000000001804,
+      "opsPerSec": 1716.8435341953814,
+      "samples": 859
+    },
+    {
+      "group": "scale-planCaveats",
+      "task": "planCaveats(synthetic-n=1000)",
+      "meanMs": 6.4079227848101885,
+      "medianMs": 6.005900000000111,
+      "p95Ms": 9.392400000000634,
+      "opsPerSec": 156.05681179094006,
+      "samples": 79
+    },
+    {
+      "group": "scale-planCaveats",
+      "task": "planCaveats(synthetic-n=10000)",
+      "meanMs": 62.32761666666678,
+      "medianMs": 62.791699999999764,
+      "p95Ms": 75.04599999999846,
+      "opsPerSec": 16.044252186764695,
+      "samples": 30
+    }
+  ]
+}
