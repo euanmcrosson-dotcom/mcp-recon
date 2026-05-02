@@ -1,13 +1,13 @@
-# F003 — `puppeteer_evaluate` is arbitrary JS execution; recon flags `shell/privileged`
+# F003 — `puppeteer_evaluate` bypasses any `puppeteer_navigate` URL allowlist
 
 | Field | Value |
 |---|---|
 | **Server** | `@modelcontextprotocol/server-puppeteer` v0.1.0 (npm `2025.5.12`) |
 | **Tool** | `puppeteer_evaluate` |
 | **Discovery date** | 2026-05-01 |
-| **Severity** | informational |
-| **Severity rationale** | Not a vulnerability — the tool's documented behaviour is "Execute JavaScript in the browser console", which is by design the most powerful surface a browser-automation MCP server exposes. Filed as informational because operators wiring this tool into an agent need to know that **it bypasses every URL allowlist they configure on `puppeteer_navigate`** (a `puppeteer_evaluate` of `window.location = ...` re-navigates without going through the navigate caveat). The recon classifier surfaces this with a `tool != "puppeteer_evaluate"` deny-by-default caveat — that's the behaviour we want to keep documenting. |
-| **Coordinated disclosure status** | not-applicable-documented-as-evaluation-tool |
+| **Severity** | low |
+| **Severity rationale** | The headline is the **navigate-allowlist bypass**, not the documented "execute JS" behaviour. An operator who issues a capnagent caveat tightening `puppeteer_navigate.url` to a URL allowlist gets a defence-in-depth illusion: a single `puppeteer_evaluate` of `window.location = "<off-allowlist>"` re-navigates without going through the `puppeteer_navigate` caveat, breaking the allowlist they thought they had. Severity is `low` (not `informational`) because the operator-facing impact is real even though the upstream behaviour is documented — the bug is in the *interaction* between the two tools' caveats, which the upstream cannot fix and which the operator must know about. The recon classifier already surfaces this with a `tool != "puppeteer_evaluate"` deny-by-default caveat. |
+| **Coordinated disclosure status** | not-applicable-documented-as-evaluation-tool (operator-side defence is the only mitigation) |
 
 ## Description
 
