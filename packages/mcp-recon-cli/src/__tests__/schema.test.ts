@@ -87,4 +87,68 @@ describe("extractToolFacts", () => {
     });
     expect(f.args[0]?.declaredType).toBe("string");
   });
+
+  // F006 regression — IANA-timezone-named args were misclassified as path-shaped
+  // because the path-name list contains `source`/`target` and `source_timezone`
+  // / `target_timezone` matched. Stop-word check in looksPathy now suppresses.
+  describe("F006 regression — timezone-named args are NOT path-shaped", () => {
+    it("source_timezone is not path-shaped", () => {
+      const f = extractToolFacts("convert_time", {
+        type: "object",
+        properties: { source_timezone: { type: "string" } },
+      });
+      expect(f.args[0]?.isPathShaped).toBe(false);
+    });
+
+    it("target_timezone is not path-shaped", () => {
+      const f = extractToolFacts("convert_time", {
+        type: "object",
+        properties: { target_timezone: { type: "string" } },
+      });
+      expect(f.args[0]?.isPathShaped).toBe(false);
+    });
+
+    it("plain `timezone` is not path-shaped", () => {
+      const f = extractToolFacts("get_time", {
+        type: "object",
+        properties: { timezone: { type: "string" } },
+      });
+      expect(f.args[0]?.isPathShaped).toBe(false);
+    });
+
+    it("`tz` is not path-shaped", () => {
+      const f = extractToolFacts("t", {
+        type: "object",
+        properties: { tz: { type: "string" } },
+      });
+      expect(f.args[0]?.isPathShaped).toBe(false);
+    });
+
+    it("region / locale / currency / country / language are not path-shaped", () => {
+      for (const name of ["region", "locale", "currency", "country", "language"]) {
+        const f = extractToolFacts("t", {
+          type: "object",
+          properties: { [name]: { type: "string" } },
+        });
+        expect(f.args[0]?.isPathShaped, `${name} should not be path-shaped`).toBe(false);
+      }
+    });
+
+    // Negative control — verify the path-shape detection still fires for real path args.
+    it("plain `path` arg IS still path-shaped (positive control)", () => {
+      const f = extractToolFacts("read", {
+        type: "object",
+        properties: { path: { type: "string" } },
+      });
+      expect(f.args[0]?.isPathShaped).toBe(true);
+    });
+
+    it("`source_path` IS still path-shaped (positive control)", () => {
+      const f = extractToolFacts("read", {
+        type: "object",
+        properties: { source_path: { type: "string" } },
+      });
+      expect(f.args[0]?.isPathShaped).toBe(true);
+    });
+  });
 });

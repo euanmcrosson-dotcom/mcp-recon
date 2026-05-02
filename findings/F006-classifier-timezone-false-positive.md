@@ -8,7 +8,7 @@
 | **Discovery date** | 2026-05-01 |
 | **Severity** | low |
 | **Severity rationale** | Real bug in mcp-recon, not in any external server. The classifier's "path-shaped argument" heuristic fires on any string that contains a forward slash and produces a `data_class=filesystem` rationale that is plainly wrong for IANA timezone names like `America/New_York`. The output caveat instructs the operator to bind the argument to a `<your-sandbox-prefix>/` filesystem prefix — which would break the tool's correct usage. Severity is low because the false-positive rationale is human-readable in the report.md and the operator will catch it before deployment, but the misclassification still pollutes the dataset and any downstream automation that consumes the JSON. |
-| **Coordinated disclosure status** | open (fix lands in this repo as a follow-up PR) |
+| **Coordinated disclosure status** | **fixed in v0.2.0** — `looksPathy()` stop-word list added in `packages/mcp-recon-cli/src/fuzz/schema.ts`; 7 regression tests in `__tests__/schema.test.ts` |
 
 ## Description
 
@@ -116,6 +116,14 @@ surface that the blast radius is one tool.
 ## Status
 
 - 2026-05-01: Filed as F006.
-- Fix queued for the v0.2 classifier rework PR. Until then,
-  `mcp-server-time/classification.json` ships with this known
-  false positive and the report.md includes a caveat noting it.
+- 2026-05-03: **Fixed in v0.2.0.** `looksPathy()` in `fuzz/schema.ts`
+  now consults a stop-word list (`timezone`, `tz`, `zone`, `region`,
+  `locale`, `currency`, `country`, `language`) before applying the
+  path-name heuristic. 7 new regression tests in
+  `__tests__/schema.test.ts` pin the fix (5 negative — timezone-named
+  args are NOT path-shaped; 2 positive controls — `path` and
+  `source_path` ARE still path-shaped).
+- Follow-up: re-scan `mcp-server-time` to refresh
+  `examples/public-servers/server-time/classification.json` against
+  the corrected classifier. The dataset file currently in master
+  pre-dates the fix.
