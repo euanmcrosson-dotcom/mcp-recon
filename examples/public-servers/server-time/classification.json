@@ -1,6 +1,6 @@
 {
   "schema": "mcp-recon/v0.1/classification",
-  "scanned_at": "2026-05-01T01:19:18.869Z",
+  "scanned_at": "2026-05-03T00:07:23.991Z",
   "server": {
     "name": "mcp-time",
     "version": "1.27.0"
@@ -18,12 +18,12 @@
     },
     {
       "tool": "convert_time",
-      "data_class": "filesystem",
+      "data_class": "unknown",
       "authority_level": "read",
       "confused_deputy_candidate": false,
-      "confidence": 0.64,
-      "rationale": "schema: arg \"source_timezone\" is path-shaped → filesystem (0.40); schema: arg \"target_timezone\" is path-shaped → filesystem (0.40)",
-      "recommended_caveat": "tool == \"convert_time\" AND caller == \"<your-caller-id>\" AND arg.source_timezone starts_with \"<your-sandbox-prefix>/\" AND arg.target_timezone starts_with \"<your-sandbox-prefix>/\" AND now <= @<your-cap-expiry>  // READ filesystem; bound the sandbox prefix tightly (capnagent round 07/10)"
+      "confidence": 0,
+      "rationale": "no rules fired",
+      "recommended_caveat": "tool == \"convert_time\" AND caller == \"<your-caller-id>\" AND now <= @<your-cap-expiry>  // READ unclassified — operator must review"
     }
   ]
 }
