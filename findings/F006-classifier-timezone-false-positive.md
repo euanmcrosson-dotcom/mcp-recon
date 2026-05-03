@@ -123,7 +123,10 @@ surface that the blast radius is one tool.
   `__tests__/schema.test.ts` pin the fix (5 negative — timezone-named
   args are NOT path-shaped; 2 positive controls — `path` and
   `source_path` ARE still path-shaped).
-- Follow-up: re-scan `mcp-server-time` to refresh
-  `examples/public-servers/server-time/classification.json` against
-  the corrected classifier. The dataset file currently in master
-  pre-dates the fix.
+- 2026-05-03: **Dataset refreshed** in a follow-up PR. Re-scanned
+  `mcp-server-time` v1.27.0 against the post-F006 classifier;
+  `examples/public-servers/server-time/classification.json` now
+  reports `data_class: unknown` (correct) for both `convert_time`
+  and `get_current_time` instead of the prior `data_class: filesystem`
+  false-positive. `report.md` regenerated. Inventory + fuzz artefacts
+  preserved (those are unrelated to the classifier change).
