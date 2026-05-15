@@ -1,0 +1,88 @@
+name: publish-npm
+
+# Publishes @mcp-recon/cli to npm when a release is created on GitHub.
+# Requires an NPM_TOKEN repo secret with publish scope on the
+# @mcp-recon/cli package (or "automation"-class token covering the
+# @mcp-recon scope). The publish step is guarded by the secret's
+# presence — if it isn't set, the build runs and uploads the tarball
+# as a workflow artifact so it can be inspected / manually published.
+#
+# To enable:
+#   1. Sign up at https://www.npmjs.com/signup
+#   2. Enable 2FA (mandatory for publish)
+#   3. Generate a token: https://www.npmjs.com/settings/<user>/tokens
+#      Type: "Automation" (used in CI; bypasses 2FA-on-publish)
+#   4. Add as repo secret named NPM_TOKEN at:
+#      https://github.com/euanmcrosson-dotcom/mcp-recon/settings/secrets/actions
+#
+# To publish:
+#   1. Bump the version in packages/mcp-recon-cli/package.json
+#   2. Commit + push
+#   3. git tag v<x.y.z> && git push --tags
+#   4. Create a GitHub release pointing at the tag — this fires the
+#      `release: published` event below.
+#
+# `workflow_dispatch` is also wired so you can manually re-fire the
+# build/publish without cutting a new release (useful for re-publishing
+# after a transient failure).
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # for npm provenance (requires public-access scoped pkg)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install workspace deps
+        run: npm ci
+
+      - name: Build
+        run: npm run -w @mcp-recon/cli build
+
+      - name: Sanity — pack dry-run
+        run: npm pack --dry-run -w @mcp-recon/cli
+
+      - name: Publish to npm
+        if: ${{ env.NODE_AUTH_TOKEN != '' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # `--provenance` attaches a SLSA-style attestation to the
+          # published tarball. Requires id-token: write permission
+          # above and a public-access scoped package — both are set.
+          npm publish -w @mcp-recon/cli --provenance
+
+      - name: Notice if no token
+        if: ${{ env.NODE_AUTH_TOKEN == '' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "::warning::NPM_TOKEN secret not set; skipping publish."
+          echo "::warning::Tarball available below as the dist artifact."
+
+      - name: Pack tarball for artifact
+        run: |
+          cd packages/mcp-recon-cli
+          npm pack
+          mkdir -p ../../dist
+          mv *.tgz ../../dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarball
+          path: dist/

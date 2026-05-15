@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-05-15
+
+### Added
+
+- **npm distribution.** The `@mcp-recon/cli` package now ships to npm
+  on every GitHub Release. After this version is published, end users
+  can run `npx @mcp-recon/cli ...` directly — no clone, no Rust
+  toolchain, no TypeScript. Same three-layer-stack distribution
+  parity as `capnagent` (PyPI) and `mcp-guardrails` (PyPI).
+  - New `.github/workflows/publish-npm.yml` — release-triggered npm
+    publish via `setup-node@v4` with `NODE_AUTH_TOKEN`. Includes
+    `--provenance` for SLSA-style build attestation.
+  - Gracefully no-op-skips when `NPM_TOKEN` secret isn't set,
+    leaving the tarball as a workflow artifact for manual upload.
+
+### Changed
+
+- `packages/mcp-recon-cli/package.json` reshaped for npm consumption:
+  - `main` / `types` / `bin` rewired from `./src/*.ts` to `./dist/*.js`
+    so the published package is consumable without a TypeScript
+    toolchain. The `prepublishOnly` script runs `npm run build` so
+    `dist/` is always fresh on publish.
+  - Added `files: ["dist", "README.md", "LICENSE"]` — drops the
+    tarball from 116 kB / 145 files to 58 kB / 95 files by excluding
+    `src/`, tests, benches, and tsconfig.
+  - Added `keywords`, `homepage`, `repository.directory`, `bugs`,
+    `engines`, `publishConfig.access` — standard npm metadata suite.
+  - Added `exports` field for modern TS/ESM consumers.
+- Workspace package version 0.2.0 → 0.2.1 (no behaviour change;
+  first version actually publishable to npm).
+
 ## [0.2.0] — 2026-05-03
 
 ### Highlights
