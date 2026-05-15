@@ -181,11 +181,23 @@ Recon → capability gap → attack PoC → fix → CLOSED.
 ## Installation
 
 ```bash
-# From source (the recommended path today; npm package is post-v0.2)
+# From npm (recommended — v0.2.2+)
+npx mcp-recon scan \
+  "stdio:npx -y @modelcontextprotocol/server-filesystem $HOME/sandbox" \
+  --out=./reports/filesystem --budget=200
+
+# Or install globally
+npm install -g mcp-recon
+mcp-recon --help
+```
+
+For development:
+
+```bash
 git clone https://github.com/euanmcrosson-dotcom/mcp-recon
 cd mcp-recon
 npm install
-npm run -w @mcp-recon/cli build
+npm run -w mcp-recon build
 
 # Run the CLI directly via tsx (no build step needed for development)
 npx tsx packages/mcp-recon-cli/src/bin/recon.ts scan \

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-05-15
+
+### Changed
+
+- **npm package renamed from `@mcp-recon/cli` to `mcp-recon`** (unscoped).
+  v0.2.1's publish failed with `404 Scope not found` — the `@mcp-recon`
+  npm scope doesn't exist (would require creating an npm org first).
+  Rather than create the org just to scope a single CLI package, the
+  package moves to the unscoped name `mcp-recon` (which we'd already
+  verified was available).
+- **End-user-facing payoff**: `npx mcp-recon ...` works directly
+  instead of `npx @mcp-recon/cli ...`. Matches the project's
+  long-stated naming and integrates cleanly with the three-layer
+  stack table.
+- Workspace internal references updated: root `package.json` `recon`
+  script, `.github/workflows/bench.yml` + `publish-npm.yml` workspace
+  selectors. Source code, docs, and case studies that mention
+  "mcp-recon" by repo / project name were already correct.
+
 ## [0.2.1] — 2026-05-15
 
 ### Added

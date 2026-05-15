@@ -1,8 +1,8 @@
 name: publish-npm
 
-# Publishes @mcp-recon/cli to npm when a release is created on GitHub.
+# Publishes mcp-recon to npm when a release is created on GitHub.
 # Requires an NPM_TOKEN repo secret with publish scope on the
-# @mcp-recon/cli package (or "automation"-class token covering the
+# mcp-recon package (or "automation"-class token covering the
 # @mcp-recon scope). The publish step is guarded by the secret's
 # presence — if it isn't set, the build runs and uploads the tarball
 # as a workflow artifact so it can be inspected / manually published.
@@ -52,10 +52,10 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run -w @mcp-recon/cli build
+        run: npm run -w mcp-recon build
 
       - name: Sanity — pack dry-run
-        run: npm pack --dry-run -w @mcp-recon/cli
+        run: npm pack --dry-run -w mcp-recon
 
       - name: Publish to npm
         if: ${{ env.NODE_AUTH_TOKEN != '' }}
@@ -65,7 +65,7 @@ jobs:
           # `--provenance` attaches a SLSA-style attestation to the
           # published tarball. Requires id-token: write permission
           # above and a public-access scoped package — both are set.
-          npm publish -w @mcp-recon/cli --provenance
+          npm publish -w mcp-recon --provenance
 
       - name: Notice if no token
         if: ${{ env.NODE_AUTH_TOKEN == '' }}

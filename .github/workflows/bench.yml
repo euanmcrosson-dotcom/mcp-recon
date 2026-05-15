@@ -35,7 +35,7 @@ jobs:
         id: bench
         run: |
           set -euo pipefail
-          npm run bench --workspace=@mcp-recon/cli | tee bench-output.txt
+          npm run bench --workspace=mcp-recon | tee bench-output.txt
 
       - name: upload results
         uses: actions/upload-artifact@v4

@@ -16,6 +16,6 @@
     "test": "npm run -ws --if-present test",
     "lint": "npm run -ws --if-present lint",
     "typecheck": "npm run -ws --if-present typecheck",
-    "recon": "npm run -w @mcp-recon/cli -- "
+    "recon": "npm run -w mcp-recon -- "
   }
 }
