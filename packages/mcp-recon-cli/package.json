@@ -1,13 +1,50 @@
 {
   "name": "@mcp-recon/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Reverse-engineer MCP server tool surfaces. Enumerate, fuzz, classify, report. CLI + library.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-security",
+    "agent-security",
+    "owasp-llm",
+    "mitre-atlas",
+    "security",
+    "cli"
+  ],
   "license": "Apache-2.0",
+  "author": "Euan Crosson <euanmcrosson@gmail.com>",
+  "homepage": "https://github.com/euanmcrosson-dotcom/mcp-recon#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/euanmcrosson-dotcom/mcp-recon.git",
+    "directory": "packages/mcp-recon-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/euanmcrosson-dotcom/mcp-recon/issues"
+  },
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "bin": {
-    "mcp-recon": "./src/bin/recon.ts"
+    "mcp-recon": "./dist/bin/recon.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "test": "vitest run",
@@ -16,7 +53,8 @@
     "lint": "biome check src",
     "typecheck": "tsc --noEmit",
     "recon": "tsx src/bin/recon.ts",
-    "bench": "tsx bench/run.ts"
+    "bench": "tsx bench/run.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"
