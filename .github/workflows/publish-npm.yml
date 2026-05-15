@@ -60,7 +60,7 @@ jobs:
       - name: Publish to npm
         if: ${{ env.NODE_AUTH_TOKEN != '' }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN1 }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN2 }}
         run: |
           # `--provenance` attaches a SLSA-style attestation to the
           # published tarball. Requires id-token: write permission
@@ -70,7 +70,7 @@ jobs:
       - name: Notice if no token
         if: ${{ env.NODE_AUTH_TOKEN == '' }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN1 }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN2 }}
         run: |
           echo "::warning::NPM_TOKEN secret not set; skipping publish."
           echo "::warning::Tarball available below as the dist artifact."
