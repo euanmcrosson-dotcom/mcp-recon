@@ -15,10 +15,14 @@
 #![warn(missing_docs)]
 
 pub mod classifier;
+pub mod findings;
 pub mod fuzzer;
+pub mod inventory;
 pub mod report;
 
-pub use classifier::{Classification, DataClass, AuthorityLevel};
+pub use classifier::{classify, AuthorityLevel, Classification, DataClass};
+pub use findings::{Category, Finding, Mappings, Severity};
+pub use inventory::{McpInventory, McpServer, SideEffect, Tool, Transport, INVENTORY_SCHEMA};
 
 /// Schema-version tag emitted by `mcp-recon classify` (matches the
 /// CLI's `INVENTORY_SCHEMA` for inventory documents).

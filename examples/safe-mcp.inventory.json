@@ -1,0 +1,40 @@
+{
+  "schema": "mcp-recon.inventory.v1",
+  "servers": [
+    {
+      "name": "well-defended-server",
+      "transport": "stdio",
+      "tools": [
+        {
+          "name": "user.read_profile",
+          "description": "Return the authenticated user's profile.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "user_id": { "type": "string", "maxLength": 64 }
+            },
+            "required": ["user_id"]
+          },
+          "side_effects": ["read"],
+          "auth_required": true,
+          "rate_limited": true
+        },
+        {
+          "name": "math.add",
+          "description": "Return a + b.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "a": { "type": "number", "minimum": -1e9, "maximum": 1e9 },
+              "b": { "type": "number", "minimum": -1e9, "maximum": 1e9 }
+            },
+            "required": ["a", "b"]
+          },
+          "side_effects": ["read"],
+          "auth_required": true,
+          "rate_limited": false
+        }
+      ]
+    }
+  ]
+}

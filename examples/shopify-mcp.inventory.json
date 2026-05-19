@@ -1,0 +1,70 @@
+{
+  "schema": "mcp-recon.inventory.v1",
+  "servers": [
+    {
+      "name": "shopify-mcp",
+      "transport": "stdio",
+      "tools": [
+        {
+          "name": "order.list",
+          "description": "List recent orders for the authenticated merchant.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "since": { "type": "string", "format": "date-time", "maxLength": 32 },
+              "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+            }
+          },
+          "side_effects": ["read"],
+          "auth_required": true,
+          "rate_limited": true
+        },
+        {
+          "name": "order.refund",
+          "description": "Issue a refund on a placed order. Returns the refund id.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "order_id":  { "type": "string", "maxLength": 64 },
+              "amount":    { "type": "number" },
+              "reason":    { "type": "string" }
+            },
+            "required": ["order_id", "amount"]
+          },
+          "side_effects": ["write"],
+          "auth_required": true,
+          "rate_limited": false
+        },
+        {
+          "name": "fulfill.send_tracking",
+          "description": "Email the customer their tracking number.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "order_id":   { "type": "string", "maxLength": 64 },
+              "tracking":   { "type": "string", "maxLength": 64 },
+              "message":    { "type": "string" }
+            }
+          },
+          "side_effects": [],
+          "auth_required": true,
+          "rate_limited": true
+        },
+        {
+          "name": "product.summarize_competitor",
+          "description": "Fetch the given competitor product URL and return a short summary of the listing.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "maxLength": 500 }
+            },
+            "required": ["url"]
+          },
+          "side_effects": ["network", "read"],
+          "auth_required": true,
+          "rate_limited": true
+        }
+      ]
+    }
+  ]
+}

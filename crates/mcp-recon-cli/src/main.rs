@@ -1,10 +1,16 @@
 //! `mcp-recon` CLI — emits a `findings.v1` JSON document describing the
-//! tool surface of the target MCP server. Designed to be dispatched by the
-//! Capframe umbrella CLI (`capframe find`). The classifier/fuzzer logic
-//! lives in `mcp-recon-core`; this binary is the wire-format glue.
+//! tool surface of the target MCP inventory. Designed to be dispatched by
+//! the Capframe umbrella CLI (`capframe find`).
+//!
+//! Input file is an `mcp-recon.inventory.v1` document (see
+//! [`mcp_recon_core::McpInventory`]). If parsing fails the CLI still emits a
+//! valid `findings.v1.json` envelope with a single informational finding,
+//! so downstream tools never see broken output.
 
 use anyhow::{Context, Result};
 use clap::Parser;
+use mcp_recon_core::{classify, Finding, McpInventory, Severity};
+use serde_json::json;
 use std::fs;
 use std::path::{Path, PathBuf};
 use time::format_description::well_known::Rfc3339;
@@ -17,7 +23,7 @@ use time::OffsetDateTime;
     about = "Discover MCP tool surface and emit findings.v1 JSON"
 )]
 struct Cli {
-    /// Path to the MCP server configuration or transport spec.
+    /// Path to an mcp-recon.inventory.v1 JSON file.
     #[arg(long)]
     target: PathBuf,
 
@@ -47,41 +53,100 @@ fn build_findings(target: &Path) -> Result<serde_json::Value> {
     let now = OffsetDateTime::now_utc()
         .format(&Rfc3339)
         .context("format current time")?;
-    let exists = target.exists();
-    let (total, severity_info, findings_arr) = if exists {
-        (0u32, 0u32, serde_json::json!([]))
-    } else {
-        (
-            1u32,
-            1u32,
-            serde_json::json!([{
-                "id": "f-target-not-found",
-                "severity": "info",
-                "category": "other",
-                "title": "Target file not found",
-                "description": format!("Could not read target spec at {}", target.display()),
-                "remediation": "Pass a valid MCP server config path with --target."
-            }]),
-        )
+
+    // Try to read + parse the target as an inventory. Any failure becomes a
+    // single info-level finding so the CLI never emits broken output.
+    let outcome = read_and_classify(target);
+
+    let (tools_json, findings, scan_target_path) = match outcome {
+        Ok((inv, findings)) => (
+            inventory_tools_to_findings_v1(&inv),
+            findings,
+            target.display().to_string(),
+        ),
+        Err(e) => (
+            serde_json::Value::Array(vec![]),
+            vec![Finding {
+                id: "f-target-unreadable".into(),
+                severity: Severity::Info,
+                category: mcp_recon_core::Category::Other,
+                title: "Target inventory could not be read".into(),
+                description: Some(format!("{e:#}")),
+                tool: None,
+                remediation: Some("Pass an mcp-recon.inventory.v1 JSON file via --target.".into()),
+                mappings: Default::default(),
+            }],
+            target.display().to_string(),
+        ),
     };
-    Ok(serde_json::json!({
+
+    let severity_counts = count_by_severity(&findings);
+    let total: u32 = severity_counts.values().sum();
+
+    Ok(json!({
         "schema_version": "capframe.findings.v1",
         "scanned_at": now,
         "scanner": { "name": "mcp-recon", "version": env!("CARGO_PKG_VERSION") },
         "target": {
             "kind": "mcp_server",
-            "path": target.display().to_string()
+            "path": scan_target_path
         },
-        "tools": [],
-        "findings": findings_arr,
+        "tools": tools_json,
+        "findings": findings,
         "summary": {
             "total": total,
             "by_severity": {
-                "info": severity_info,
-                "low": 0, "medium": 0, "high": 0, "critical": 0
+                "info":     severity_counts.get(&Severity::Info).copied().unwrap_or(0),
+                "low":      severity_counts.get(&Severity::Low).copied().unwrap_or(0),
+                "medium":   severity_counts.get(&Severity::Medium).copied().unwrap_or(0),
+                "high":     severity_counts.get(&Severity::High).copied().unwrap_or(0),
+                "critical": severity_counts.get(&Severity::Critical).copied().unwrap_or(0),
             }
         }
     }))
+}
+
+fn read_and_classify(target: &Path) -> Result<(McpInventory, Vec<Finding>)> {
+    let body = fs::read_to_string(target).with_context(|| format!("read {}", target.display()))?;
+    let inv: McpInventory = serde_json::from_str(&body)
+        .with_context(|| format!("parse {} as mcp-recon.inventory.v1", target.display()))?;
+    let findings = classify(&inv);
+    Ok((inv, findings))
+}
+
+fn inventory_tools_to_findings_v1(inv: &McpInventory) -> serde_json::Value {
+    let mut tools = Vec::new();
+    for server in &inv.servers {
+        for t in &server.tools {
+            let mut entry = serde_json::Map::new();
+            entry.insert("name".into(), json!(t.name));
+            if let Some(d) = &t.description {
+                entry.insert("description".into(), json!(d));
+            }
+            if let Some(p) = &t.parameters {
+                entry.insert("parameters".into(), p.clone());
+            }
+            if !t.side_effects.is_empty() {
+                entry.insert("side_effects".into(), json!(t.side_effects));
+            }
+            if let Some(a) = t.auth_required {
+                entry.insert("auth_required".into(), json!(a));
+            }
+            if let Some(r) = t.rate_limited {
+                entry.insert("rate_limited".into(), json!(r));
+            }
+            tools.push(serde_json::Value::Object(entry));
+        }
+    }
+    serde_json::Value::Array(tools)
+}
+
+fn count_by_severity(findings: &[Finding]) -> std::collections::HashMap<Severity, u32> {
+    let mut m = std::collections::HashMap::new();
+    for f in findings {
+        *m.entry(f.severity).or_insert(0) += 1;
+    }
+    m
 }
 
 #[cfg(test)]
@@ -95,14 +160,35 @@ mod tests {
         assert_eq!(v["schema_version"], "capframe.findings.v1");
         assert_eq!(v["summary"]["total"], 1);
         assert_eq!(v["summary"]["by_severity"]["info"], 1);
-        assert_eq!(v["findings"][0]["id"], "f-target-not-found");
+        assert_eq!(v["findings"][0]["id"], "f-target-unreadable");
     }
 
     #[test]
-    fn existing_target_yields_empty_findings() {
-        let here = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
-        let v = build_findings(&here).unwrap();
-        assert_eq!(v["summary"]["total"], 0);
-        assert!(v["findings"].as_array().unwrap().is_empty());
+    fn valid_inventory_yields_real_findings() {
+        // An inventory with one tool that triggers R1 (unconstrained string).
+        let tmp = std::env::temp_dir().join("mcp-recon-test-inv.json");
+        let inv = serde_json::json!({
+            "schema": "mcp-recon.inventory.v1",
+            "servers": [{
+                "name": "test-server",
+                "tools": [{
+                    "name": "lookup",
+                    "description": "Look something up",
+                    "parameters": {
+                        "type": "object",
+                        "properties": { "query": { "type": "string" } }
+                    },
+                    "side_effects": ["read"],
+                    "auth_required": true
+                }]
+            }]
+        });
+        fs::write(&tmp, serde_json::to_string(&inv).unwrap()).unwrap();
+        let v = build_findings(&tmp).unwrap();
+        let _ = fs::remove_file(&tmp);
+        assert_eq!(v["summary"]["total"], 1);
+        assert_eq!(v["summary"]["by_severity"]["medium"], 1);
+        assert_eq!(v["findings"][0]["category"], "unconstrained_input");
+        assert_eq!(v["tools"][0]["name"], "lookup");
     }
 }
