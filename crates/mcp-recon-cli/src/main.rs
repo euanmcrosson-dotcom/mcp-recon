@@ -7,12 +7,15 @@
 //! valid `findings.v1.json` envelope with a single informational finding,
 //! so downstream tools never see broken output.
 
+mod enumerate;
+
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use mcp_recon_core::{classify, Finding, McpInventory, Severity};
 use serde_json::json;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
@@ -23,11 +26,16 @@ use time::OffsetDateTime;
     about = "Discover MCP tool surface and emit findings.v1 JSON"
 )]
 struct Cli {
-    /// Path to an mcp-recon.inventory.v1 JSON file.
-    #[arg(long)]
-    target: PathBuf,
+    #[command(subcommand)]
+    cmd: Option<Cmd>,
 
-    /// Output file (default: capframe.findings.json).
+    // ── Legacy top-level flags: `mcp-recon --target <inventory> --out <findings>` ──
+    // Kept so `capframe find` (which dispatches this exact shape) is unaffected.
+    /// Path to an mcp-recon.inventory.v1 JSON file (classify mode).
+    #[arg(long)]
+    target: Option<PathBuf>,
+
+    /// Output file for classify mode (default: capframe.findings.json).
     #[arg(long, default_value = "capframe.findings.json")]
     out: PathBuf,
 
@@ -36,16 +44,73 @@ struct Cli {
     pretty: bool,
 }
 
+#[derive(Subcommand, Debug)]
+enum Cmd {
+    /// Live-enumerate MCP servers from a claude_desktop_config.json (stdio
+    /// transport): launch each server, handshake, call tools/list, and write an
+    /// mcp-recon.inventory.v1 you can then classify.
+    Enumerate {
+        /// Path to a claude_desktop_config.json (Cursor / Cline configs work too).
+        config: PathBuf,
+        /// Output inventory path.
+        #[arg(long, default_value = "mcp-recon.inventory.json")]
+        out: PathBuf,
+        /// Pretty-print the emitted inventory.
+        #[arg(long)]
+        pretty: bool,
+        /// Per-server handshake + tools/list timeout, in seconds.
+        #[arg(long, default_value_t = 15)]
+        timeout_secs: u64,
+    },
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let findings = build_findings(&cli.target)?;
-    let json = if cli.pretty {
+    match cli.cmd {
+        Some(Cmd::Enumerate {
+            config,
+            out,
+            pretty,
+            timeout_secs,
+        }) => run_enumerate(&config, &out, pretty, Duration::from_secs(timeout_secs)),
+        None => run_classify(cli.target.as_deref(), &cli.out, cli.pretty),
+    }
+}
+
+fn run_classify(target: Option<&Path>, out: &Path, pretty: bool) -> Result<()> {
+    let target = target.context(
+        "no input given. Either pass --target <inventory.json> to classify, \
+         or use `mcp-recon enumerate <claude_desktop_config.json>` to build one live.",
+    )?;
+    let findings = build_findings(target)?;
+    let json = if pretty {
         serde_json::to_string_pretty(&findings)?
     } else {
         serde_json::to_string(&findings)?
     };
-    fs::write(&cli.out, json).with_context(|| format!("write {}", cli.out.display()))?;
-    eprintln!("mcp-recon: wrote {}", cli.out.display());
+    fs::write(out, json).with_context(|| format!("write {}", out.display()))?;
+    eprintln!("mcp-recon: wrote {}", out.display());
+    Ok(())
+}
+
+fn run_enumerate(config: &Path, out: &Path, pretty: bool, timeout: Duration) -> Result<()> {
+    let body = fs::read_to_string(config).with_context(|| format!("read {}", config.display()))?;
+    eprintln!("mcp-recon: enumerating MCP servers (stdio)…");
+    let inventory = enumerate::enumerate_config(&body, timeout)?;
+    let json = if pretty {
+        serde_json::to_string_pretty(&inventory)?
+    } else {
+        serde_json::to_string(&inventory)?
+    };
+    fs::write(out, json).with_context(|| format!("write {}", out.display()))?;
+    let total: usize = inventory.servers.iter().map(|s| s.tools.len()).sum();
+    eprintln!(
+        "mcp-recon: wrote {} ({} servers, {} tools) — classify with: mcp-recon --target {}",
+        out.display(),
+        inventory.servers.len(),
+        total,
+        out.display()
+    );
     Ok(())
 }
 
