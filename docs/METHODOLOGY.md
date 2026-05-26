@@ -1,5 +1,9 @@
 # mcp-recon methodology
 
+> **Status banner (added 2026-05-27):** the classifier described here is
+> shipped (7 rules, see the [README](../README.md)). The fuzzer is **not yet
+> built** — treat fuzzer sections as design intent, not current behaviour.
+
 This document describes how mcp-recon's classifier and fuzzer
 work, what signals they consume, and what would falsify each
 classification. It's written **before** the week-3 implementation

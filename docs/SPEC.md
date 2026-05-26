@@ -1,5 +1,11 @@
 # mcp-recon v0.1 — specification + non-goals
 
+> **Status banner (added 2026-05-27):** this is a *design spec*, not a
+> description of the shipped tool. What ships today is the deterministic
+> 7-rule classifier (`mcp-recon --target <inventory> → findings.v1.json`) —
+> see the [README](../README.md). The `enumerate` / `fuzz` / `scan` commands
+> below are planned, not built. Treat this doc as the target, not the state.
+
 This document is **load-bearing**. The goal is a v0.1 release in 4
 weeks. Anything not listed below is out of scope for v0.1, even if
 "obviously useful." Scope creep is the project's biggest risk.
