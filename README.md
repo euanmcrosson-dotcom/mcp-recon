@@ -49,18 +49,32 @@ cargo install --git https://github.com/euanmcrosson-dotcom/mcp-recon mcp-recon-c
 
 ## Usage
 
+Two modes — build an inventory from your real config (`enumerate`), or classify
+an inventory you already have (`--target`).
+
 ```bash
-# Standalone
-mcp-recon --target ./mcp-inventory.json --out findings.json --pretty
+# Live: point at your real claude_desktop_config.json (Cursor / Cline configs
+# work too) — mcp-recon launches each MCP server over stdio, handshakes, calls
+# tools/list, and writes an inventory of the actual tools.
+mcp-recon enumerate ~/Library/Application\ Support/Claude/claude_desktop_config.json \
+    --out inventory.json
+
+# Classify an inventory (hand-authored or produced by enumerate) into findings.
+mcp-recon --target inventory.json --out findings.json --pretty
 
 # Or dispatched through the Capframe umbrella CLI
-capframe find ./mcp-inventory.json --out findings.json
+capframe find ./inventory.json --out findings.json
 ```
 
-`--target` is an `mcp-recon.inventory.v1` JSON file (see
-[`examples/`](examples/)). If the file can't be read or parsed, mcp-recon still
-emits a valid `findings.v1` envelope with a single informational finding, so
-downstream tooling never sees broken output.
+`--target` takes an `mcp-recon.inventory.v1` JSON file (see [`examples/`](examples/)).
+If the file can't be read or parsed, mcp-recon still emits a valid `findings.v1`
+envelope with a single informational finding, so downstream tooling never sees
+broken output.
+
+`enumerate` is **stdio transport only** today (the transport every local MCP
+server uses); per-server handshake has a 15s default timeout (`--timeout-secs`).
+A server that fails to connect becomes an empty inventory entry rather than
+aborting the run. HTTP/SSE transport is on the roadmap.
 
 ## Classifier rules
 
@@ -119,9 +133,9 @@ caveat. They're glued by the `findings.v1` schema.
 
 These are the ambitions, stated honestly as not-yet-built:
 
-- **Live enumeration.** Connect to a running MCP server (stdio / HTTP / SSE),
-  call `tools/list`, and build the inventory automatically instead of requiring
-  a hand-authored one.
+- **Live enumeration over HTTP/SSE.** Stdio enumeration ships today
+  (`mcp-recon enumerate`); HTTP and SSE transports are the next step so remote
+  MCP servers can be enumerated too.
 - **Schema-aware fuzzing.** Generate adversarial inputs against each tool's
   parameter schema to surface runtime defects (DoS, deserialization).
 - **Per-tool capnagent caveat emission.** Output a copy-pasteable capability
