@@ -74,6 +74,7 @@ pub fn classify(inventory: &McpInventory) -> Vec<Finding> {
             out.extend(rule_r4_unbounded_money_param(tool));
             out.extend(rule_r5_description_money_no_side_effect(tool));
             out.extend(rule_r6_external_fetch_surface(tool));
+            out.extend(rule_r7_code_execution_surface(tool));
         }
     }
     out
@@ -450,6 +451,80 @@ fn rule_r6_external_fetch_surface(tool: &Tool) -> Option<Finding> {
     })
 }
 
+/// Tokens in a tool's name or description that imply it executes code,
+/// shell commands, or arbitrary subprocesses — the highest-severity surface.
+const EXECUTION_TOKENS: &[&str] = &[
+    "execute ",
+    "execute_",
+    "exec ",
+    "shell command",
+    "shell_command",
+    "run python",
+    "run code",
+    "run a script",
+    "run shell",
+    "eval(",
+    "subprocess",
+    "spawn a",
+    "arbitrary code",
+    "arbitrary command",
+    "system(",
+];
+
+/// True if name+description (lowercased) implies code/command execution.
+fn implies_code_execution(tool: &Tool) -> bool {
+    let mut hay = tool.name.to_ascii_lowercase();
+    hay.push(' ');
+    if let Some(d) = &tool.description {
+        hay.push_str(&d.to_ascii_lowercase());
+    }
+    EXECUTION_TOKENS.iter().any(|t| hay.contains(t))
+}
+
+/// R7 — Code / command execution surface.
+///
+/// A tool whose name or description implies executing code, shell commands, or
+/// subprocesses is the top of the severity ladder: it collapses every other
+/// constraint, because arbitrary execution can do anything the host process
+/// can. Rated Critical regardless of declared side effects — the whole point
+/// is that these tools are routinely mislabelled (or unlabelled) on real
+/// servers, so we don't trust the declaration.
+fn rule_r7_code_execution_surface(tool: &Tool) -> Option<Finding> {
+    if !implies_code_execution(tool) {
+        return None;
+    }
+    Some(Finding {
+        id: stable_id("r7", &tool.name),
+        severity: Severity::Critical,
+        category: Category::ExcessiveAgency,
+        title: format!(
+            "Tool `{}` exposes a code/command execution surface",
+            tool.name
+        ),
+        description: Some(format!(
+            "`{}` looks like it executes code or shell commands ({}). Arbitrary \
+             execution is the maximal authority a tool can hold — it subsumes every \
+             other caveat, so it should never be exposed to an agent without a \
+             hard sandbox and an explicit, narrowly-scoped capability.",
+            tool.name,
+            tool.description.as_deref().unwrap_or("name match")
+        )),
+        tool: Some(tool.name.clone()),
+        remediation: Some(
+            "Do not expose raw code/shell execution to an agent. If unavoidable, run \
+             it in a disposable sandbox with no network + no host FS, gate it behind a \
+             capframe-bind capability scoped to an allow-list of commands, and require \
+             holder-of-key proof per call."
+                .into(),
+        ),
+        mappings: Mappings {
+            owasp_llm: vec!["LLM08".into()],
+            nist_rmf: vec!["MANAGE-2.2".into()],
+            mitre_atlas: vec!["T0051".into()],
+        },
+    })
+}
+
 fn stable_id(rule: &str, tool: &str) -> String {
     let mut s = String::with_capacity(rule.len() + tool.len() + 8);
     s.push_str("f-");
@@ -480,6 +555,57 @@ mod tests {
                 tools: vec![tool],
             }],
         }
+    }
+
+    #[test]
+    fn r7_fires_critical_on_shell_execution_tool() {
+        let tool = Tool {
+            name: "execute_shell_command".into(),
+            description: Some("Execute a shell command for system management.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "command": { "type": "string", "maxLength": 4096 } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r7: Vec<_> = findings.iter().filter(|f| f.id.contains("r7")).collect();
+        assert_eq!(r7.len(), 1, "expected one R7 finding; got {findings:?}");
+        let f = r7[0];
+        assert_eq!(f.severity, Severity::Critical);
+        assert_eq!(f.category, Category::ExcessiveAgency);
+        assert_eq!(f.tool.as_deref(), Some("execute_shell_command"));
+        assert_eq!(f.mappings.owasp_llm, vec!["LLM08"]);
+    }
+
+    #[test]
+    fn r7_fires_on_code_execution_by_description() {
+        let tool = Tool {
+            name: "analyze".into(),
+            description: Some("Execute Python code for data analysis.".into()),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(findings.iter().filter(|f| f.id.contains("r7")).count(), 1);
+    }
+
+    #[test]
+    fn r7_silent_on_benign_tool() {
+        let tool = Tool {
+            name: "get_user_info".into(),
+            description: Some("Get information about a user".into()),
+            parameters: None,
+            side_effects: vec![SideEffect::Read],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(findings.iter().filter(|f| f.id.contains("r7")).count(), 0);
     }
 
     #[test]

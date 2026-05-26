@@ -1,0 +1,128 @@
+{
+  "schema": "mcp-recon.inventory.v1",
+  "servers": [
+    {
+      "name": "dvmcp-challenge1-prompt-injection",
+      "transport": "sse",
+      "tools": [
+        {
+          "name": "get_user_info",
+          "description": "Get information about a user",
+          "parameters": {
+            "type": "object",
+            "properties": { "username": { "type": "string" } },
+            "required": ["username"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dvmcp-challenge3-excessive-permissions",
+      "transport": "sse",
+      "tools": [
+        {
+          "name": "read_file",
+          "description": "Read a file from the public directory.",
+          "parameters": {
+            "type": "object",
+            "properties": { "filename": { "type": "string" } },
+            "required": ["filename"]
+          }
+        },
+        {
+          "name": "search_files",
+          "description": "Search for files containing a specific keyword in the public directory.",
+          "parameters": {
+            "type": "object",
+            "properties": { "keyword": { "type": "string" } },
+            "required": ["keyword"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dvmcp-challenge8-code-execution",
+      "transport": "sse",
+      "tools": [
+        {
+          "name": "execute_python_code",
+          "description": "Execute Python code for data analysis.",
+          "parameters": {
+            "type": "object",
+            "properties": { "code": { "type": "string" } },
+            "required": ["code"]
+          }
+        },
+        {
+          "name": "execute_shell_command",
+          "description": "Execute a shell command for system management.",
+          "parameters": {
+            "type": "object",
+            "properties": { "command": { "type": "string" } },
+            "required": ["command"]
+          }
+        },
+        {
+          "name": "analyze_log_file",
+          "description": "Analyze a log file for patterns.",
+          "parameters": {
+            "type": "object",
+            "properties": { "log_path": { "type": "string" } },
+            "required": ["log_path"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dvmcp-challenge9-remote-access",
+      "transport": "sse",
+      "tools": [
+        {
+          "name": "ping_host",
+          "description": "Ping a host to check connectivity.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "host": { "type": "string" },
+              "count": { "type": "integer" }
+            },
+            "required": ["host"]
+          }
+        },
+        {
+          "name": "traceroute",
+          "description": "Trace the network route to a host.",
+          "parameters": {
+            "type": "object",
+            "properties": { "host": { "type": "string" } },
+            "required": ["host"]
+          }
+        },
+        {
+          "name": "port_scan",
+          "description": "Check if a specific port is open on a host.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "host": { "type": "string" },
+              "port": { "type": "integer" }
+            },
+            "required": ["host", "port"]
+          }
+        },
+        {
+          "name": "network_diagnostic",
+          "description": "Run comprehensive network diagnostics on a target.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "target": { "type": "string" },
+              "options": { "type": "string" }
+            },
+            "required": ["target"]
+          }
+        }
+      ]
+    }
+  ]
+}

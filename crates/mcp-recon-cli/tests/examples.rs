@@ -59,6 +59,33 @@ fn shopify_inventory_produces_six_findings() {
 }
 
 #[test]
+fn dvmcp_inventory_escalates_execution_tools_to_critical() {
+    // Damn Vulnerable MCP Server (real tool surface, faithful to the repo).
+    // Every tool has an unconstrained string input (R1, medium); the two
+    // code/command-execution tools must escalate to critical via R7.
+    let inv = load("dvmcp.inventory.json");
+    let findings = classify(&inv);
+    assert_eq!(
+        findings.len(),
+        12,
+        "expected 12 findings; got {}",
+        findings.len()
+    );
+    let critical: Vec<&str> = findings
+        .iter()
+        .filter(|f| matches!(f.severity, mcp_recon_core::Severity::Critical))
+        .filter_map(|f| f.tool.as_deref())
+        .collect();
+    assert_eq!(
+        critical.len(),
+        2,
+        "expected 2 critical findings; got {critical:?}"
+    );
+    assert!(critical.contains(&"execute_python_code"));
+    assert!(critical.contains(&"execute_shell_command"));
+}
+
+#[test]
 fn safe_inventory_produces_zero_findings() {
     let inv = load("safe-mcp.inventory.json");
     let findings = classify(&inv);
