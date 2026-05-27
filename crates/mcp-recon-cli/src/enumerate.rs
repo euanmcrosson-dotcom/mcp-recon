@@ -1,13 +1,16 @@
-//! Live MCP enumeration (stdio transport).
+//! Live MCP enumeration (stdio + HTTP transports).
 //!
 //! Reads a `claude_desktop_config.json` (the same shape Cursor and Cline use),
-//! launches each configured MCP server as a subprocess, performs the MCP
+//! reaches each configured MCP server — either by launching it as a stdio
+//! subprocess or by POSTing to its HTTP endpoint — performs the MCP
 //! `initialize` handshake, calls `tools/list`, and builds an
 //! `mcp-recon.inventory.v1` from the discovered tools. The resulting inventory
 //! can then be fed to the classifier (`mcp-recon --target …`).
 //!
-//! v1 supports stdio transport only — the transport every local MCP server
-//! (Claude Desktop / Cursor / Cline) uses. HTTP/SSE is a follow-up.
+//! A server entry is HTTP if it has a `url` field, stdio if it has a `command`.
+//! HTTP uses the MCP Streamable HTTP transport: each JSON-RPC message is POSTed
+//! and the reply arrives as either `application/json` or a `text/event-stream`
+//! SSE body; the `Mcp-Session-Id` response header is echoed on later requests.
 
 use anyhow::{anyhow, Context, Result};
 use mcp_recon_core::{McpInventory, McpServer, Tool, Transport, INVENTORY_SCHEMA};
@@ -53,41 +56,84 @@ fn tools_from_list_result(result: &serde_json::Value) -> Vec<Tool> {
 #[derive(Debug, Deserialize)]
 struct ClaudeDesktopConfig {
     #[serde(rename = "mcpServers", default)]
-    mcp_servers: BTreeMap<String, ServerLaunchSpec>,
+    mcp_servers: BTreeMap<String, RawSpec>,
 }
 
-/// How to launch one MCP server (stdio).
-#[derive(Debug, Clone, Deserialize)]
-pub struct ServerLaunchSpec {
-    /// Executable to run (e.g. "npx").
-    pub command: String,
-    /// Arguments passed to the command.
+/// The raw per-server config object, before we decide stdio vs HTTP.
+#[derive(Debug, Deserialize)]
+struct RawSpec {
+    /// stdio: executable to run (e.g. "npx").
+    command: Option<String>,
+    /// stdio: arguments passed to the command.
     #[serde(default)]
-    pub args: Vec<String>,
-    /// Extra environment variables for the child process.
+    args: Vec<String>,
+    /// stdio: extra environment variables for the child process.
     #[serde(default)]
-    pub env: BTreeMap<String, String>,
+    env: BTreeMap<String, String>,
+    /// HTTP: the server endpoint URL.
+    url: Option<String>,
+    /// HTTP: extra request headers (e.g. an `Authorization` bearer).
+    #[serde(default)]
+    headers: BTreeMap<String, String>,
 }
 
-/// A configured server with its logical name.
+/// How to reach one MCP server.
+#[derive(Debug, Clone)]
+pub enum Launch {
+    /// Launch a local subprocess and speak JSON-RPC over its stdio.
+    Stdio {
+        /// Executable to run.
+        command: String,
+        /// Arguments passed to the command.
+        args: Vec<String>,
+        /// Extra environment variables for the child process.
+        env: BTreeMap<String, String>,
+    },
+    /// POST JSON-RPC to a remote HTTP endpoint (Streamable HTTP transport).
+    Http {
+        /// The server endpoint URL.
+        url: String,
+        /// Extra request headers (e.g. an `Authorization` bearer).
+        headers: BTreeMap<String, String>,
+    },
+}
+
+/// A configured server with its logical name and how to reach it.
 #[derive(Debug, Clone)]
 pub struct NamedServer {
     /// The key under `mcpServers`.
     pub name: String,
-    /// Launch spec.
-    pub spec: ServerLaunchSpec,
+    /// How to reach the server.
+    pub launch: Launch,
 }
 
 /// Parse a `claude_desktop_config.json` into a name-sorted list of servers.
+/// An entry with a `url` is HTTP; an entry with a `command` is stdio.
 pub fn parse_config(json: &str) -> Result<Vec<NamedServer>> {
     let cfg: ClaudeDesktopConfig =
         serde_json::from_str(json).context("parse claude_desktop_config.json")?;
     // BTreeMap iteration is already name-sorted, giving deterministic output.
-    Ok(cfg
-        .mcp_servers
-        .into_iter()
-        .map(|(name, spec)| NamedServer { name, spec })
-        .collect())
+    let mut out = Vec::with_capacity(cfg.mcp_servers.len());
+    for (name, raw) in cfg.mcp_servers {
+        let launch = if let Some(url) = raw.url {
+            Launch::Http {
+                url,
+                headers: raw.headers,
+            }
+        } else if let Some(command) = raw.command {
+            Launch::Stdio {
+                command,
+                args: raw.args,
+                env: raw.env,
+            }
+        } else {
+            return Err(anyhow!(
+                "server `{name}` has neither a `command` (stdio) nor a `url` (http)"
+            ));
+        };
+        out.push(NamedServer { name, launch });
+    }
+    Ok(out)
 }
 
 /// Enumerate every server in a `claude_desktop_config.json` and assemble an
@@ -98,7 +144,16 @@ pub fn enumerate_config(json: &str, timeout: Duration) -> Result<McpInventory> {
     let servers = parse_config(json)?;
     let mut out = Vec::with_capacity(servers.len());
     for ns in servers {
-        let tools = match list_tools_stdio(&ns.spec, timeout) {
+        let (transport, result) = match &ns.launch {
+            Launch::Stdio { command, args, env } => (
+                Transport::Stdio,
+                list_tools_stdio(command, args, env, timeout),
+            ),
+            Launch::Http { url, headers } => {
+                (Transport::Http, list_tools_http(url, headers, timeout))
+            }
+        };
+        let tools = match result {
             Ok(t) => {
                 eprintln!("  ✓ {} — {} tools", ns.name, t.len());
                 t
@@ -110,7 +165,7 @@ pub fn enumerate_config(json: &str, timeout: Duration) -> Result<McpInventory> {
         };
         out.push(McpServer {
             name: ns.name,
-            transport: Some(Transport::Stdio),
+            transport: Some(transport),
             tools,
         });
     }
@@ -122,20 +177,24 @@ pub fn enumerate_config(json: &str, timeout: Duration) -> Result<McpInventory> {
 
 /// Spawn one stdio MCP server, perform the `initialize` handshake, call
 /// `tools/list`, and map the result to inventory tools.
-fn list_tools_stdio(spec: &ServerLaunchSpec, timeout: Duration) -> Result<Vec<Tool>> {
+fn list_tools_stdio(
+    command: &str,
+    args: &[String],
+    env: &BTreeMap<String, String>,
+    timeout: Duration,
+) -> Result<Vec<Tool>> {
     // Resolve the command through PATH/PATHEXT so Windows launcher shims
     // (npx.cmd, uvx.cmd, …) are found — `Command::new("npx")` alone only
     // resolves .exe on Windows. Fall back to the raw name if resolution fails.
-    let program =
-        which::which(&spec.command).unwrap_or_else(|_| std::path::PathBuf::from(&spec.command));
+    let program = which::which(command).unwrap_or_else(|_| std::path::PathBuf::from(command));
     let mut child = Command::new(&program)
-        .args(&spec.args)
-        .envs(&spec.env)
+        .args(args)
+        .envs(env)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
-        .with_context(|| format!("spawn `{}`", spec.command))?;
+        .with_context(|| format!("spawn `{command}`"))?;
 
     let mut stdin = child.stdin.take().context("open child stdin")?;
     let stdout = child.stdout.take().context("open child stdout")?;
@@ -196,6 +255,139 @@ fn list_tools_stdio(spec: &ServerLaunchSpec, timeout: Duration) -> Result<Vec<To
     result
 }
 
+/// Perform the MCP handshake over Streamable HTTP and return the tools.
+fn list_tools_http(
+    url: &str,
+    headers: &BTreeMap<String, String>,
+    timeout: Duration,
+) -> Result<Vec<Tool>> {
+    let agent = ureq::AgentBuilder::new().timeout(timeout).build();
+    let mut session: Option<String> = None;
+
+    http_rpc(
+        &agent,
+        url,
+        headers,
+        &mut session,
+        &serde_json::json!({
+            "jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {
+                "protocolVersion": PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": { "name": "mcp-recon", "version": env!("CARGO_PKG_VERSION") }
+            }
+        }),
+        Some(1),
+    )
+    .context("initialize handshake")?
+    .ok_or_else(|| anyhow!("no initialize response from {url} — not an MCP HTTP endpoint?"))?;
+
+    http_rpc(
+        &agent,
+        url,
+        headers,
+        &mut session,
+        &serde_json::json!({ "jsonrpc": "2.0", "method": "notifications/initialized" }),
+        None,
+    )
+    .context("notifications/initialized")?;
+
+    let resp = http_rpc(
+        &agent,
+        url,
+        headers,
+        &mut session,
+        &serde_json::json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {} }),
+        Some(2),
+    )
+    .context("tools/list")?
+    .ok_or_else(|| anyhow!("no tools/list response from {url}"))?;
+
+    if let Some(err) = resp.get("error") {
+        return Err(anyhow!("server returned error for tools/list: {err}"));
+    }
+    let result = resp.get("result").cloned().unwrap_or_default();
+    Ok(tools_from_list_result(&result))
+}
+
+/// POST one JSON-RPC message and, when `want_id` is set, return the response
+/// object with that id. Carries the `Mcp-Session-Id` across calls.
+fn http_rpc(
+    agent: &ureq::Agent,
+    url: &str,
+    headers: &BTreeMap<String, String>,
+    session: &mut Option<String>,
+    msg: &serde_json::Value,
+    want_id: Option<i64>,
+) -> Result<Option<serde_json::Value>> {
+    let mut req = agent
+        .post(url)
+        .set("Content-Type", "application/json")
+        .set("Accept", "application/json, text/event-stream");
+    for (k, v) in headers {
+        req = req.set(k, v);
+    }
+    if let Some(sid) = session.as_deref() {
+        req = req.set("Mcp-Session-Id", sid);
+    }
+    let resp = req
+        .send_string(&serde_json::to_string(msg)?)
+        .map_err(|e| anyhow!("HTTP request to {url} failed: {e}"))?;
+
+    if let Some(sid) = resp.header("mcp-session-id") {
+        *session = Some(sid.to_string());
+    }
+    let content_type = resp.header("content-type").unwrap_or("").to_string();
+    let body = resp.into_string().context("read HTTP response body")?;
+
+    let Some(id) = want_id else {
+        return Ok(None);
+    };
+    Ok(parse_http_body(&content_type, &body)
+        .into_iter()
+        .find(|m| m.get("id").and_then(serde_json::Value::as_i64) == Some(id)))
+}
+
+/// Parse an HTTP MCP response body into JSON-RPC messages, handling both a
+/// plain `application/json` object and a `text/event-stream` (SSE) body.
+fn parse_http_body(content_type: &str, body: &str) -> Vec<serde_json::Value> {
+    if content_type.contains("text/event-stream") {
+        sse_json_messages(body)
+    } else {
+        serde_json::from_str::<serde_json::Value>(body)
+            .map(|v| vec![v])
+            .unwrap_or_default()
+    }
+}
+
+/// Extract JSON objects from the `data:` fields of an SSE body. Multiple
+/// `data:` lines within one event are joined with newlines (per the SSE spec)
+/// before being parsed; non-JSON events are skipped.
+fn sse_json_messages(body: &str) -> Vec<serde_json::Value> {
+    let mut out = Vec::new();
+    let mut data = String::new();
+    let flush = |data: &mut String, out: &mut Vec<serde_json::Value>| {
+        if !data.is_empty() {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(data) {
+                out.push(v);
+            }
+            data.clear();
+        }
+    };
+    for line in body.lines() {
+        if let Some(rest) = line.strip_prefix("data:") {
+            if !data.is_empty() {
+                data.push('\n');
+            }
+            data.push_str(rest.strip_prefix(' ').unwrap_or(rest));
+        } else if line.trim().is_empty() {
+            flush(&mut data, &mut out);
+        }
+    }
+    flush(&mut data, &mut out);
+    out
+}
+
 /// Write one newline-delimited JSON-RPC message to the child's stdin.
 fn write_msg(stdin: &mut std::process::ChildStdin, v: &serde_json::Value) -> Result<()> {
     let s = serde_json::to_string(v)?;
@@ -252,40 +444,76 @@ mod tests {
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
             },
-            "shopify": {
-                "command": "node",
-                "args": ["server.js"],
-                "env": { "SHOPIFY_API_KEY": "xxx" }
+            "remote": {
+                "url": "https://mcp.example.com/mcp",
+                "headers": { "Authorization": "Bearer xyz" }
             }
         }
     }"#;
 
     #[test]
-    fn parses_two_servers_sorted_by_name() {
+    fn parses_stdio_and_http_servers_sorted_by_name() {
         let servers = parse_config(SAMPLE).unwrap();
         assert_eq!(servers.len(), 2);
-        // BTreeMap → sorted: filesystem before shopify
+        // BTreeMap → sorted: filesystem before remote
         assert_eq!(servers[0].name, "filesystem");
-        assert_eq!(servers[0].spec.command, "npx");
-        assert_eq!(
-            servers[0].spec.args,
-            vec!["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
-        );
-        assert_eq!(servers[1].name, "shopify");
-        assert_eq!(servers[1].spec.command, "node");
-        assert_eq!(
-            servers[1]
-                .spec
-                .env
-                .get("SHOPIFY_API_KEY")
-                .map(String::as_str),
-            Some("xxx")
-        );
+        match &servers[0].launch {
+            Launch::Stdio { command, args, .. } => {
+                assert_eq!(command, "npx");
+                assert_eq!(args[0], "-y");
+            }
+            other => panic!("expected stdio, got {other:?}"),
+        }
+        assert_eq!(servers[1].name, "remote");
+        match &servers[1].launch {
+            Launch::Http { url, headers } => {
+                assert_eq!(url, "https://mcp.example.com/mcp");
+                assert_eq!(headers.get("Authorization").map(String::as_str), Some("Bearer xyz"));
+            }
+            other => panic!("expected http, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn rejects_server_with_neither_command_nor_url() {
+        let json = r#"{ "mcpServers": { "bad": { "args": ["x"] } } }"#;
+        assert!(parse_config(json).is_err());
     }
 
     #[test]
     fn empty_config_yields_no_servers() {
         assert_eq!(parse_config("{}").unwrap().len(), 0);
+    }
+
+    #[test]
+    fn sse_body_yields_jsonrpc_messages() {
+        // One SSE event carrying a JSON-RPC response, plus noise lines.
+        let body = "event: message\n\
+                    data: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[]}}\n\
+                    \n";
+        let msgs = sse_json_messages(body);
+        assert_eq!(msgs.len(), 1);
+        assert_eq!(msgs[0]["id"].as_i64(), Some(2));
+    }
+
+    #[test]
+    fn sse_body_joins_multiline_data() {
+        let body = "data: {\"jsonrpc\":\"2.0\",\n\
+                    data: \"id\":7}\n\
+                    \n";
+        let msgs = sse_json_messages(body);
+        assert_eq!(msgs.len(), 1);
+        assert_eq!(msgs[0]["id"].as_i64(), Some(7));
+    }
+
+    #[test]
+    fn parse_http_body_handles_plain_json() {
+        let msgs = parse_http_body(
+            "application/json",
+            r#"{"jsonrpc":"2.0","id":1,"result":{}}"#,
+        );
+        assert_eq!(msgs.len(), 1);
+        assert_eq!(msgs[0]["id"].as_i64(), Some(1));
     }
 
     #[test]

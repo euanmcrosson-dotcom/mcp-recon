@@ -54,8 +54,8 @@ an inventory you already have (`--target`).
 
 ```bash
 # Live: point at your real claude_desktop_config.json (Cursor / Cline configs
-# work too) — mcp-recon launches each MCP server over stdio, handshakes, calls
-# tools/list, and writes an inventory of the actual tools.
+# work too) — mcp-recon reaches each MCP server, handshakes, calls tools/list,
+# and writes an inventory of the actual tools.
 mcp-recon enumerate ~/Library/Application\ Support/Claude/claude_desktop_config.json \
     --out inventory.json
 
@@ -71,10 +71,22 @@ If the file can't be read or parsed, mcp-recon still emits a valid `findings.v1`
 envelope with a single informational finding, so downstream tooling never sees
 broken output.
 
-`enumerate` is **stdio transport only** today (the transport every local MCP
-server uses); per-server handshake has a 15s default timeout (`--timeout-secs`).
-A server that fails to connect becomes an empty inventory entry rather than
-aborting the run. HTTP/SSE transport is on the roadmap.
+`enumerate` supports **both transports**: a server entry with a `command` is
+launched over **stdio** (the local case); an entry with a `url` is reached over
+**HTTP** (Streamable HTTP — JSON-RPC over POST, handling both `application/json`
+and `text/event-stream` replies, with `Mcp-Session-Id` carried across calls, plus
+optional `headers` for auth). Per-server handshake has a 15s default timeout
+(`--timeout-secs`); a server that fails to connect becomes an empty inventory
+entry rather than aborting the run.
+
+```jsonc
+{
+  "mcpServers": {
+    "filesystem": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "."] },
+    "remote":     { "url": "https://mcp.example.com/mcp", "headers": { "Authorization": "Bearer …" } }
+  }
+}
+```
 
 ## Classifier rules
 
@@ -133,9 +145,8 @@ caveat. They're glued by the `findings.v1` schema.
 
 These are the ambitions, stated honestly as not-yet-built:
 
-- **Live enumeration over HTTP/SSE.** Stdio enumeration ships today
-  (`mcp-recon enumerate`); HTTP and SSE transports are the next step so remote
-  MCP servers can be enumerated too.
+- **WebSocket transport.** Stdio and HTTP (Streamable HTTP) enumeration ship
+  today (`mcp-recon enumerate`); a WebSocket transport is the remaining one.
 - **Schema-aware fuzzing.** Generate adversarial inputs against each tool's
   parameter schema to surface runtime defects (DoS, deserialization).
 - **Per-tool capnagent caveat emission.** Output a copy-pasteable capability
@@ -148,8 +159,10 @@ the shipped CLI yet. PRs welcome.
 
 ## What this is NOT
 
-- It is **not** a live scanner today — it classifies an inventory you provide,
-  it doesn't connect to your servers (yet — see Roadmap).
+- It does **not** *call* your tools. `enumerate` connects (stdio/HTTP),
+  handshakes, and reads `tools/list` — it never invokes a tool, so enumeration
+  has no side effects. Classification is then a separate, offline, deterministic
+  pass over that inventory.
 - It is **not** an LLM-based tool. Rules are deterministic and auditable.
 - It does **not** prove a tool is exploitable — it flags patterns worth a human's
   attention, mapped to known threat classes. A heuristic classifier is a floor,

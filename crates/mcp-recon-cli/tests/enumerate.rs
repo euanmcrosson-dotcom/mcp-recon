@@ -5,8 +5,9 @@
 //! binary against it, and asserts the emitted inventory contains the mock's
 //! two tools. Skips gracefully if no Python interpreter is on PATH.
 
+use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 /// First Python interpreter on PATH that runs, or None.
 fn python_cmd() -> Option<&'static str> {
@@ -79,6 +80,86 @@ fn enumerate_mock_server_yields_inventory_with_two_tools() {
     assert!(names.contains(&"read_file"));
     // inputSchema should have mapped into parameters
     assert!(tools[0]["parameters"].is_object() || tools[1]["parameters"].is_object());
+
+    let _ = std::fs::remove_dir_all(&tmp);
+}
+
+#[test]
+fn enumerate_http_mock_server_yields_inventory_with_two_tools() {
+    // Exercises the Streamable HTTP transport end-to-end: spawn a mock HTTP MCP
+    // server on an OS-assigned port, run the real binary against its URL.
+    let Some(py) = python_cmd() else {
+        eprintln!("skipping: no python interpreter on PATH");
+        return;
+    };
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mock = manifest.join("tests/fixtures/mock_http_mcp_server.py");
+    assert!(mock.exists(), "http mock fixture missing: {}", mock.display());
+
+    // Spawn the mock and read the `PORT <n>` line it prints.
+    let mut server = Command::new(py)
+        .arg(mock.to_string_lossy().as_ref())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("spawn http mock");
+    let stdout = server.stdout.take().expect("mock stdout");
+    let mut first = String::new();
+    BufReader::new(stdout)
+        .read_line(&mut first)
+        .expect("read PORT line");
+    let port: u16 = first
+        .trim()
+        .strip_prefix("PORT ")
+        .and_then(|p| p.parse().ok())
+        .unwrap_or_else(|| {
+            let _ = server.kill();
+            panic!("mock did not print a port; got {first:?}")
+        });
+
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let tmp = std::env::temp_dir().join(format!("mcp-recon-http-test-{stamp}"));
+    std::fs::create_dir_all(&tmp).unwrap();
+    let config_path = tmp.join("config.json");
+    let inv_path = tmp.join("inventory.json");
+
+    let config = serde_json::json!({
+        "mcpServers": {
+            "mockhttp": { "url": format!("http://127.0.0.1:{port}/mcp") }
+        }
+    });
+    std::fs::write(&config_path, serde_json::to_string(&config).unwrap()).unwrap();
+
+    let status = Command::new(env!("CARGO_BIN_EXE_mcp-recon"))
+        .args([
+            "enumerate",
+            config_path.to_string_lossy().as_ref(),
+            "--out",
+            inv_path.to_string_lossy().as_ref(),
+            "--timeout-secs",
+            "20",
+        ])
+        .status()
+        .expect("run mcp-recon enumerate");
+
+    // Stop the mock regardless of assertions below.
+    let _ = server.kill();
+    let _ = server.wait();
+    assert!(status.success(), "enumerate exited non-zero");
+
+    let inv: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&inv_path).expect("inventory written"))
+            .unwrap();
+    let servers = inv["servers"].as_array().expect("servers array");
+    assert_eq!(servers.len(), 1);
+    assert_eq!(servers[0]["transport"], "http", "transport recorded as http");
+    let tools = servers[0]["tools"].as_array().expect("tools array");
+    assert_eq!(tools.len(), 2, "http mock exposes two tools; got {tools:?}");
+    let names: Vec<&str> = tools.iter().filter_map(|t| t["name"].as_str()).collect();
+    assert!(names.contains(&"http_exec"));
+    assert!(names.contains(&"http_lookup"));
 
     let _ = std::fs::remove_dir_all(&tmp);
 }
