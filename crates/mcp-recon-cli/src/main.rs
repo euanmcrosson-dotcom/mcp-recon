@@ -62,6 +62,21 @@ enum Cmd {
         #[arg(long, default_value_t = 15)]
         timeout_secs: u64,
     },
+
+    /// Turn an inventory's findings into capnagent-ready issuance plans
+    /// (`mcp-recon/v0.1/caveats`): a deny/scope recommendation plus caveat-DSL
+    /// strings and rule provenance for every authority-relevant tool. The
+    /// Find → Bind handoff — feed the output to your capnagent issuer.
+    Caveats {
+        /// Path to an mcp-recon.inventory.v1 JSON file.
+        target: PathBuf,
+        /// Output caveats artifact path.
+        #[arg(long, default_value = "mcp-recon.caveats.json")]
+        out: PathBuf,
+        /// Pretty-print the emitted artifact.
+        #[arg(long)]
+        pretty: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -73,8 +88,34 @@ fn main() -> Result<()> {
             pretty,
             timeout_secs,
         }) => run_enumerate(&config, &out, pretty, Duration::from_secs(timeout_secs)),
+        Some(Cmd::Caveats { target, out, pretty }) => run_caveats(&target, &out, pretty),
         None => run_classify(cli.target.as_deref(), &cli.out, cli.pretty),
     }
+}
+
+fn run_caveats(target: &Path, out: &Path, pretty: bool) -> Result<()> {
+    let body = fs::read_to_string(target).with_context(|| format!("read {}", target.display()))?;
+    let inv: McpInventory = serde_json::from_str(&body)
+        .with_context(|| format!("parse {} as mcp-recon.inventory.v1", target.display()))?;
+    let artifact = mcp_recon_core::caveats_v1(&inv);
+    let json = if pretty {
+        serde_json::to_string_pretty(&artifact)?
+    } else {
+        serde_json::to_string(&artifact)?
+    };
+    fs::write(out, json).with_context(|| format!("write {}", out.display()))?;
+    let denies = artifact
+        .plans
+        .iter()
+        .filter(|p| p.recommend == "deny")
+        .count();
+    eprintln!(
+        "mcp-recon: wrote {} ({} issuance plans, {} deny) — feed to your capnagent issuer",
+        out.display(),
+        artifact.plans.len(),
+        denies
+    );
+    Ok(())
 }
 
 fn run_classify(target: Option<&Path>, out: &Path, pretty: bool) -> Result<()> {

@@ -1,26 +1,25 @@
-//! mcp-recon-core — rule-based authority classifier + schema-aware fuzzer
-//! for MCP tool surfaces.
+//! mcp-recon-core — the deterministic, rule-based core of mcp-recon.
 //!
-//! This crate is the deterministic, language-agnostic core. The CLI in
-//! `packages/mcp-recon-cli` calls into it via WASM bindings (added in
-//! v0.1 week 3). The TS layer owns the MCP protocol; this crate owns
-//! everything that benefits from being in Rust — the classifier rule
-//! engine, the schema-aware fuzz generator, and the report renderer.
+//! Shipping today: the [`classifier`] (rules R1-R7 over an [`inventory`]
+//! snapshot, emitting [`findings`]) and [`caveats`] (the Find -> Bind handoff:
+//! findings to capnagent-ready issuance plans). The CLI (`mcp-recon-cli`) owns
+//! live enumeration (stdio + HTTP) and calls into this crate directly.
 //!
-//! v0.1 status: scaffold. The public types below match the wire shape
-//! the CLI emits today (`mcp-recon enumerate`); the classifier and
-//! fuzzer modules are stubs documented per docs/SPEC.md.
+//! The [`fuzzer`] and [`report`] modules are documented stubs for planned work
+//! (see docs/SPEC.md); they are not wired into the shipped CLI.
 
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod caveats;
 pub mod classifier;
 pub mod findings;
 pub mod fuzzer;
 pub mod inventory;
 pub mod report;
 
-pub use classifier::{classify, AuthorityLevel, Classification, DataClass};
+pub use caveats::{caveats_v1, CaveatArtifact, CaveatPlan, CAVEATS_SCHEMA};
+pub use classifier::{classify, unbounded_money_params, AuthorityLevel, Classification, DataClass};
 pub use findings::{Category, Finding, Mappings, Severity};
 pub use inventory::{McpInventory, McpServer, SideEffect, Tool, Transport, INVENTORY_SCHEMA};
 

@@ -302,17 +302,21 @@ const MONEY_PARAM_NAMES: &[&str] = &[
     // Real spend caps (`max_amount`) are still caught via "amount".
 ];
 
-/// R4 -- Unbounded numeric on a money-ish parameter.
-///
-/// Any number-typed property whose name hints at a monetary or quota value
-/// without a `maximum` constraint is the canonical LLM08 "refund $1B"
-/// failure mode.
-fn rule_r4_unbounded_money_param(tool: &Tool) -> Option<Finding> {
-    let params = tool.parameters.as_ref()?;
-    let props = params.get("properties")?.as_object()?;
-    let mut offenders: Vec<&str> = Vec::new();
+/// Numeric parameters whose name looks money/quota-shaped and carry no
+/// `maximum`. Shared by R4 and the caveat emitter so both agree on exactly
+/// which arguments need a cap. Returns sorted, owned names.
+pub fn unbounded_money_params(tool: &Tool) -> Vec<String> {
+    let Some(params) = tool.parameters.as_ref() else {
+        return Vec::new();
+    };
+    let Some(props) = params.get("properties").and_then(|p| p.as_object()) else {
+        return Vec::new();
+    };
+    let mut out: Vec<String> = Vec::new();
     for (name, schema) in props {
-        let ty = schema.get("type").and_then(|v| v.as_str())?;
+        let Some(ty) = schema.get("type").and_then(|v| v.as_str()) else {
+            continue;
+        };
         if ty != "number" && ty != "integer" {
             continue;
         }
@@ -321,13 +325,23 @@ fn rule_r4_unbounded_money_param(tool: &Tool) -> Option<Finding> {
             continue;
         }
         if schema.get("maximum").is_none() {
-            offenders.push(name.as_str());
+            out.push(name.clone());
         }
     }
+    out.sort();
+    out
+}
+
+/// R4 -- Unbounded numeric on a money-ish parameter.
+///
+/// Any number-typed property whose name hints at a monetary or quota value
+/// without a `maximum` constraint is the canonical LLM08 "refund $1B"
+/// failure mode.
+fn rule_r4_unbounded_money_param(tool: &Tool) -> Option<Finding> {
+    let offenders = unbounded_money_params(tool);
     if offenders.is_empty() {
         return None;
     }
-    offenders.sort();
     let pretty = offenders
         .iter()
         .map(|s| format!("`{s}`"))

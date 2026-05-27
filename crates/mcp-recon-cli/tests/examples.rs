@@ -2,7 +2,7 @@
 //! `mcp-recon/examples/`. Asserts the rule output is stable so HN demos
 //! can rely on specific numbers.
 
-use mcp_recon_core::{classify, McpInventory};
+use mcp_recon_core::{caveats_v1, classify, McpInventory};
 
 fn load(name: &str) -> McpInventory {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -94,4 +94,34 @@ fn safe_inventory_produces_zero_findings() {
         "safe-mcp should be clean; got:\n{}",
         serde_json::to_string_pretty(&findings).unwrap()
     );
+
+    // …and a clean inventory yields no issuance plans either.
+    assert!(caveats_v1(&inv).plans.is_empty());
+}
+
+#[test]
+fn dvmcp_caveats_deny_the_two_execution_tools() {
+    // The Find → Bind handoff: the two RCE tools must become `deny` plans.
+    let inv = load("dvmcp.inventory.json");
+    let art = caveats_v1(&inv);
+    assert_eq!(art.schema, "mcp-recon/v0.1/caveats");
+    let denied: Vec<&str> = art
+        .plans
+        .iter()
+        .filter(|p| p.recommend == "deny")
+        .map(|p| p.tool.as_str())
+        .collect();
+    assert!(
+        denied.contains(&"execute_python_code") && denied.contains(&"execute_shell_command"),
+        "both exec tools should be deny plans; got {denied:?}"
+    );
+    // Each deny plan carries a `tool != "…"` exclusion caveat.
+    for p in art.plans.iter().filter(|p| p.recommend == "deny") {
+        assert!(
+            p.caveats.iter().any(|c| c.starts_with("tool != ")),
+            "deny plan for {} should exclude the tool; got {:?}",
+            p.tool,
+            p.caveats
+        );
+    }
 }

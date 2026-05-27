@@ -128,18 +128,47 @@ Two more example inventories ship in [`examples/`](examples/):
 `shopify-mcp.inventory.json` (6 findings) and `safe-mcp.inventory.json` (0 —
 what a well-declared tool surface looks like).
 
+## From finding to enforcement (`mcp-recon caveats`)
+
+Findings tell you what's wrong; `caveats` tells you what to *do* about it. It
+classifies an inventory and emits `mcp-recon/v0.1/caveats` — a capnagent-ready
+issuance plan per authority-relevant tool:
+
+```bash
+mcp-recon caveats inventory.json --out caveats.json --pretty
+```
+
+```jsonc
+{
+  "schema": "mcp-recon/v0.1/caveats",
+  "plans": [
+    { "tool": "puppeteer_evaluate", "recommend": "deny",
+      "caveats": ["tool != \"puppeteer_evaluate\""], "provenance": ["r1","r7"],
+      "note": "Code/command-execution surface (R7)… do not grant this tool." },
+    { "tool": "order.refund", "recommend": "scope",
+      "caveats": ["tool == \"order.refund\"", "arg.amount <= 100"],
+      "provenance": ["r4"], "note": "…the `<= 100` limit is a placeholder." }
+  ]
+}
+```
+
+R7 code-execution tools become **`deny`** plans; everything else becomes a
+**`scope`** plan (`tool == "…"`, plus an `arg.<param> <= …` cap for unbounded
+money/quota numerics). Feed the artifact straight into your
+[capnagent](https://github.com/euanmcrosson-dotcom/capnagent) issuer.
+
 ## How it fits Capframe
 
 ```
-inventory.json ──▶ mcp-recon (Find) ──▶ findings.v1.json ──▶ capframe report
-                                                │
-                                                ▼
-                                         capnagent (Bind) — mint a caveat
+inventory.json ─▶ mcp-recon (Find) ─▶ findings.v1.json ─▶ capframe report
+                       │
+                       ▼  mcp-recon caveats
+              mcp-recon/v0.1/caveats ─▶ capnagent (Bind) — issue a scoped token
 ```
 
-mcp-recon emits findings; `capframe report` renders them to HTML/PDF mapped to
-the compliance frameworks; capnagent turns a tool's profile into a capability
-caveat. They're glued by the `findings.v1` schema.
+mcp-recon classifies the surface and emits both findings (`capframe report`
+renders them to HTML/PDF mapped to the compliance frameworks) and a caveats
+artifact that capnagent turns into a capability token.
 
 ## Roadmap — not yet shipped
 
@@ -149,8 +178,6 @@ These are the ambitions, stated honestly as not-yet-built:
   today (`mcp-recon enumerate`); a WebSocket transport is the remaining one.
 - **Schema-aware fuzzing.** Generate adversarial inputs against each tool's
   parameter schema to surface runtime defects (DoS, deserialization).
-- **Per-tool capnagent caveat emission.** Output a copy-pasteable capability
-  caveat alongside each finding.
 - **Markdown threat-profile rendering.** A human-readable report companion to
   the JSON.
 
