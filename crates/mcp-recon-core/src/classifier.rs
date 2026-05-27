@@ -519,13 +519,25 @@ const EXECUTION_TOKENS: &[&str] = &[
     "shell_command",
     "run python",
     "run code",
+    "run_code",
     "run a script",
     "run shell",
+    "run javascript",
     "eval(",
+    // JavaScript evaluation is arbitrary code execution. Caught `puppeteer_evaluate`
+    // via "execute " but missed Playwright's `browser_evaluate` ("Evaluate
+    // JavaScript expression") and `browser_run_code_unsafe` ("executes arbitrary
+    // JavaScript") until these phrasings were added.
+    "evaluate javascript",
+    "evaluate js",
+    "javascript expression",
     "subprocess",
     "spawn a",
     "arbitrary code",
     "arbitrary command",
+    "arbitrary javascript",
+    "executes arbitrary",
+    "execute arbitrary",
     "system(",
 ];
 
@@ -808,6 +820,58 @@ mod tests {
                 "R6 should fire on external-fetch desc {desc:?}; got {findings:?}"
             );
         }
+    }
+
+    #[test]
+    fn r7_fires_on_javascript_evaluation_tools() {
+        // Both are arbitrary-JS-execution surfaces. R7 caught `puppeteer_evaluate`
+        // ("Execute JavaScript…") only because of the verb "execute"; it missed
+        // these, which say "Evaluate JavaScript" / "executes arbitrary JavaScript".
+        let cases = [
+            (
+                "browser_evaluate",
+                "Evaluate JavaScript expression on page or element",
+            ),
+            (
+                "browser_run_code_unsafe",
+                "Run a Playwright code snippet. Unsafe: executes arbitrary JavaScript in the page context.",
+            ),
+        ];
+        for (name, desc) in cases {
+            let tool = Tool {
+                name: name.into(),
+                description: Some(desc.into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r7")).count(),
+                1,
+                "R7 should fire on JS-execution tool `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r7_silent_on_benign_evaluate_tool() {
+        // "evaluate" in a non-code sense must not raise a critical.
+        let tool = Tool {
+            name: "evaluate_candidate".into(),
+            description: Some("Evaluate a job candidate's resume against the role.".into()),
+            parameters: None,
+            side_effects: vec![SideEffect::Read],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r7")).count(),
+            0,
+            "R7 should not fire on benign evaluate tool; got {findings:?}"
+        );
     }
 
     #[test]
