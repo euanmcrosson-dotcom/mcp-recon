@@ -37,6 +37,12 @@ jobs:
           - target: aarch64-apple-darwin
             os: macos-latest
             archive: tar.gz
+          - target: x86_64-apple-darwin
+            # Cross-built natively on an Apple Silicon runner: Xcode's clang +
+            # SDK target both arches, so `cargo build --target x86_64-apple-darwin`
+            # works without `cross`. Sidesteps the unavailable macos-13 (Intel) runner.
+            os: macos-14
+            archive: tar.gz
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             archive: zip
