@@ -81,7 +81,9 @@ jobs:
         shell: bash
         run: |
           set -eu
-          ver="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          # On workflow_dispatch, GITHUB_REF_NAME is the branch ("master"), so
+          # prefer the explicit tag input; fall back to the ref for tag pushes.
+          ver="${{ github.event.inputs.tag || github.ref_name }}"
           name="mcp-recon-${ver}-${{ matrix.target }}"
           mkdir -p dist "stage/$name"
 
@@ -135,8 +137,8 @@ jobs:
       - name: create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name || github.event.inputs.tag }}
-          name: ${{ github.ref_name || github.event.inputs.tag }}
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag || github.ref_name }}
           files: dist/*
           generate_release_notes: true
           draft: false
