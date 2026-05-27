@@ -187,16 +187,59 @@ const MUTATION_VERBS: &[&str] = &[
     "delete", "remove", "drop", "destroy", "refund", "charge", "transfer", "pay", "purchase",
     "buy", "sell", "send", "post", "publish", "dispatch", "email", "create", "update", "edit",
     "modify", "set", "write", "save", "store", "cancel", "revoke", "expire", "approve", "deny",
-    "grant", "issue",
+    "grant",
+    // NB: "issue" intentionally excluded -- far more common as the noun (an
+    // issue tracker: get_issue / list_issues / search_issues are reads) than the
+    // verb. create_issue / update_issue stay caught by their real verbs.
+    // "add" is likewise excluded: it reads as arithmetic/compute as often as
+    // mutation (`math.add`, `add_numbers`), so it is too ambiguous to flag on.
 ];
 
-/// True if `tool_name` (case-insensitive) contains any of `MUTATION_VERBS` as
-/// a recognizable token. We accept substring match against the lowercased
-/// name to keep this dependency-free; false positives are mitigated by the
-/// caller already gating on declared side_effects.
+/// Split a tool name into lowercase word tokens, breaking on non-alphanumeric
+/// separators (`_`, `-`, `.`, `/`, …) and on lower→upper camelCase boundaries
+/// (`createIssue` → `create`, `issue`).
+fn tokenize(name: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut cur = String::new();
+    let mut prev_lower = false;
+    for ch in name.chars() {
+        if ch.is_alphanumeric() {
+            if ch.is_uppercase() && prev_lower && !cur.is_empty() {
+                tokens.push(std::mem::take(&mut cur));
+            }
+            cur.push(ch.to_ascii_lowercase());
+            prev_lower = ch.is_lowercase() || ch.is_ascii_digit();
+        } else if !cur.is_empty() {
+            tokens.push(std::mem::take(&mut cur));
+            prev_lower = false;
+        }
+    }
+    if !cur.is_empty() {
+        tokens.push(cur);
+    }
+    tokens
+}
+
+/// True if a single `token` is `verb`, or `verb` plus a common plural/tense
+/// suffix (so `updates` / `created` match), but bounded to the whole token so
+/// the noun `issues` does not match a removed verb and `reset` does not match
+/// the verb `set`.
+fn token_matches_verb(token: &str, verb: &str) -> bool {
+    match token.strip_prefix(verb) {
+        Some("") => true,
+        Some(suffix) => matches!(suffix, "s" | "es" | "ed" | "d" | "ing"),
+        None => false,
+    }
+}
+
+/// True if any *token* of `tool_name` is a mutation verb. Token-bounded rather
+/// than a bare substring, so a verb's letters appearing inside an unrelated
+/// word (`issue` in `issues`, `set` in `reset`, `pay` in `payment`) no longer
+/// trigger a false match.
 fn name_implies_mutation(tool_name: &str) -> bool {
-    let lower = tool_name.to_ascii_lowercase();
-    MUTATION_VERBS.iter().any(|v| lower.contains(v))
+    tokenize(tool_name)
+        .iter()
+        .any(|tok| MUTATION_VERBS.iter().any(|v| token_matches_verb(tok, v)))
 }
 
 /// R3 -- Side-effect / name mismatch.
@@ -252,8 +295,11 @@ fn rule_r3_side_effect_mismatch(tool: &Tool) -> Option<Finding> {
 
 /// Parameter names that strongly imply a monetary or quota-style value.
 const MONEY_PARAM_NAMES: &[&str] = &[
-    "amount", "price", "cost", "value", "limit", "max", "qty", "quantity", "total", "fee",
-    "charge", "refund", "credit", "debit",
+    "amount", "price", "cost", "value", "limit", "qty", "quantity", "total", "fee", "charge",
+    "refund", "credit", "debit",
+    // NB: bare "max" intentionally excluded -- it matched content/pagination
+    // caps like `max_length` / `max_results` / `max_tokens` that move no money.
+    // Real spend caps (`max_amount`) are still caught via "amount".
 ];
 
 /// R4 -- Unbounded numeric on a money-ish parameter.
@@ -404,7 +450,11 @@ const FETCH_DESC_PHRASES: &[&str] = &[
     "download http",
     "scrape",
     "crawl",
-    "browse",
+    // bounded "browse" forms -- bare "browse" matched the noun "browser",
+    // flagging every browser-automation control tool (resize, tabs, screenshot).
+    "browse the",
+    "browse to",
+    "browse http",
     "summarize the",
     "summarize a",
     "read the page",
@@ -614,6 +664,150 @@ mod tests {
         };
         let findings = classify(&inventory_with_one_tool(tool));
         assert_eq!(findings.iter().filter(|f| f.id.contains("r7")).count(), 0);
+    }
+
+    // ── False-positive regressions (surfaced scanning 16 popular MCP servers).
+    // All three rules matched a short verb *inside* a longer word: "issue" in
+    // "issues"/"get_issue" (R3), "max" in "max_length" (R4), "browse" in
+    // "browser" (R6). ──────────────────────────────────────────────────────
+
+    #[test]
+    fn r3_silent_on_reads_named_after_the_issue_noun() {
+        // "issue" is a noun here (an issue tracker), not the verb "to issue".
+        for name in ["list_issues", "get_issue", "search_issues"] {
+            let tool = Tool {
+                name: name.into(),
+                description: Some("Read-only lookup.".into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r3")).count(),
+                0,
+                "R3 should not fire on read tool `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r3_still_fires_on_genuine_mutation_verbs() {
+        // Regression guard: real mutations stay flagged, including a pluralised
+        // verb token (`updates`) and a dotted name (`order.refund`).
+        for name in [
+            "create_issue",
+            "delete_entities",
+            "toggle-subscriber-updates",
+            "order.refund",
+        ] {
+            let tool = Tool {
+                name: name.into(),
+                description: Some("does something".into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r3")).count(),
+                1,
+                "R3 should fire on mutation tool `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r4_silent_on_non_money_max_length_param() {
+        // `max_length` is a content-length cap, not a money/quota value.
+        let tool = Tool {
+            name: "fetch".into(),
+            description: Some("Return content.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "max_length": { "type": "integer" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r4")).count(),
+            0,
+            "R4 should not fire on `max_length`; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r4_still_fires_on_unbounded_money_param() {
+        let tool = Tool {
+            name: "billing".into(),
+            description: Some("does something".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "amount": { "type": "number" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r4")).count(),
+            1,
+            "R4 should fire on unbounded `amount`; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r6_silent_on_browser_control_tools() {
+        // "browse" must not match the noun "browser". These manipulate browser
+        // chrome; they don't pull external content into the context window.
+        for (name, desc) in [
+            ("browser_resize", "Resize the browser window"),
+            ("browser_tabs", "List, close, or select a browser tab."),
+        ] {
+            let tool = Tool {
+                name: name.into(),
+                description: Some(desc.into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r6")).count(),
+                0,
+                "R6 should not fire on browser-control tool `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r6_still_fires_on_real_external_fetch() {
+        for desc in [
+            "Fetch the URL and return its contents.",
+            "Browse the web for the answer.",
+        ] {
+            let tool = Tool {
+                name: "retrieve".into(),
+                description: Some(desc.into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r6")).count(),
+                1,
+                "R6 should fire on external-fetch desc {desc:?}; got {findings:?}"
+            );
+        }
     }
 
     #[test]
