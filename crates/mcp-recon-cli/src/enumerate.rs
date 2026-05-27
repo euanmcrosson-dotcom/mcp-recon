@@ -123,7 +123,12 @@ pub fn enumerate_config(json: &str, timeout: Duration) -> Result<McpInventory> {
 /// Spawn one stdio MCP server, perform the `initialize` handshake, call
 /// `tools/list`, and map the result to inventory tools.
 fn list_tools_stdio(spec: &ServerLaunchSpec, timeout: Duration) -> Result<Vec<Tool>> {
-    let mut child = Command::new(&spec.command)
+    // Resolve the command through PATH/PATHEXT so Windows launcher shims
+    // (npx.cmd, uvx.cmd, …) are found — `Command::new("npx")` alone only
+    // resolves .exe on Windows. Fall back to the raw name if resolution fails.
+    let program =
+        which::which(&spec.command).unwrap_or_else(|_| std::path::PathBuf::from(&spec.command));
+    let mut child = Command::new(&program)
         .args(&spec.args)
         .envs(&spec.env)
         .stdin(Stdio::piped())

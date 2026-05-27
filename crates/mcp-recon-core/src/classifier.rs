@@ -1,7 +1,7 @@
 //! Rule-based classifier.
 //!
 //! Takes an [`McpInventory`] snapshot and emits a list of [`Finding`]s.
-//! Rules are deterministic — the same inventory produces the same findings
+//! Rules are deterministic -- the same inventory produces the same findings
 //! every run. Each rule maps to a category + a small bag of compliance
 //! framework IDs (OWASP LLM Top 10, NIST AI RMF, MITRE ATLAS).
 
@@ -34,7 +34,7 @@ pub enum DataClass {
     Unknown,
 }
 
-/// Heuristic authority level — what the tool can do once invoked.
+/// Heuristic authority level -- what the tool can do once invoked.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthorityLevel {
@@ -82,7 +82,7 @@ pub fn classify(inventory: &McpInventory) -> Vec<Finding> {
 
 // ─── Rules ────────────────────────────────────────────────────────────────
 
-/// R1 — Unconstrained string input.
+/// R1 -- Unconstrained string input.
 ///
 /// Any string property in `tool.parameters.properties` with no `maxLength`
 /// constraint is flagged as a prompt-injection / payload-stuffing surface.
@@ -132,7 +132,7 @@ fn rule_r1_unconstrained_string(tool: &Tool) -> Option<Finding> {
     })
 }
 
-/// R2 — Missing auth declaration on a side-effecting tool.
+/// R2 -- Missing auth declaration on a side-effecting tool.
 ///
 /// Tools that mutate state, send money, or otherwise act on the world should
 /// declare `auth_required: true`. Read-only tools are exempt.
@@ -199,11 +199,11 @@ fn name_implies_mutation(tool_name: &str) -> bool {
     MUTATION_VERBS.iter().any(|v| lower.contains(v))
 }
 
-/// R3 — Side-effect / name mismatch.
+/// R3 -- Side-effect / name mismatch.
 ///
 /// If the tool's name implies a mutation verb (delete, send, refund, …) but
 /// the declared `side_effects` list doesn't include any write-class effect,
-/// the tool is misrepresenting what it does — exactly the LLM08 excessive-
+/// the tool is misrepresenting what it does -- exactly the LLM08 excessive-
 /// agency pattern.
 fn rule_r3_side_effect_mismatch(tool: &Tool) -> Option<Finding> {
     if !name_implies_mutation(&tool.name) {
@@ -256,7 +256,7 @@ const MONEY_PARAM_NAMES: &[&str] = &[
     "charge", "refund", "credit", "debit",
 ];
 
-/// R4 — Unbounded numeric on a money-ish parameter.
+/// R4 -- Unbounded numeric on a money-ish parameter.
 ///
 /// Any number-typed property whose name hints at a monetary or quota value
 /// without a `maximum` constraint is the canonical LLM08 "refund $1B"
@@ -326,14 +326,16 @@ const MONEY_DESC_WORDS: &[&str] = &[
     "checkout",
     "invoice",
     "billing",
-    "subscribe",
-    "subscription",
     "transfer ",
     "wire",
     "payout",
     "topup",
     "top-up",
     "balance",
+    // NB: "subscribe"/"subscription" intentionally excluded -- too ambiguous
+    // (resource subscriptions, newsletters, event subscriptions all match but
+    // aren't money). Found as a false positive scanning the MCP `everything`
+    // server's `toggle-subscriber-updates`.
 ];
 
 /// True if `desc` (case-insensitive) mentions money.
@@ -342,12 +344,12 @@ fn description_mentions_money(desc: &str) -> bool {
     MONEY_DESC_WORDS.iter().any(|w| lower.contains(w))
 }
 
-/// R5 — Money in description, no money side-effect declared.
+/// R5 -- Money in description, no money side-effect declared.
 ///
 /// Auditors miss the money operation when a tool's description mentions
 /// payment / refund / charge / billing language but the declared
 /// `side_effects` list doesn't include `Money`. Same root cause as R3 but a
-/// softer signal — description rather than name.
+/// softer signal -- description rather than name.
 fn rule_r5_description_money_no_side_effect(tool: &Tool) -> Option<Finding> {
     let desc = tool.description.as_deref()?;
     if !description_mentions_money(desc) {
@@ -365,7 +367,7 @@ fn rule_r5_description_money_no_side_effect(tool: &Tool) -> Option<Finding> {
             tool.name
         ),
         description: Some(format!(
-            "Description: \"{}\" — this references money/payment/refund/etc., but the \
+            "Description: \"{}\" -- this references money/payment/refund/etc., but the \
              declared side_effects ({:?}) don't include `money`. A capframe-bind policy \
              that relies on declared side_effects to scope spend caveats will under-scope \
              this tool.",
@@ -385,7 +387,7 @@ fn rule_r5_description_money_no_side_effect(tool: &Tool) -> Option<Finding> {
     })
 }
 
-/// Phrases that strongly imply a tool fetches external web content — the
+/// Phrases that strongly imply a tool fetches external web content -- the
 /// canonical indirect-injection surface.
 const FETCH_DESC_PHRASES: &[&str] = &[
     "fetch the",
@@ -393,7 +395,13 @@ const FETCH_DESC_PHRASES: &[&str] = &[
     "fetch url",
     "fetch http",
     "open the url",
-    "download",
+    // bounded "download" forms -- bare "download" was a false positive on tools
+    // that return *downloadable output* (e.g. a gzip tool) rather than fetching
+    // external attacker-controlled content.
+    "download the",
+    "download a ",
+    "download from",
+    "download http",
     "scrape",
     "crawl",
     "browse",
@@ -413,7 +421,7 @@ fn description_implies_external_fetch(desc: &str) -> bool {
     FETCH_DESC_PHRASES.iter().any(|p| lower.contains(p))
 }
 
-/// R6 — External-fetch surface in description.
+/// R6 -- External-fetch surface in description.
 ///
 /// Tools that pull arbitrary external content into the agent's context window
 /// are the canonical LLM01 indirect-injection surface: an attacker-controlled
@@ -428,11 +436,11 @@ fn rule_r6_external_fetch_surface(tool: &Tool) -> Option<Finding> {
         severity: Severity::Medium,
         category: Category::IndirectInjection,
         title: format!(
-            "Tool `{}` fetches external web content — indirect-injection surface",
+            "Tool `{}` fetches external web content -- indirect-injection surface",
             tool.name
         ),
         description: Some(format!(
-            "Description: \"{desc}\" — this tool pulls externally-controlled content into the \
+            "Description: \"{desc}\" -- this tool pulls externally-controlled content into the \
              agent's context window, the canonical indirect-injection vector. Even when the \
              user supplies the URL, content at that URL can carry hostile instructions."
         )),
@@ -452,7 +460,7 @@ fn rule_r6_external_fetch_surface(tool: &Tool) -> Option<Finding> {
 }
 
 /// Tokens in a tool's name or description that imply it executes code,
-/// shell commands, or arbitrary subprocesses — the highest-severity surface.
+/// shell commands, or arbitrary subprocesses -- the highest-severity surface.
 const EXECUTION_TOKENS: &[&str] = &[
     "execute ",
     "execute_",
@@ -481,12 +489,12 @@ fn implies_code_execution(tool: &Tool) -> bool {
     EXECUTION_TOKENS.iter().any(|t| hay.contains(t))
 }
 
-/// R7 — Code / command execution surface.
+/// R7 -- Code / command execution surface.
 ///
 /// A tool whose name or description implies executing code, shell commands, or
 /// subprocesses is the top of the severity ladder: it collapses every other
 /// constraint, because arbitrary execution can do anything the host process
-/// can. Rated Critical regardless of declared side effects — the whole point
+/// can. Rated Critical regardless of declared side effects -- the whole point
 /// is that these tools are routinely mislabelled (or unlabelled) on real
 /// servers, so we don't trust the declaration.
 fn rule_r7_code_execution_surface(tool: &Tool) -> Option<Finding> {
@@ -503,7 +511,7 @@ fn rule_r7_code_execution_surface(tool: &Tool) -> Option<Finding> {
         ),
         description: Some(format!(
             "`{}` looks like it executes code or shell commands ({}). Arbitrary \
-             execution is the maximal authority a tool can hold — it subsumes every \
+             execution is the maximal authority a tool can hold -- it subsumes every \
              other caveat, so it should never be exposed to an agent without a \
              hard sandbox and an explicit, narrowly-scoped capability.",
             tool.name,
@@ -706,7 +714,7 @@ mod tests {
 
     #[test]
     fn r3_fires_when_name_implies_side_effect_but_none_declared() {
-        // `email.send` — name has "send", a strong mutation verb. side_effects is
+        // `email.send` -- name has "send", a strong mutation verb. side_effects is
         // empty so the tool is lying about what it does.
         let tool = Tool {
             name: "email.send".into(),
@@ -874,6 +882,51 @@ mod tests {
         let findings = classify(&inventory_with_one_tool(tool));
         let r5 = findings.iter().filter(|f| f.id.contains("r5")).count();
         assert_eq!(r5, 0);
+    }
+
+    #[test]
+    fn r5_silent_on_resource_subscription_not_money() {
+        // Real false positive found scanning the MCP `everything` server:
+        // "resource subscription updates" is not a paid subscription.
+        let tool = Tool {
+            name: "toggle-subscriber-updates".into(),
+            description: Some("Toggles simulated resource subscription updates on or off.".into()),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r5")).count(),
+            0,
+            "a resource subscription is not a money operation"
+        );
+    }
+
+    #[test]
+    fn r6_silent_on_downloadable_output_not_external_fetch() {
+        // Real false positive found scanning the MCP `filesystem`/everything
+        // gzip tool: returning downloadable *output* is not fetching external
+        // attacker-controlled content.
+        let tool = Tool {
+            name: "gzip-file".into(),
+            description: Some(
+                "Compresses a local file and returns the data as a resource, \
+                 allowing it to be downloaded."
+                    .into(),
+            ),
+            parameters: None,
+            side_effects: vec![SideEffect::Read],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r6")).count(),
+            0,
+            "downloadable output is not an external-fetch / indirect-injection surface"
+        );
     }
 
     #[test]
