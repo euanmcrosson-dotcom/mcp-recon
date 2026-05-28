@@ -1,0 +1,59 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "description": "Get the current weather in a given city.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string", "maxLength": 64 }
+        },
+        "required": ["city"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "fetch_url",
+      "description": "Fetch the URL and return its contents as text.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "maxLength": 1024 }
+        },
+        "required": ["url"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "charge_customer",
+      "description": "Charge a customer for an invoice. The amount is in USD.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_id": { "type": "string", "maxLength": 64 },
+          "amount":      { "type": "number" }
+        },
+        "required": ["customer_id", "amount"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "run_shell",
+      "description": "Run a shell command on the host and return stdout.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cmd": { "type": "string", "maxLength": 4096 }
+        },
+        "required": ["cmd"]
+      }
+    }
+  }
+]

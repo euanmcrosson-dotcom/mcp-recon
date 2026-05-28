@@ -1,0 +1,48 @@
+[
+  {
+    "name": "get_order_status",
+    "description": "Look up the current status of an order by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "order_id": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["order_id"]
+    }
+  },
+  {
+    "name": "send_shipping_notification",
+    "description": "Send a shipping update email to the customer.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "order_id": { "type": "string", "maxLength": 64 },
+        "message":  { "type": "string" }
+      },
+      "required": ["order_id"]
+    }
+  },
+  {
+    "name": "refund_order",
+    "description": "Issue a refund on an order. The amount is in USD.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "order_id": { "type": "string", "maxLength": 64 },
+        "amount":   { "type": "number" }
+      },
+      "required": ["order_id", "amount"]
+    }
+  },
+  {
+    "name": "execute_python",
+    "description": "Execute arbitrary Python code in the agent's sandbox and return stdout.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" }
+      },
+      "required": ["code"]
+    }
+  }
+]

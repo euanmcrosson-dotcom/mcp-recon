@@ -88,6 +88,37 @@ entry rather than aborting the run.
 }
 ```
 
+## Classify non-MCP tool surfaces (`mcp-recon adapt`)
+
+You don't have to be on MCP for mcp-recon to be useful. If your agent already
+describes its tools in Anthropic's `tool_use` format or OpenAI's
+function-calling format, `mcp-recon adapt` converts that payload into an
+`mcp-recon.inventory.v1` document — same downstream pipeline, same findings,
+same caveats artifact.
+
+```bash
+mcp-recon adapt --format anthropic ./examples/anthropic-tools.json \
+    --out inventory.json
+mcp-recon adapt --format openai    ./examples/openai-tools.json    \
+    --out inventory.json
+mcp-recon --target inventory.json --out findings.json --pretty
+```
+
+Both formats accept either a bare array of tool entries or a `{ "tools": [...] }`
+wrapper. OpenAI's current `{ type: "function", function: {...} }` shape and
+the deprecated bare `{ name, description, parameters }` form both work; you
+can even mix them in the same file. `--server-name` overrides the default
+inventory server name (which is otherwise derived from the input filename's
+stem). See [`examples/anthropic-tools.json`](examples/anthropic-tools.json)
+and [`examples/openai-tools.json`](examples/openai-tools.json) for the input
+shapes the adapter understands.
+
+What the adapter cannot infer — `side_effects`, `auth_required`, and
+`rate_limited` are not declared in either provider's tool format — is left
+empty / unset. The classifier still surfaces authority signals via R3 (name
+implies mutation), R5 (description mentions money), R6 (description implies
+external fetch), and R7 (code execution) without needing those declarations.
+
 ## Run mcp-recon *as* an MCP server (`mcp-recon mcp-server`)
 
 mcp-recon also speaks the protocol it scans. `mcp-recon mcp-server` turns the
