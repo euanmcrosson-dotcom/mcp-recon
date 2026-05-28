@@ -8,6 +8,7 @@
 //! so downstream tools never see broken output.
 
 mod enumerate;
+mod mcp_server;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -77,6 +78,12 @@ enum Cmd {
         #[arg(long)]
         pretty: bool,
     },
+
+    /// Run mcp-recon as an MCP server itself — newline-delimited JSON-RPC
+    /// over stdio. Exposes `classify_inventory` and `caveats` as MCP tools so
+    /// any MCP-aware agent can invoke the recon classifier the same way it
+    /// invokes any other MCP server.
+    McpServer,
 }
 
 fn main() -> Result<()> {
@@ -89,6 +96,7 @@ fn main() -> Result<()> {
             timeout_secs,
         }) => run_enumerate(&config, &out, pretty, Duration::from_secs(timeout_secs)),
         Some(Cmd::Caveats { target, out, pretty }) => run_caveats(&target, &out, pretty),
+        Some(Cmd::McpServer) => mcp_server::run(),
         None => run_classify(cli.target.as_deref(), &cli.out, cli.pretty),
     }
 }

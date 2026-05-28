@@ -88,6 +88,28 @@ entry rather than aborting the run.
 }
 ```
 
+## Run mcp-recon *as* an MCP server (`mcp-recon mcp-server`)
+
+mcp-recon also speaks the protocol it scans. `mcp-recon mcp-server` turns the
+binary into a stdio MCP server that any MCP-aware agent (Claude Desktop, Cursor,
+your own framework) can connect to. It exposes two tools — `classify_inventory`
+and `caveats` — backed by the same deterministic core the CLI runs.
+
+```jsonc
+// claude_desktop_config.json (or equivalent)
+{
+  "mcpServers": {
+    "mcp-recon": { "command": "mcp-recon", "args": ["mcp-server"] }
+  }
+}
+```
+
+Each tool takes an `inventory` argument shaped per
+[`mcp-recon.inventory.v1`](schemas/) and returns its result as a JSON-encoded
+text content block. The server speaks newline-delimited JSON-RPC 2.0 per the
+MCP 2025-03-26 spec; no live enumeration in this mode — supply a pre-built
+inventory.
+
 ## Classifier rules
 
 Seven deterministic rules today. Each is a small function with unit tests plus
