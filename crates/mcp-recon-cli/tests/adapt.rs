@@ -162,6 +162,50 @@ fn adapt_server_name_override_propagates_to_inventory() {
 }
 
 #[test]
+fn langchain_fixture_adapts_and_fires_expected_rules() {
+    let input = manifest_dir().join("../../examples/langchain-tools.json");
+    let output = temp_path("mcp-recon-adapt-langchain");
+
+    run_adapt("langchain", &input, &output);
+    let inv = load_inventory(&output);
+    let _ = std::fs::remove_file(&output);
+
+    let names: Vec<&str> = inv.servers[0]
+        .tools
+        .iter()
+        .map(|t| t.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        vec!["calculator", "search_web", "refund_payment", "shell"]
+    );
+
+    let findings = classify(&inv);
+    let rule_ids: Vec<&str> = findings.iter().map(|f| f.id.as_str()).collect();
+
+    // R7 on shell, R6 on search_web (fetch the page), R4 on refund_payment.
+    assert!(
+        rule_ids.iter().any(|id| id.contains("r7") && id.contains("shell")),
+        "R7 should fire on shell; got {rule_ids:?}"
+    );
+    assert!(
+        rule_ids.iter().any(|id| id.contains("r6") && id.contains("search_web")),
+        "R6 should fire on search_web; got {rule_ids:?}"
+    );
+    assert!(
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r4") && id.contains("refund_payment")),
+        "R4 should fire on refund_payment; got {rule_ids:?}"
+    );
+    // calculator is a clean read-only tool with a maxLength'd input — no findings.
+    assert!(
+        !rule_ids.iter().any(|id| id.contains("calculator")),
+        "calculator should produce no findings; got {rule_ids:?}"
+    );
+}
+
+#[test]
 fn adapt_default_server_name_is_the_input_file_stem() {
     let input = manifest_dir().join("../../examples/anthropic-tools.json");
     let output = temp_path("mcp-recon-adapt-default-name");

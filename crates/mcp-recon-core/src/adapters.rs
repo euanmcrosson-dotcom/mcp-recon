@@ -11,6 +11,8 @@
 //! - **OpenAI function-calling**, both the current chat-completions
 //!   `[{ type: "function", function: { name, description, parameters } }, …]`
 //!   form and the deprecated bare-function `[{ name, description, parameters }, …]`
+//! - **LangChain `BaseTool`** dumps (`[{ name, description, args_schema }, …]`),
+//!   with a fallback for the older bare-`args` field
 //!
 //! Each adapter accepts either a bare array of tool entries or a `{ tools: [...] }`
 //! wrapper object, since both shapes appear in real-world configs and request
@@ -137,6 +139,52 @@ pub fn from_openai_tools(payload: &Value, server_name: &str) -> Result<McpInvent
             .map(|s| s.to_string());
         let parameters = fn_obj.get("parameters").cloned();
 
+        tools.push(Tool {
+            name,
+            description,
+            parameters,
+            side_effects: Vec::new(),
+            auth_required: None,
+            rate_limited: None,
+        });
+    }
+    Ok(wrap_in_inventory(server_name, tools))
+}
+
+/// Translate a LangChain `BaseTool` JSON dump into an `McpInventory`.
+///
+/// Accepts the conventional dump `[{ name, description, args_schema }, ...]`
+/// (what `tool.model_dump()` plus `args_schema=tool.args` produces). For
+/// looser serializations that flatten the schema into `args` instead of
+/// `args_schema`, the adapter falls back to that field. Like the other
+/// providers, both bare-array and `{ tools: [...] }` wrappers are accepted.
+///
+/// If the input is from a stack that serializes LangChain tools via
+/// `convert_to_openai_tool()`, use `from_openai_tools` instead — that output
+/// matches OpenAI's wire format byte-for-byte.
+pub fn from_langchain_tools(
+    payload: &Value,
+    server_name: &str,
+) -> Result<McpInventory, AdapterError> {
+    let arr = unwrap_tools_array(payload)?;
+    let mut tools = Vec::with_capacity(arr.len());
+    for (i, entry) in arr.iter().enumerate() {
+        let obj = entry.as_object().ok_or(AdapterError::ToolNotAnObject { index: i })?;
+        let name = obj
+            .get("name")
+            .and_then(|v| v.as_str())
+            .ok_or(AdapterError::MissingName { index: i })?
+            .to_string();
+        let description = obj
+            .get("description")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        // Canonical LangChain field is `args_schema`; some dumps use the
+        // shorter `args` (the property dict alone). Prefer the schema.
+        let parameters = obj
+            .get("args_schema")
+            .or_else(|| obj.get("args"))
+            .cloned();
         tools.push(Tool {
             name,
             description,
@@ -315,6 +363,107 @@ mod tests {
         let payload = json!([{ "type": "function" }]);
         let err = from_openai_tools(&payload, "s").expect_err("must fail");
         assert!(matches!(err, AdapterError::ToolNotAnObject { index: 0 }));
+    }
+
+    // ── LangChain ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn langchain_args_schema_field_is_the_canonical_path() {
+        let payload = json!([
+            {
+                "name": "calculator",
+                "description": "Evaluate a math expression.",
+                "args_schema": {
+                    "type": "object",
+                    "properties": { "expr": { "type": "string", "maxLength": 256 } },
+                    "required": ["expr"]
+                }
+            }
+        ]);
+        let inv = from_langchain_tools(&payload, "lc").expect("adapter");
+        let t = &inv.servers[0].tools[0];
+        assert_eq!(t.name, "calculator");
+        assert_eq!(t.description.as_deref(), Some("Evaluate a math expression."));
+        assert_eq!(t.parameters.as_ref().unwrap()["properties"]["expr"]["maxLength"], 256);
+    }
+
+    #[test]
+    fn langchain_falls_back_to_args_when_no_args_schema() {
+        // Some looser dumps put the property block under `args` instead of
+        // wrapping it as a full `args_schema`.
+        let payload = json!([
+            {
+                "name": "calculator",
+                "args": { "expr": { "type": "string" } }
+            }
+        ]);
+        let inv = from_langchain_tools(&payload, "lc").expect("adapter");
+        let t = &inv.servers[0].tools[0];
+        assert_eq!(
+            t.parameters.as_ref().unwrap()["expr"]["type"],
+            "string"
+        );
+    }
+
+    #[test]
+    fn langchain_object_wrapped_tools_field_works() {
+        let payload = json!({ "tools": [
+            { "name": "search", "args_schema": { "type": "object", "properties": {} } }
+        ]});
+        let inv = from_langchain_tools(&payload, "lc").expect("adapter");
+        assert_eq!(inv.servers[0].tools[0].name, "search");
+    }
+
+    #[test]
+    fn langchain_tool_without_schema_yields_none_parameters() {
+        let payload = json!([{ "name": "ping" }]);
+        let inv = from_langchain_tools(&payload, "lc").expect("adapter");
+        assert!(inv.servers[0].tools[0].parameters.is_none());
+    }
+
+    #[test]
+    fn langchain_missing_name_is_a_clean_error() {
+        let payload = json!([{ "description": "nameless" }]);
+        let err = from_langchain_tools(&payload, "lc").expect_err("must fail");
+        assert!(matches!(err, AdapterError::MissingName { index: 0 }));
+    }
+
+    #[test]
+    fn langchain_inventory_runs_through_classifier_and_fires_rules() {
+        // LangChain agents in the wild often expose a shell tool — should
+        // light up R7. Also includes an unbounded refund amount → R4.
+        let payload = json!([
+            {
+                "name": "shell",
+                "description": "Run shell commands on the host system.",
+                "args_schema": {
+                    "type": "object",
+                    "properties": { "command": { "type": "string", "maxLength": 4096 } }
+                }
+            },
+            {
+                "name": "refund_payment",
+                "description": "Refund a payment by ID.",
+                "args_schema": {
+                    "type": "object",
+                    "properties": {
+                        "payment_id": { "type": "string", "maxLength": 64 },
+                        "amount":     { "type": "number" }
+                    }
+                }
+            }
+        ]);
+        let inv = from_langchain_tools(&payload, "lc").expect("adapter");
+        let findings = classify(&inv);
+        let ids: Vec<&str> = findings.iter().map(|f| f.id.as_str()).collect();
+        assert!(
+            ids.iter().any(|id| id.contains("r7") && id.contains("shell")),
+            "R7 should fire on the shell tool; got {ids:?}"
+        );
+        assert!(
+            ids.iter().any(|id| id.contains("r4") && id.contains("refund_payment")),
+            "R4 should fire on unbounded refund amount; got {ids:?}"
+        );
     }
 
     // ── End-to-end: adapter output runs through the classifier ─────────────

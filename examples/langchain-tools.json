@@ -1,0 +1,47 @@
+[
+  {
+    "name": "calculator",
+    "description": "Evaluate a math expression like '2 + 3 * 4'.",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "expression": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["expression"]
+    }
+  },
+  {
+    "name": "search_web",
+    "description": "Fetch the page at the given URL and return its text.",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "maxLength": 1024 }
+      },
+      "required": ["url"]
+    }
+  },
+  {
+    "name": "refund_payment",
+    "description": "Refund a payment by its id. Amount is in USD.",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "payment_id": { "type": "string", "maxLength": 64 },
+        "amount":     { "type": "number" }
+      },
+      "required": ["payment_id", "amount"]
+    }
+  },
+  {
+    "name": "shell",
+    "description": "Run an arbitrary shell command on the host system and return stdout.",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "command": { "type": "string", "maxLength": 4096 }
+      },
+      "required": ["command"]
+    }
+  }
+]

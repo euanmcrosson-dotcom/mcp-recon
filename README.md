@@ -91,27 +91,32 @@ entry rather than aborting the run.
 ## Classify non-MCP tool surfaces (`mcp-recon adapt`)
 
 You don't have to be on MCP for mcp-recon to be useful. If your agent already
-describes its tools in Anthropic's `tool_use` format or OpenAI's
-function-calling format, `mcp-recon adapt` converts that payload into an
-`mcp-recon.inventory.v1` document — same downstream pipeline, same findings,
-same caveats artifact.
+describes its tools in Anthropic's `tool_use` format, OpenAI's
+function-calling format, or LangChain's `BaseTool` dump, `mcp-recon adapt`
+converts that payload into an `mcp-recon.inventory.v1` document — same
+downstream pipeline, same findings, same caveats artifact.
 
 ```bash
-mcp-recon adapt --format anthropic ./examples/anthropic-tools.json \
-    --out inventory.json
-mcp-recon adapt --format openai    ./examples/openai-tools.json    \
-    --out inventory.json
+mcp-recon adapt --format anthropic ./examples/anthropic-tools.json --out inventory.json
+mcp-recon adapt --format openai    ./examples/openai-tools.json    --out inventory.json
+mcp-recon adapt --format langchain ./examples/langchain-tools.json --out inventory.json
 mcp-recon --target inventory.json --out findings.json --pretty
 ```
 
-Both formats accept either a bare array of tool entries or a `{ "tools": [...] }`
-wrapper. OpenAI's current `{ type: "function", function: {...} }` shape and
-the deprecated bare `{ name, description, parameters }` form both work; you
-can even mix them in the same file. `--server-name` overrides the default
-inventory server name (which is otherwise derived from the input filename's
-stem). See [`examples/anthropic-tools.json`](examples/anthropic-tools.json)
-and [`examples/openai-tools.json`](examples/openai-tools.json) for the input
-shapes the adapter understands.
+All three formats accept either a bare array of tool entries or a
+`{ "tools": [...] }` wrapper. OpenAI's current
+`{ type: "function", function: {...} }` shape and the deprecated bare
+`{ name, description, parameters }` form both work; you can even mix them in
+the same file. The LangChain adapter reads `args_schema` (the canonical
+field on `BaseTool.model_dump()`) and falls back to bare `args` for looser
+serializations; for stacks that emit tools via `convert_to_openai_tool()`,
+prefer `--format openai` since that output matches OpenAI's wire format
+byte-for-byte. `--server-name` overrides the default inventory server name
+(otherwise derived from the input filename's stem). See
+[`examples/anthropic-tools.json`](examples/anthropic-tools.json),
+[`examples/openai-tools.json`](examples/openai-tools.json), and
+[`examples/langchain-tools.json`](examples/langchain-tools.json) for the
+input shapes the adapter understands.
 
 What the adapter cannot infer — `side_effects`, `auth_required`, and
 `rate_limited` are not declared in either provider's tool format — is left
