@@ -13,7 +13,8 @@ mod mcp_server;
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use mcp_recon_core::{
-    classify, from_anthropic_tools, from_openai_tools, Finding, McpInventory, Severity,
+    classify, from_anthropic_tools, from_langchain_tools, from_openai_tools, Finding,
+    McpInventory, Severity,
 };
 use serde_json::json;
 use std::fs;
@@ -121,6 +122,11 @@ enum AdaptFormat {
     /// `[{ type: "function", function: {...} }, ...]` shape or the deprecated
     /// bare `[{ name, description, parameters }, ...]` form.
     Openai,
+    /// LangChain `BaseTool` dump — `[{ name, description, args_schema }, ...]`.
+    /// Falls back to bare `args` if `args_schema` is missing. For LangChain
+    /// stacks that serialize via `convert_to_openai_tool()`, prefer
+    /// `--format openai`.
+    Langchain,
 }
 
 fn main() -> Result<()> {
@@ -170,6 +176,8 @@ fn run_adapt(
             .map_err(|e| anyhow!("adapt anthropic: {e}"))?,
         AdaptFormat::Openai => from_openai_tools(&payload, &server_name)
             .map_err(|e| anyhow!("adapt openai: {e}"))?,
+        AdaptFormat::Langchain => from_langchain_tools(&payload, &server_name)
+            .map_err(|e| anyhow!("adapt langchain: {e}"))?,
     };
 
     let json = if pretty {
@@ -182,6 +190,7 @@ fn run_adapt(
     let format_name = match format {
         AdaptFormat::Anthropic => "anthropic",
         AdaptFormat::Openai => "openai",
+        AdaptFormat::Langchain => "langchain",
     };
     eprintln!(
         "mcp-recon: adapted {} {} tool(s) → {} — classify with: mcp-recon --target {}",
