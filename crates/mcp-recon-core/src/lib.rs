@@ -11,6 +11,7 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod adapters;
 pub mod caveats;
 pub mod classifier;
 pub mod findings;
@@ -18,6 +19,7 @@ pub mod fuzzer;
 pub mod inventory;
 pub mod report;
 
+pub use adapters::{from_anthropic_tools, from_openai_tools, AdapterError};
 pub use caveats::{caveats_v1, CaveatArtifact, CaveatPlan, CAVEATS_SCHEMA};
 pub use classifier::{classify, unbounded_money_params, AuthorityLevel, Classification, DataClass};
 pub use findings::{Category, Finding, Mappings, Severity};

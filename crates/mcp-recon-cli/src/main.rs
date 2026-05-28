@@ -10,9 +10,11 @@
 mod enumerate;
 mod mcp_server;
 
-use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
-use mcp_recon_core::{classify, Finding, McpInventory, Severity};
+use anyhow::{anyhow, Context, Result};
+use clap::{Parser, Subcommand, ValueEnum};
+use mcp_recon_core::{
+    classify, from_anthropic_tools, from_openai_tools, Finding, McpInventory, Severity,
+};
 use serde_json::json;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -84,6 +86,41 @@ enum Cmd {
     /// any MCP-aware agent can invoke the recon classifier the same way it
     /// invokes any other MCP server.
     McpServer,
+
+    /// Convert a non-MCP tool-use payload (Anthropic / OpenAI) into an
+    /// `mcp-recon.inventory.v1` document the classifier accepts. Lets teams
+    /// already using OpenAI's `tools` or Anthropic's `tool_use` blocks run
+    /// mcp-recon against their existing tool surface without rewriting it as
+    /// an MCP server first.
+    Adapt {
+        /// Source format of the input file.
+        #[arg(long, value_enum)]
+        format: AdaptFormat,
+        /// Path to the input JSON file (array of tools or `{ "tools": [...] }`).
+        input: PathBuf,
+        /// Output inventory path.
+        #[arg(long, default_value = "mcp-recon.inventory.json")]
+        out: PathBuf,
+        /// Name to record on the synthesized server entry. Defaults to the
+        /// input file's stem (e.g. `tools.json` → `tools`).
+        #[arg(long)]
+        server_name: Option<String>,
+        /// Pretty-print the emitted inventory.
+        #[arg(long)]
+        pretty: bool,
+    },
+}
+
+/// Source format accepted by `mcp-recon adapt`.
+#[derive(Clone, Copy, Debug, ValueEnum)]
+enum AdaptFormat {
+    /// Anthropic tool-use payload — `[{ name, description, input_schema }, ...]`
+    /// or `{ "tools": [...] }`.
+    Anthropic,
+    /// OpenAI function-calling payload — either the current
+    /// `[{ type: "function", function: {...} }, ...]` shape or the deprecated
+    /// bare `[{ name, description, parameters }, ...]` form.
+    Openai,
 }
 
 fn main() -> Result<()> {
@@ -97,8 +134,63 @@ fn main() -> Result<()> {
         }) => run_enumerate(&config, &out, pretty, Duration::from_secs(timeout_secs)),
         Some(Cmd::Caveats { target, out, pretty }) => run_caveats(&target, &out, pretty),
         Some(Cmd::McpServer) => mcp_server::run(),
+        Some(Cmd::Adapt {
+            format,
+            input,
+            out,
+            server_name,
+            pretty,
+        }) => run_adapt(format, &input, &out, server_name.as_deref(), pretty),
         None => run_classify(cli.target.as_deref(), &cli.out, cli.pretty),
     }
+}
+
+fn run_adapt(
+    format: AdaptFormat,
+    input: &Path,
+    out: &Path,
+    server_name_override: Option<&str>,
+    pretty: bool,
+) -> Result<()> {
+    let body = fs::read_to_string(input).with_context(|| format!("read {}", input.display()))?;
+    let payload: serde_json::Value = serde_json::from_str(&body)
+        .with_context(|| format!("parse {} as JSON", input.display()))?;
+
+    let server_name = match server_name_override {
+        Some(s) => s.to_string(),
+        None => input
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("tools")
+            .to_string(),
+    };
+
+    let inventory = match format {
+        AdaptFormat::Anthropic => from_anthropic_tools(&payload, &server_name)
+            .map_err(|e| anyhow!("adapt anthropic: {e}"))?,
+        AdaptFormat::Openai => from_openai_tools(&payload, &server_name)
+            .map_err(|e| anyhow!("adapt openai: {e}"))?,
+    };
+
+    let json = if pretty {
+        serde_json::to_string_pretty(&inventory)?
+    } else {
+        serde_json::to_string(&inventory)?
+    };
+    fs::write(out, json).with_context(|| format!("write {}", out.display()))?;
+    let total: usize = inventory.servers.iter().map(|s| s.tools.len()).sum();
+    let format_name = match format {
+        AdaptFormat::Anthropic => "anthropic",
+        AdaptFormat::Openai => "openai",
+    };
+    eprintln!(
+        "mcp-recon: adapted {} {} tool(s) → {} — classify with: mcp-recon --target {}",
+        total,
+        format_name,
+        out.display(),
+        out.display()
+    );
+    Ok(())
 }
 
 fn run_caveats(target: &Path, out: &Path, pretty: bool) -> Result<()> {
