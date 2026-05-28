@@ -1,6 +1,6 @@
 {
   "name": "mcp-recon",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Reverse-engineer MCP server tool surfaces. Enumerate, fuzz, classify, report. CLI + library.",
   "keywords": [
     "mcp",
