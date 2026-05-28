@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] — 2026-05-28
+
+### Added
+
+- **`mcp-recon mcp-server` — mcp-recon speaks the protocol it scans.** New
+  stdio MCP server subcommand exposing the core classifier as two MCP tools
+  any agent can call:
+  - `classify_inventory(inventory)` → `findings.v1` JSON
+  - `caveats(inventory)` → `mcp-recon/v0.1/caveats` JSON
+
+  Newline-delimited JSON-RPC 2.0 per the MCP 2025-03-26 spec. Tool-name
+  validated before inventory parsing so typos surface as `METHOD_NOT_FOUND`
+  rather than confusing `INVALID_PARAMS` on the inventory; notifications
+  return `None` uniformly via `req.id?`. Single file, no new dependencies,
+  hand-rolled JSON-RPC.
+
+  Drop into your `claude_desktop_config.json` as
+  `{ "command": "mcp-recon", "args": ["mcp-server"] }` and the recon
+  classifier becomes a tool any MCP-aware agent (Claude Desktop, Cursor,
+  your own framework) can invoke. Also clears the listing-requirement bar
+  for the [`awesome-mcp-servers#5754`](https://github.com/punkpeye/awesome-mcp-servers/pull/5754)
+  Glama check, which previously couldn't introspect mcp-recon because it
+  had no MCP server interface to talk to.
+
+- **Adapters: classify non-MCP tool surfaces.** New
+  `mcp-recon adapt --format anthropic|openai|langchain <input>` subcommand
+  converts third-party tool-use payloads into `mcp-recon.inventory.v1` so
+  the existing deterministic classifier runs unchanged on:
+  - **Anthropic tool-use** — `[{ name, description, input_schema }, ...]`
+  - **OpenAI function-calling** — both the current
+    `[{ type: "function", function: {...} }, ...]` chat-completions shape
+    AND the deprecated bare-function `[{ name, description, parameters }, ...]`
+    form (you can even mix them in the same file)
+  - **LangChain `BaseTool` dump** — `[{ name, description, args_schema }, ...]`
+    with a fallback to bare `args`; for stacks that emit via
+    `convert_to_openai_tool()`, the OpenAI adapter is the byte-for-byte
+    match instead
+
+  All formats accept either a bare array or a `{ "tools": [...] }` wrapper.
+  Clean `AdapterError` enum surfaces useful messages for malformed input
+  rather than opaque serde errors. New `mcp-recon-core::adapters` module
+  exposes `from_anthropic_tools`, `from_openai_tools`, `from_langchain_tools`
+  as library functions so downstream tools (e.g. capframe) can adapt
+  in-process. Realistic example fixtures shipped at
+  `examples/{anthropic,openai,langchain}-tools.json`.
+
+  What's lost in translation — `side_effects`, `auth_required`,
+  `rate_limited` aren't declared in any of these formats — is left empty
+  and recovered by the classifier via R3 (name implies mutation), R5
+  (description mentions money), R6 (description implies external fetch),
+  and R7 (code execution).
+
+### Tests
+
+- Core lib: 45 → 63 (12 Anthropic+OpenAI adapter tests + 6 LangChain).
+- CLI: subprocess integration tests for the MCP server and all three
+  adapters against committed fixtures.
+- Full workspace: 76 → 97 passing across the three landed PRs (#37, #38,
+  #39); clippy clean throughout.
+
 ## [0.2.3] — 2026-05-28
 
 ### Fixed
