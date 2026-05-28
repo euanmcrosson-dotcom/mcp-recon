@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] — 2026-05-28
+
+### Fixed
+
+- **Find→Bind handoff: tool names with control characters no longer produce
+  unparseable caveats.** `caveats_v1` previously formatted tool names into
+  `tool == "…"` / `tool != "…"` predicates with Rust's `Debug` formatter
+  (`{:?}`). `Debug` emits a strict superset of the escape sequences
+  capnagent's caveat DSL parser accepts — capnagent only knows `\n`, `\t`,
+  `\\`, `\"`, while `Debug` can also emit `\r`, `\0`, and `\u{..}` for
+  control characters. A tool name containing any such character produced a
+  caveat string that failed parsing on the receiving end, silently breaking
+  the handoff. Since the upstream MCP server controls tool names, a hostile
+  or buggy server could turn this into a denial of the whole capability
+  binding step.
+
+  The serializer now uses an explicit `dsl_string_literal` that emits only
+  the four escapes capnagent supports, and **fails closed** for any other
+  control character: the affected tool gets a `recommend: "deny"` plan with
+  an empty `caveats` list and an explanatory `note`, so the issuer cannot
+  bind any capability covering the tool. Rule provenance is preserved on
+  the fail-closed plan. Non-ASCII passes through unchanged — the DSL parser
+  does not restrict it. Test corpus expanded with a vendored equivalent of
+  capnagent's `parse_string` so every emitted predicate is round-trip
+  asserted against the exact grammar the consumer enforces.
+
+  Core lib tests: 35 → 45.
+
 ## [0.2.2] — 2026-05-15
 
 ### Changed
