@@ -9,12 +9,13 @@
 
 mod enumerate;
 mod mcp_server;
+mod producer;
 
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use mcp_recon_core::{
-    classify, from_anthropic_tools, from_langchain_tools, from_openai_tools, Finding,
-    McpInventory, Severity,
+    classify, from_anthropic_tools, from_langchain_tools, from_openai_tools, Finding, McpInventory,
+    Severity,
 };
 use serde_json::json;
 use std::fs;
@@ -88,6 +89,14 @@ enum Cmd {
     /// invokes any other MCP server.
     McpServer,
 
+    /// Walk a corpus of MCP server handles (npm + PyPI), fetch each one's
+    /// tool surface from package metadata, classify, and emit one
+    /// `findings.v2.json` per server. Feeds the public Capframe leaderboard.
+    Producer {
+        #[command(subcommand)]
+        kind: ProducerKind,
+    },
+
     /// Convert a non-MCP tool-use payload (Anthropic / OpenAI) into an
     /// `mcp-recon.inventory.v1` document the classifier accepts. Lets teams
     /// already using OpenAI's `tools` or Anthropic's `tool_use` blocks run
@@ -109,6 +118,27 @@ enum Cmd {
         /// Pretty-print the emitted inventory.
         #[arg(long)]
         pretty: bool,
+    },
+}
+
+/// Producer kind — which registry feeds the inventory.
+#[derive(Subcommand, Debug)]
+enum ProducerKind {
+    /// Static-manifest path: fetch tool surface from package metadata on
+    /// the npm + PyPI registries (whichever each handle in the corpus
+    /// indicates). Zero code execution. Broad reach.
+    Registry {
+        /// Path to a corpus JSON file (array of `{handle, repo_url?, name?}`).
+        corpus: PathBuf,
+        /// Output directory; one `<slug>.findings.v2.json` per entry.
+        #[arg(long, default_value = "findings/")]
+        out_dir: PathBuf,
+        /// Pretty-print emitted JSON.
+        #[arg(long)]
+        pretty: bool,
+        /// Process at most N entries (for smoke tests).
+        #[arg(long)]
+        limit: Option<usize>,
     },
 }
 
@@ -138,8 +168,24 @@ fn main() -> Result<()> {
             pretty,
             timeout_secs,
         }) => run_enumerate(&config, &out, pretty, Duration::from_secs(timeout_secs)),
-        Some(Cmd::Caveats { target, out, pretty }) => run_caveats(&target, &out, pretty),
+        Some(Cmd::Caveats {
+            target,
+            out,
+            pretty,
+        }) => run_caveats(&target, &out, pretty),
         Some(Cmd::McpServer) => mcp_server::run(),
+        Some(Cmd::Producer { kind }) => match kind {
+            ProducerKind::Registry {
+                corpus,
+                out_dir,
+                pretty,
+                limit,
+            } => {
+                let ok = producer::run_registry(&corpus, &out_dir, pretty, limit)?;
+                eprintln!("[producer] {} entries written to {}", ok, out_dir.display());
+                Ok(())
+            }
+        },
         Some(Cmd::Adapt {
             format,
             input,
@@ -174,8 +220,9 @@ fn run_adapt(
     let inventory = match format {
         AdaptFormat::Anthropic => from_anthropic_tools(&payload, &server_name)
             .map_err(|e| anyhow!("adapt anthropic: {e}"))?,
-        AdaptFormat::Openai => from_openai_tools(&payload, &server_name)
-            .map_err(|e| anyhow!("adapt openai: {e}"))?,
+        AdaptFormat::Openai => {
+            from_openai_tools(&payload, &server_name).map_err(|e| anyhow!("adapt openai: {e}"))?
+        }
         AdaptFormat::Langchain => from_langchain_tools(&payload, &server_name)
             .map_err(|e| anyhow!("adapt langchain: {e}"))?,
     };
