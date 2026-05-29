@@ -114,13 +114,32 @@ pub fn parse_manifest(manifest: &Value, package_name: &str) -> Result<McpServer>
 }
 
 fn looks_like_mcp_package(manifest: &Value) -> bool {
-    let kw = match manifest.get("keywords").and_then(Value::as_array) {
-        Some(arr) => arr,
-        None => return false,
-    };
-    kw.iter()
-        .filter_map(Value::as_str)
-        .any(|s| MCP_KEYWORDS.iter().any(|m| s.eq_ignore_ascii_case(m)))
+    // Strong signal: explicit MCP keyword in `keywords`.
+    if let Some(arr) = manifest.get("keywords").and_then(Value::as_array) {
+        if arr
+            .iter()
+            .filter_map(Value::as_str)
+            .any(|s| MCP_KEYWORDS.iter().any(|m| s.eq_ignore_ascii_case(m)))
+        {
+            return true;
+        }
+    }
+    // Fallback: name-based MCP signature. Caught by E2E:
+    // `@modelcontextprotocol/server-everything` has NO keywords field
+    // but is obviously the reference MCP server. We accept:
+    //   - `@modelcontextprotocol/*` scope
+    //   - any package whose name contains `mcp-server` or starts with `mcp-`
+    if let Some(name) = manifest.get("name").and_then(Value::as_str) {
+        let lower = name.to_lowercase();
+        if lower.starts_with("@modelcontextprotocol/")
+            || lower.starts_with("@modelcontext/")
+            || lower.contains("mcp-server")
+            || lower.starts_with("mcp-")
+        {
+            return true;
+        }
+    }
+    false
 }
 
 fn collect_bin_names(manifest: &Value) -> Vec<String> {
@@ -249,6 +268,38 @@ mod tests {
         });
         let server = parse_manifest(&m, "x").unwrap();
         assert_eq!(server.tools.len(), 1);
+    }
+
+    #[test]
+    fn name_based_fallback_accepts_modelcontextprotocol_scope() {
+        // Real-world: @modelcontextprotocol/server-everything ships
+        // with NO keywords field. Should still be on the leaderboard.
+        let m = json!({
+            "name": "@modelcontextprotocol/server-everything",
+            "description": "reference everything server",
+            "bin": { "mcp-server-everything": "dist/index.js" }
+        });
+        let server = parse_manifest(&m, "@modelcontextprotocol/server-everything").unwrap();
+        assert_eq!(server.tools.len(), 1);
+        assert_eq!(server.tools[0].name, "mcp-server-everything");
+    }
+
+    #[test]
+    fn name_based_fallback_accepts_mcp_server_prefix() {
+        let m = json!({
+            "name": "mcp-server-anything",
+            "description": "anything"
+        });
+        assert!(parse_manifest(&m, "mcp-server-anything").is_ok());
+    }
+
+    #[test]
+    fn name_based_fallback_rejects_unrelated_packages() {
+        let m = json!({
+            "name": "left-pad",
+            "description": "pads strings"
+        });
+        assert!(parse_manifest(&m, "left-pad").is_err());
     }
 
     #[test]

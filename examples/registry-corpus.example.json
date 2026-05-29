@@ -5,7 +5,7 @@
     "name": "server-everything"
   },
   {
-    "handle": "npm:@modelcontextprotocol/server-filesystem@0.1.0",
+    "handle": "npm:@modelcontextprotocol/server-filesystem@2026.1.14",
     "repo_url": "https://github.com/modelcontextprotocol/servers",
     "name": "server-filesystem"
   },
