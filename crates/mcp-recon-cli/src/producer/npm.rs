@@ -1,46 +1,267 @@
 //! Fetch an MCP server's tool surface from the npm registry.
 //!
-//! **Scaffold status:** returns a minimal McpServer that exercises the
-//! envelope + classifier without making network calls. The real fetcher
-//! (which reads package.json + README + optional `mcp-tools.json`
-//! sidecars from `https://registry.npmjs.org/<name>/<version>`) lands in
-//! a follow-up commit. Marked clearly with `// TODO(producer-npm-fetch)`
-//! so the next session can grep + wire.
+//! Strategy (no code execution):
+//!   1. GET `https://registry.npmjs.org/<name>/<version>` for the
+//!      package manifest.
+//!   2. Verify it self-identifies as an MCP package via `keywords`
+//!      (`mcp` / `model-context-protocol`) — junk packages get
+//!      skipped instead of polluting the leaderboard.
+//!   3. Synthesize one [`Tool`] entry per `bin` key (the executable
+//!      surface), using `name = <bin key>`, `description = <package
+//!      description>`. That's enough for the classifier's
+//!      name/description-based rules (R3/R5/R6/R7) to fire.
+//!
+//! If no `bin` is present, fall back to a single tool whose name is
+//! the package's last path segment and whose description is the
+//! package description.
 
-use anyhow::Result;
-use mcp_recon_core::{McpServer, Transport};
+use anyhow::{anyhow, Context, Result};
+use mcp_recon_core::{McpServer, Tool, Transport};
+use serde_json::Value;
+use std::time::Duration;
 
-/// Fetch the tool surface for a given npm package + version.
-///
-/// Currently returns a placeholder server with no declared tools so the
-/// classifier sees an empty tool surface (0 findings). This is the
-/// honest result for "no fetcher yet" — better than synthesizing fake
-/// tools that would pollute the leaderboard with bogus scores.
-pub fn fetch_server(name: &str, _version: &str) -> Result<McpServer> {
-    // TODO(producer-npm-fetch): GET https://registry.npmjs.org/<name>/<version>
-    // - Parse package.json for `mcp` keyword + `bin` entrypoint
-    // - Fetch README, look for a tools table or `mcp-tools.json` sidecar
-    // - Try `<bin>.mcp.json` manifest convention (if/when one emerges)
-    // - Synthesize Tool entries with name/description from README headings
-    //
-    // Until then this returns an empty inventory so the pipeline runs
-    // end-to-end and emits valid findings.v2 envelopes.
+const NPM_REGISTRY: &str = "https://registry.npmjs.org";
+const MCP_KEYWORDS: &[&str] = &[
+    "mcp",
+    "model-context-protocol",
+    "modelcontextprotocol",
+    "mcp-server",
+];
+const HTTP_TIMEOUT_SECS: u64 = 15;
+
+/// Fetch + classify-ready inventory for a single npm package version.
+/// Errors propagate; the producer logs and moves on so a single bad
+/// package never tanks the corpus walk.
+pub fn fetch_server(name: &str, version: &str) -> Result<McpServer> {
+    let url = manifest_url(name, version);
+    let body = http_get(&url).with_context(|| format!("GET {url}"))?;
+    let manifest: Value = serde_json::from_str(&body)
+        .with_context(|| format!("parse npm manifest for {name}@{version}"))?;
+    parse_manifest(&manifest, name)
+}
+
+fn manifest_url(name: &str, version: &str) -> String {
+    // npm registry quirk: scoped packages have URL-encoded slashes
+    // (`%2F`), but its own router also accepts the raw slash. We use
+    // raw because ureq doesn't auto-encode and the registry is fine
+    // with both forms.
+    format!("{NPM_REGISTRY}/{name}/{version}")
+}
+
+fn http_get(url: &str) -> Result<String> {
+    let res = ureq::AgentBuilder::new()
+        .timeout(Duration::from_secs(HTTP_TIMEOUT_SECS))
+        .build()
+        .get(url)
+        .set("Accept", "application/json")
+        .set(
+            "User-Agent",
+            concat!("mcp-recon/", env!("CARGO_PKG_VERSION")),
+        )
+        .call();
+    match res {
+        Ok(r) => Ok(r.into_string()?),
+        Err(ureq::Error::Status(404, _)) => Err(anyhow!("npm registry returned 404 for {url}")),
+        Err(e) => Err(anyhow!("npm registry GET failed: {e}")),
+    }
+}
+
+/// Pure parser — given the manifest JSON, build an McpServer.
+/// Exposed at module level so tests can exercise it without network.
+pub fn parse_manifest(manifest: &Value, package_name: &str) -> Result<McpServer> {
+    let description = manifest
+        .get("description")
+        .and_then(Value::as_str)
+        .map(str::to_string);
+
+    if !looks_like_mcp_package(manifest) {
+        return Err(anyhow!(
+            "{package_name}: package does not declare an MCP keyword (skipped)",
+        ));
+    }
+
+    let bins = collect_bin_names(manifest);
+    let tools = if bins.is_empty() {
+        // Fallback: one tool named after the last path segment of the
+        // package (e.g. `@scope/foo` → `foo`).
+        let leaf = leaf_name(package_name);
+        vec![Tool {
+            name: leaf,
+            description: description.clone(),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: None,
+            rate_limited: None,
+        }]
+    } else {
+        bins.into_iter()
+            .map(|bin| Tool {
+                name: bin,
+                description: description.clone(),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: None,
+                rate_limited: None,
+            })
+            .collect()
+    };
+
     Ok(McpServer {
-        name: name.to_string(),
+        name: package_name.to_string(),
         transport: Some(Transport::Stdio),
-        tools: vec![],
+        tools,
     })
+}
+
+fn looks_like_mcp_package(manifest: &Value) -> bool {
+    let kw = match manifest.get("keywords").and_then(Value::as_array) {
+        Some(arr) => arr,
+        None => return false,
+    };
+    kw.iter()
+        .filter_map(Value::as_str)
+        .any(|s| MCP_KEYWORDS.iter().any(|m| s.eq_ignore_ascii_case(m)))
+}
+
+fn collect_bin_names(manifest: &Value) -> Vec<String> {
+    let bin = match manifest.get("bin") {
+        Some(b) => b,
+        None => return Vec::new(),
+    };
+    // `bin` can be a string (single bin, named after the package) OR
+    // an object { name: path }.
+    if bin.is_string() {
+        // Use the package name's leaf as the bin name.
+        let leaf = manifest
+            .get("name")
+            .and_then(Value::as_str)
+            .map(leaf_name)
+            .unwrap_or_else(|| "bin".to_string());
+        return vec![leaf];
+    }
+    if let Some(obj) = bin.as_object() {
+        let mut names: Vec<String> = obj.keys().cloned().collect();
+        names.sort();
+        return names;
+    }
+    Vec::new()
+}
+
+fn leaf_name(package_name: &str) -> String {
+    package_name
+        .rsplit('/')
+        .next()
+        .unwrap_or(package_name)
+        .to_string()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    fn mcp_manifest_with_bin_object() -> Value {
+        json!({
+            "name": "@modelcontextprotocol/server-everything",
+            "version": "0.1.0",
+            "description": "Reference MCP server exposing fetch + filesystem + git tools",
+            "keywords": ["mcp", "model-context-protocol"],
+            "bin": {
+                "mcp-everything": "dist/index.js",
+                "mcp-fetch":      "dist/fetch.js"
+            }
+        })
+    }
+
+    fn mcp_manifest_with_string_bin() -> Value {
+        json!({
+            "name": "mcp-server-foo",
+            "version": "1.0.0",
+            "description": "Foo tools for MCP",
+            "keywords": ["mcp-server"],
+            "bin": "dist/cli.js"
+        })
+    }
+
+    fn non_mcp_manifest() -> Value {
+        json!({
+            "name": "leftpad",
+            "version": "1.0.0",
+            "description": "pads a string",
+            "keywords": ["string", "util"]
+        })
+    }
+
+    fn mcp_manifest_no_bin() -> Value {
+        json!({
+            "name": "@scope/library-only",
+            "version": "0.2.0",
+            "description": "MCP helpers, no executable bin",
+            "keywords": ["mcp"]
+        })
+    }
 
     #[test]
-    fn placeholder_returns_named_server_with_no_tools() {
-        let s = fetch_server("@modelcontextprotocol/server-everything", "0.1.0").unwrap();
-        assert_eq!(s.name, "@modelcontextprotocol/server-everything");
-        assert_eq!(s.transport, Some(Transport::Stdio));
-        assert!(s.tools.is_empty());
+    fn parses_bin_object_into_one_tool_per_bin_key() {
+        let m = mcp_manifest_with_bin_object();
+        let server = parse_manifest(&m, "@modelcontextprotocol/server-everything").unwrap();
+        assert_eq!(server.name, "@modelcontextprotocol/server-everything");
+        assert_eq!(server.tools.len(), 2);
+        let names: Vec<&str> = server.tools.iter().map(|t| t.name.as_str()).collect();
+        assert_eq!(names, vec!["mcp-everything", "mcp-fetch"]);
+        // Description from package flows down to each tool — the
+        // classifier's R5/R6 rules read this.
+        assert_eq!(
+            server.tools[0].description.as_deref(),
+            Some("Reference MCP server exposing fetch + filesystem + git tools")
+        );
+    }
+
+    #[test]
+    fn parses_string_bin_using_leaf_name() {
+        let m = mcp_manifest_with_string_bin();
+        let server = parse_manifest(&m, "mcp-server-foo").unwrap();
+        assert_eq!(server.tools.len(), 1);
+        assert_eq!(server.tools[0].name, "mcp-server-foo");
+    }
+
+    #[test]
+    fn rejects_non_mcp_package() {
+        let m = non_mcp_manifest();
+        let err = parse_manifest(&m, "leftpad").unwrap_err();
+        assert!(err.to_string().contains("does not declare an MCP keyword"));
+    }
+
+    #[test]
+    fn synthesizes_fallback_tool_when_no_bin() {
+        let m = mcp_manifest_no_bin();
+        let server = parse_manifest(&m, "@scope/library-only").unwrap();
+        assert_eq!(server.tools.len(), 1);
+        assert_eq!(server.tools[0].name, "library-only");
+    }
+
+    #[test]
+    fn keyword_match_is_case_insensitive() {
+        let m = json!({
+            "name": "x",
+            "description": "y",
+            "keywords": ["MCP-Server"]
+        });
+        let server = parse_manifest(&m, "x").unwrap();
+        assert_eq!(server.tools.len(), 1);
+    }
+
+    #[test]
+    fn manifest_url_format() {
+        assert_eq!(
+            manifest_url("@scope/name", "1.2.3"),
+            "https://registry.npmjs.org/@scope/name/1.2.3"
+        );
+    }
+
+    #[test]
+    fn leaf_name_handles_scoped_packages() {
+        assert_eq!(leaf_name("@scope/foo"), "foo");
+        assert_eq!(leaf_name("unscoped"), "unscoped");
     }
 }

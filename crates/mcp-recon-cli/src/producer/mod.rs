@@ -135,7 +135,12 @@ mod tests {
         );
     }
 
+    /// End-to-end smoke test that exercises the full pipeline:
+    /// corpus → real npm + PyPI fetchers → classifier → v2 envelope.
+    /// Hits live registries; gated behind `--ignored` so `cargo test`
+    /// stays hermetic. Run with: `cargo test -- --ignored producer`.
     #[test]
+    #[ignore = "hits live npm + PyPI registries; opt-in via --ignored"]
     fn run_registry_emits_one_file_per_entry() {
         let dir = std::env::temp_dir().join(format!("mcp-recon-producer-test-{}", Uuid::new_v4()));
         let corpus_path = dir.join("corpus.json");
