@@ -252,10 +252,7 @@ mod tests {
     fn tools_list_advertises_both_tools() {
         let resp = dispatch(req("tools/list", json!({}))).expect("response");
         let tools = resp["result"]["tools"].as_array().expect("array");
-        let names: Vec<&str> = tools
-            .iter()
-            .map(|t| t["name"].as_str().unwrap())
-            .collect();
+        let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(names.contains(&"classify_inventory"));
         assert!(names.contains(&"caveats"));
         // Each tool must declare an object inputSchema with a required `inventory`.
@@ -337,21 +334,17 @@ mod tests {
         assert_eq!(art["schema"], "mcp-recon/v0.1/caveats");
         let plans = art["plans"].as_array().unwrap();
         assert!(!plans.is_empty());
-        assert!(plans
+        assert!(plans.iter().any(|p| p["caveats"]
+            .as_array()
+            .unwrap()
             .iter()
-            .any(|p| p["caveats"].as_array().unwrap().iter().any(|c| c
-                .as_str()
-                .unwrap_or("")
-                .contains("arg.amount"))));
+            .any(|c| c.as_str().unwrap_or("").contains("arg.amount"))));
     }
 
     #[test]
     fn tools_call_missing_arguments_yields_invalid_params() {
-        let resp = dispatch(req(
-            "tools/call",
-            json!({ "name": "classify_inventory" }),
-        ))
-        .expect("response");
+        let resp =
+            dispatch(req("tools/call", json!({ "name": "classify_inventory" }))).expect("response");
         assert_eq!(resp["error"]["code"], INVALID_PARAMS);
     }
 
@@ -381,5 +374,4 @@ mod tests {
         .expect("response");
         assert_eq!(resp["error"]["code"], INVALID_PARAMS);
     }
-
 }

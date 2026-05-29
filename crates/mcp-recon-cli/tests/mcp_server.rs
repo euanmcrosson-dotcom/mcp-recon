@@ -28,8 +28,7 @@ fn drive_server(requests: &[serde_json::Value]) -> Vec<serde_json::Value> {
     {
         let stdin = child.stdin.as_mut().expect("child stdin");
         for req in requests {
-            writeln!(stdin, "{}", serde_json::to_string(req).unwrap())
-                .expect("write request");
+            writeln!(stdin, "{}", serde_json::to_string(req).unwrap()).expect("write request");
         }
         stdin.flush().expect("flush");
     }
@@ -216,12 +215,14 @@ fn server_handles_full_protocol_handshake_and_tool_call() {
     // tools/call caveats → arg.amount <= 100 caveat for refund
     let caveats_resp = &responses[3];
     assert_eq!(caveats_resp["id"], 4);
-    assert!(caveats_resp.get("error").is_none(), "caveats errored: {caveats_resp:#?}");
+    assert!(
+        caveats_resp.get("error").is_none(),
+        "caveats errored: {caveats_resp:#?}"
+    );
     let cav_text = caveats_resp["result"]["content"][0]["text"]
         .as_str()
         .expect("caveats text");
-    let cav_artifact: serde_json::Value =
-        serde_json::from_str(cav_text).expect("caveats JSON");
+    let cav_artifact: serde_json::Value = serde_json::from_str(cav_text).expect("caveats JSON");
     assert_eq!(cav_artifact["schema"], "mcp-recon/v0.1/caveats");
     let plans = cav_artifact["plans"].as_array().expect("plans array");
     let has_amount_cap = plans.iter().any(|p| {
