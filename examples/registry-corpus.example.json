@@ -1,16 +1,70 @@
 [
   {
-    "handle": "npm:@modelcontextprotocol/server-everything@0.1.0",
-    "repo_url": "https://github.com/modelcontextprotocol/servers",
-    "name": "server-everything"
+    "handle": "npm:@modelcontextprotocol/server-everything@2026.1.26",
+    "name": "server-everything",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
   },
   {
     "handle": "npm:@modelcontextprotocol/server-filesystem@2026.1.14",
-    "repo_url": "https://github.com/modelcontextprotocol/servers",
-    "name": "server-filesystem"
+    "name": "server-filesystem",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
   },
   {
-    "handle": "pypi:mcp-server-git@0.6.0",
+    "handle": "npm:@modelcontextprotocol/server-memory@2026.1.26",
+    "name": "server-memory",
     "repo_url": "https://github.com/modelcontextprotocol/servers"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-github@2025.4.8",
+    "name": "server-github"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-puppeteer@2025.5.12",
+    "name": "server-puppeteer"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-sequential-thinking@2025.12.18",
+    "name": "server-sequential-thinking",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-slack@2025.4.25",
+    "name": "server-slack"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-google-maps@0.6.2",
+    "name": "server-google-maps"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-postgres@0.6.2",
+    "name": "server-postgres"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-brave-search@0.6.2",
+    "name": "server-brave-search"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-aws-kb-retrieval@0.6.2",
+    "name": "server-aws-kb-retrieval"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-gdrive@2025.1.14",
+    "name": "server-gdrive"
+  },
+  {
+    "handle": "pypi:mcp-server-git@2026.1.14",
+    "name": "mcp-server-git"
+  },
+  {
+    "handle": "pypi:mcp-server-time@2026.1.26",
+    "name": "mcp-server-time"
+  },
+  {
+    "handle": "pypi:mcp-server-fetch@2025.4.7",
+    "name": "mcp-server-fetch"
+  },
+  {
+    "handle": "pypi:mcp-server-sqlite@2025.4.25",
+    "name": "mcp-server-sqlite"
   }
 ]
