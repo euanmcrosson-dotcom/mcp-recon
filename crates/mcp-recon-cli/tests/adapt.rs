@@ -76,7 +76,9 @@ fn anthropic_fixture_adapts_and_fires_expected_rules() {
 
     // R7 on execute_python (description says "Execute arbitrary Python code").
     assert!(
-        rule_ids.iter().any(|id| id.contains("r7") && id.contains("execute_python")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r7") && id.contains("execute_python")),
         "R7 should fire on execute_python; got {rule_ids:?}"
     );
     // R3 on send_shipping_notification (name has "send", side_effects undeclared).
@@ -88,7 +90,9 @@ fn anthropic_fixture_adapts_and_fires_expected_rules() {
     );
     // R4 on refund_order.amount (unbounded numeric on a money-shaped name).
     assert!(
-        rule_ids.iter().any(|id| id.contains("r4") && id.contains("refund_order")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r4") && id.contains("refund_order")),
         "R4 should fire on refund_order; got {rule_ids:?}"
     );
 }
@@ -117,17 +121,23 @@ fn openai_fixture_adapts_and_fires_expected_rules() {
 
     // R7 on run_shell (description "Run a shell command").
     assert!(
-        rule_ids.iter().any(|id| id.contains("r7") && id.contains("run_shell")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r7") && id.contains("run_shell")),
         "R7 should fire on run_shell; got {rule_ids:?}"
     );
     // R6 on fetch_url (description "Fetch the URL and return its contents").
     assert!(
-        rule_ids.iter().any(|id| id.contains("r6") && id.contains("fetch_url")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r6") && id.contains("fetch_url")),
         "R6 should fire on fetch_url; got {rule_ids:?}"
     );
     // R4 on charge_customer.amount (unbounded money numeric).
     assert!(
-        rule_ids.iter().any(|id| id.contains("r4") && id.contains("charge_customer")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r4") && id.contains("charge_customer")),
         "R4 should fire on charge_customer; got {rule_ids:?}"
     );
     // get_weather should be clean — no findings against it.
@@ -185,11 +195,15 @@ fn langchain_fixture_adapts_and_fires_expected_rules() {
 
     // R7 on shell, R6 on search_web (fetch the page), R4 on refund_payment.
     assert!(
-        rule_ids.iter().any(|id| id.contains("r7") && id.contains("shell")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r7") && id.contains("shell")),
         "R7 should fire on shell; got {rule_ids:?}"
     );
     assert!(
-        rule_ids.iter().any(|id| id.contains("r6") && id.contains("search_web")),
+        rule_ids
+            .iter()
+            .any(|id| id.contains("r6") && id.contains("search_web")),
         "R6 should fire on search_web; got {rule_ids:?}"
     );
     assert!(

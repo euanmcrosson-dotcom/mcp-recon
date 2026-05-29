@@ -468,7 +468,10 @@ mod tests {
         match &servers[1].launch {
             Launch::Http { url, headers } => {
                 assert_eq!(url, "https://mcp.example.com/mcp");
-                assert_eq!(headers.get("Authorization").map(String::as_str), Some("Bearer xyz"));
+                assert_eq!(
+                    headers.get("Authorization").map(String::as_str),
+                    Some("Bearer xyz")
+                );
             }
             other => panic!("expected http, got {other:?}"),
         }

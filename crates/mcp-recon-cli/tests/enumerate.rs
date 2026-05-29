@@ -94,7 +94,11 @@ fn enumerate_http_mock_server_yields_inventory_with_two_tools() {
     };
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let mock = manifest.join("tests/fixtures/mock_http_mcp_server.py");
-    assert!(mock.exists(), "http mock fixture missing: {}", mock.display());
+    assert!(
+        mock.exists(),
+        "http mock fixture missing: {}",
+        mock.display()
+    );
 
     // Spawn the mock and read the `PORT <n>` line it prints.
     let mut server = Command::new(py)
@@ -154,7 +158,10 @@ fn enumerate_http_mock_server_yields_inventory_with_two_tools() {
             .unwrap();
     let servers = inv["servers"].as_array().expect("servers array");
     assert_eq!(servers.len(), 1);
-    assert_eq!(servers[0]["transport"], "http", "transport recorded as http");
+    assert_eq!(
+        servers[0]["transport"], "http",
+        "transport recorded as http"
+    );
     let tools = servers[0]["tools"].as_array().expect("tools array");
     assert_eq!(tools.len(), 2, "http mock exposes two tools; got {tools:?}");
     let names: Vec<&str> = tools.iter().filter_map(|t| t["name"].as_str()).collect();
