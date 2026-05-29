@@ -16,6 +16,7 @@ pub mod envelope;
 pub mod npm;
 pub mod pypi;
 pub mod readme;
+pub mod sandbox;
 
 use anyhow::{Context, Result};
 use mcp_recon_core::{classify, McpInventory, McpServer, INVENTORY_SCHEMA};

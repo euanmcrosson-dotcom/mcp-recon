@@ -66,5 +66,68 @@
   {
     "handle": "pypi:mcp-server-sqlite@2025.4.25",
     "name": "mcp-server-sqlite"
+  },
+  {
+    "handle": "npm:@notionhq/notion-mcp-server@2.2.1",
+    "name": "notion-mcp-server"
+  },
+  {
+    "handle": "npm:@executeautomation/playwright-mcp-server@1.0.12",
+    "name": "playwright-mcp-server",
+    "repo_url": "https://github.com/executeautomation/mcp-playwright"
+  },
+  {
+    "handle": "npm:@upstash/context7-mcp@3.0.0",
+    "name": "context7-mcp",
+    "repo_url": "https://github.com/upstash/context7"
+  },
+  {
+    "handle": "npm:@stripe/mcp@0.3.3",
+    "name": "mcp",
+    "repo_url": "https://github.com/stripe/ai"
+  },
+  {
+    "handle": "npm:tavily-mcp@0.2.20",
+    "name": "tavily-mcp",
+    "repo_url": "https://github.com/tavily-ai/tavily-mcp"
+  },
+  {
+    "handle": "npm:mcp-server-kubernetes@3.8.0",
+    "name": "mcp-server-kubernetes",
+    "repo_url": "https://github.com/Flux159/mcp-server-kubernetes"
+  },
+  {
+    "handle": "npm:@cloudflare/mcp-server-cloudflare@0.2.0",
+    "name": "mcp-server-cloudflare"
+  },
+  {
+    "handle": "npm:@anaisbetts/mcp-installer@0.5.0",
+    "name": "mcp-installer"
+  },
+  {
+    "handle": "npm:@21st-dev/magic@0.1.0",
+    "name": "magic",
+    "repo_url": "https://github.com/21st-dev/magic-mcp"
+  },
+  {
+    "handle": "pypi:mcp-server-postgres@0.1.0",
+    "name": "mcp-server-postgres"
+  },
+  {
+    "handle": "pypi:mcp-atlassian@0.21.1",
+    "name": "mcp-atlassian"
+  },
+  {
+    "handle": "pypi:mcp-server-kubernetes@0.1.6",
+    "name": "mcp-server-kubernetes"
+  },
+  {
+    "handle": "pypi:mcp-server-docker@0.2.1",
+    "name": "mcp-server-docker",
+    "repo_url": "https://github.com/ckreiling/mcp-server-docker"
+  },
+  {
+    "handle": "pypi:mcp-server-redis@0.1.1",
+    "name": "mcp-server-redis"
   }
 ]
