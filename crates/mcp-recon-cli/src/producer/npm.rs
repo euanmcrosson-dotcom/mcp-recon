@@ -20,6 +20,8 @@ use mcp_recon_core::{McpServer, Tool, Transport};
 use serde_json::Value;
 use std::time::Duration;
 
+use super::readme;
+
 const NPM_REGISTRY: &str = "https://registry.npmjs.org";
 const MCP_KEYWORDS: &[&str] = &[
     "mcp",
@@ -32,12 +34,19 @@ const HTTP_TIMEOUT_SECS: u64 = 15;
 /// Fetch + classify-ready inventory for a single npm package version.
 /// Errors propagate; the producer logs and moves on so a single bad
 /// package never tanks the corpus walk.
+///
+/// Two HTTP requests:
+///   1. Version-specific manifest — canonical metadata (keywords, bin).
+///   2. Package-level manifest — for the README, which the version
+///      endpoint omits. Best-effort; on failure we fall back to
+///      bin-based tool synthesis.
 pub fn fetch_server(name: &str, version: &str) -> Result<McpServer> {
     let url = manifest_url(name, version);
     let body = http_get(&url).with_context(|| format!("GET {url}"))?;
     let manifest: Value = serde_json::from_str(&body)
         .with_context(|| format!("parse npm manifest for {name}@{version}"))?;
-    parse_manifest(&manifest, name)
+    let readme_md = fetch_package_readme(name).unwrap_or_default();
+    parse_with_readme(&manifest, &readme_md, name)
 }
 
 fn manifest_url(name: &str, version: &str) -> String {
@@ -46,6 +55,22 @@ fn manifest_url(name: &str, version: &str) -> String {
     // raw because ureq doesn't auto-encode and the registry is fine
     // with both forms.
     format!("{NPM_REGISTRY}/{name}/{version}")
+}
+
+fn package_url(name: &str) -> String {
+    format!("{NPM_REGISTRY}/{name}")
+}
+
+fn fetch_package_readme(name: &str) -> Result<String> {
+    let url = package_url(name);
+    let body = http_get(&url).with_context(|| format!("GET {url}"))?;
+    let manifest: Value = serde_json::from_str(&body)
+        .with_context(|| format!("parse package manifest for {name}"))?;
+    Ok(manifest
+        .get("readme")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string())
 }
 
 fn http_get(url: &str) -> Result<String> {
@@ -66,9 +91,14 @@ fn http_get(url: &str) -> Result<String> {
     }
 }
 
-/// Pure parser — given the manifest JSON, build an McpServer.
-/// Exposed at module level so tests can exercise it without network.
-pub fn parse_manifest(manifest: &Value, package_name: &str) -> Result<McpServer> {
+/// Build an McpServer from manifest + optional README. README-extracted
+/// tools win when non-empty (richer per-tool descriptions for the
+/// classifier); otherwise we fall back to bin-based synthesis.
+pub fn parse_with_readme(
+    manifest: &Value,
+    readme_md: &str,
+    package_name: &str,
+) -> Result<McpServer> {
     let description = manifest
         .get("description")
         .and_then(Value::as_str)
@@ -80,10 +110,30 @@ pub fn parse_manifest(manifest: &Value, package_name: &str) -> Result<McpServer>
         ));
     }
 
+    // Preferred: README-extracted tool surface.
+    let from_readme = readme::extract_tools(readme_md);
+    if !from_readme.is_empty() {
+        let tools = from_readme
+            .into_iter()
+            .map(|t| Tool {
+                name: t.name,
+                description: t.description.or_else(|| description.clone()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: None,
+                rate_limited: None,
+            })
+            .collect();
+        return Ok(McpServer {
+            name: package_name.to_string(),
+            transport: Some(Transport::Stdio),
+            tools,
+        });
+    }
+
+    // Fallback: bin-based synthesis.
     let bins = collect_bin_names(manifest);
     let tools = if bins.is_empty() {
-        // Fallback: one tool named after the last path segment of the
-        // package (e.g. `@scope/foo` → `foo`).
         let leaf = leaf_name(package_name);
         vec![Tool {
             name: leaf,
@@ -223,7 +273,7 @@ mod tests {
     #[test]
     fn parses_bin_object_into_one_tool_per_bin_key() {
         let m = mcp_manifest_with_bin_object();
-        let server = parse_manifest(&m, "@modelcontextprotocol/server-everything").unwrap();
+        let server = parse_with_readme(&m, "", "@modelcontextprotocol/server-everything").unwrap();
         assert_eq!(server.name, "@modelcontextprotocol/server-everything");
         assert_eq!(server.tools.len(), 2);
         let names: Vec<&str> = server.tools.iter().map(|t| t.name.as_str()).collect();
@@ -239,7 +289,7 @@ mod tests {
     #[test]
     fn parses_string_bin_using_leaf_name() {
         let m = mcp_manifest_with_string_bin();
-        let server = parse_manifest(&m, "mcp-server-foo").unwrap();
+        let server = parse_with_readme(&m, "", "mcp-server-foo").unwrap();
         assert_eq!(server.tools.len(), 1);
         assert_eq!(server.tools[0].name, "mcp-server-foo");
     }
@@ -247,14 +297,14 @@ mod tests {
     #[test]
     fn rejects_non_mcp_package() {
         let m = non_mcp_manifest();
-        let err = parse_manifest(&m, "leftpad").unwrap_err();
+        let err = parse_with_readme(&m, "", "leftpad").unwrap_err();
         assert!(err.to_string().contains("does not declare an MCP keyword"));
     }
 
     #[test]
     fn synthesizes_fallback_tool_when_no_bin() {
         let m = mcp_manifest_no_bin();
-        let server = parse_manifest(&m, "@scope/library-only").unwrap();
+        let server = parse_with_readme(&m, "", "@scope/library-only").unwrap();
         assert_eq!(server.tools.len(), 1);
         assert_eq!(server.tools[0].name, "library-only");
     }
@@ -266,7 +316,7 @@ mod tests {
             "description": "y",
             "keywords": ["MCP-Server"]
         });
-        let server = parse_manifest(&m, "x").unwrap();
+        let server = parse_with_readme(&m, "", "x").unwrap();
         assert_eq!(server.tools.len(), 1);
     }
 
@@ -279,7 +329,7 @@ mod tests {
             "description": "reference everything server",
             "bin": { "mcp-server-everything": "dist/index.js" }
         });
-        let server = parse_manifest(&m, "@modelcontextprotocol/server-everything").unwrap();
+        let server = parse_with_readme(&m, "", "@modelcontextprotocol/server-everything").unwrap();
         assert_eq!(server.tools.len(), 1);
         assert_eq!(server.tools[0].name, "mcp-server-everything");
     }
@@ -290,7 +340,7 @@ mod tests {
             "name": "mcp-server-anything",
             "description": "anything"
         });
-        assert!(parse_manifest(&m, "mcp-server-anything").is_ok());
+        assert!(parse_with_readme(&m, "", "mcp-server-anything").is_ok());
     }
 
     #[test]
@@ -299,7 +349,7 @@ mod tests {
             "name": "left-pad",
             "description": "pads strings"
         });
-        assert!(parse_manifest(&m, "left-pad").is_err());
+        assert!(parse_with_readme(&m, "", "left-pad").is_err());
     }
 
     #[test]

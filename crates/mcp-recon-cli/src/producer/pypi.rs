@@ -16,6 +16,8 @@ use mcp_recon_core::{McpServer, Tool, Transport};
 use serde_json::Value;
 use std::time::Duration;
 
+use super::readme;
+
 const PYPI_BASE: &str = "https://pypi.org/pypi";
 const MCP_KEYWORDS: &[&str] = &[
     "mcp",
@@ -31,6 +33,17 @@ pub fn fetch_server(name: &str, version: &str) -> Result<McpServer> {
     let manifest: Value = serde_json::from_str(&body)
         .with_context(|| format!("parse PyPI manifest for {name}@{version}"))?;
     parse_manifest(&manifest, name)
+}
+
+/// Convenience: extract the README out of a parsed PyPI manifest.
+/// PyPI bundles the full long-form description (which is the rendered
+/// README in the vast majority of cases) inside `info.description`.
+fn readme_from(manifest: &Value) -> &str {
+    manifest
+        .get("info")
+        .and_then(|i| i.get("description"))
+        .and_then(Value::as_str)
+        .unwrap_or("")
 }
 
 fn manifest_url(name: &str, version: &str) -> String {
@@ -71,6 +84,28 @@ pub fn parse_manifest(manifest: &Value, package_name: &str) -> Result<McpServer>
         ));
     }
 
+    // Preferred: README-extracted tools (info.description = rendered README).
+    let from_readme = readme::extract_tools(readme_from(manifest));
+    if !from_readme.is_empty() {
+        let tools = from_readme
+            .into_iter()
+            .map(|t| Tool {
+                name: t.name,
+                description: t.description.or_else(|| summary.clone()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: None,
+                rate_limited: None,
+            })
+            .collect();
+        return Ok(McpServer {
+            name: package_name.to_string(),
+            transport: Some(Transport::Stdio),
+            tools,
+        });
+    }
+
+    // Fallback: entry_points-based synthesis.
     let entry_points = parse_entry_points(info);
     let tools = if entry_points.is_empty() {
         vec![Tool {
@@ -103,7 +138,7 @@ pub fn parse_manifest(manifest: &Value, package_name: &str) -> Result<McpServer>
 }
 
 fn looks_like_mcp_package(info: &Value) -> bool {
-    // keywords is a comma-separated STRING on PyPI (Python convention).
+    // Strong signal: explicit MCP keyword (PyPI keywords is a CSV string).
     if let Some(kw) = info.get("keywords").and_then(Value::as_str) {
         let normalized: Vec<&str> = kw
             .split(',')
@@ -117,8 +152,7 @@ fn looks_like_mcp_package(info: &Value) -> bool {
             return true;
         }
     }
-    // Classifiers are a fallback — Trove classifiers often mention MCP
-    // for tool-related packages (e.g. "Framework :: MCP").
+    // Classifiers fallback — Trove classifiers often mention MCP.
     if let Some(classifiers) = info.get("classifiers").and_then(Value::as_array) {
         for c in classifiers.iter().filter_map(Value::as_str) {
             let lower = c.to_lowercase();
@@ -128,6 +162,19 @@ fn looks_like_mcp_package(info: &Value) -> bool {
             {
                 return true;
             }
+        }
+    }
+    // Name-based fallback (mirrors the npm fix). Caught by E2E against
+    // the live PyPI corpus: `mcp-server-sqlite` ships without an MCP
+    // keyword or classifier and was being excluded.
+    if let Some(name) = info.get("name").and_then(Value::as_str) {
+        let lower = name.to_lowercase();
+        if lower.starts_with("mcp-server-")
+            || lower.starts_with("mcp-server.")
+            || lower == "mcp-server"
+            || lower.starts_with("mcp-")
+        {
+            return true;
         }
     }
     false
@@ -278,6 +325,44 @@ mod tests {
         });
         let server = parse_manifest(&m, "x").unwrap();
         assert_eq!(server.tools.len(), 1);
+    }
+
+    #[test]
+    fn name_based_fallback_accepts_mcp_server_prefix() {
+        // Real-world: mcp-server-sqlite ships with no MCP keyword or
+        // classifier. Should still be on the leaderboard.
+        let m = json!({
+            "info": {
+                "name": "mcp-server-sqlite",
+                "summary": "SQLite tools for MCP",
+                "keywords": ""
+            }
+        });
+        let server = parse_manifest(&m, "mcp-server-sqlite").unwrap();
+        assert_eq!(server.tools.len(), 1);
+        assert_eq!(server.tools[0].name, "mcp-server-sqlite");
+    }
+
+    #[test]
+    fn name_based_fallback_accepts_mcp_prefix() {
+        let m = json!({
+            "info": {
+                "name": "mcp-toolkit",
+                "summary": "Generic MCP utilities"
+            }
+        });
+        assert!(parse_manifest(&m, "mcp-toolkit").is_ok());
+    }
+
+    #[test]
+    fn name_based_fallback_rejects_unrelated_packages() {
+        let m = json!({
+            "info": {
+                "name": "requests",
+                "summary": "HTTP for humans"
+            }
+        });
+        assert!(parse_manifest(&m, "requests").is_err());
     }
 
     #[test]
