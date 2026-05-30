@@ -41,17 +41,7 @@ jobs:
       - name: Typecheck (workspaces)
         run: npm run --workspaces --if-present typecheck
 
-      # Lint is informational today. Test-file exemptions are already
-      # codified in packages/mcp-recon-cli/biome.json (noNonNullAssertion
-      # and noAssignInExpressions allowed in `src/__tests__/**`). What's
-      # blocking gating: ~20 residual production-code violations, mostly
-      # `noUnusedTemplateLiteral` and `useLiteralKeys` — both safe to
-      # auto-fix with `biome check --write --unsafe`. Plus one production
-      # `noNonNullAssertion` in `src/caveats/index.ts:176` that needs a
-      # manual decision. Drop this `continue-on-error` once those are
-      # addressed.
-      - name: Lint (workspaces, informational)
-        continue-on-error: true
+      - name: Lint (workspaces)
         run: npm run --workspaces --if-present lint
 
       - name: Test (workspaces)

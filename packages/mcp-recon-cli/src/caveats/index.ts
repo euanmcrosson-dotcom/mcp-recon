@@ -35,11 +35,11 @@
 
 import type { ClassificationResults } from "../classify/types.js";
 import {
-  CAVEATS_SCHEMA,
-  type CaveatBindings,
-  type CaveatPlan,
-  type CaveatsResults,
-  type FlagReason,
+	CAVEATS_SCHEMA,
+	type CaveatBindings,
+	type CaveatPlan,
+	type CaveatsResults,
+	type FlagReason,
 } from "./types.js";
 
 /** Confidence threshold below which classifications are flagged. */
@@ -50,9 +50,9 @@ const PLACEHOLDER_REMAINING = /<your-[a-z-]+>/i;
 const ARG_CONSTRAINT = /\barg\./i;
 
 const PLACEHOLDER_PATTERNS = {
-  caller: /<your-caller-id>/g,
-  sandbox: /<your-sandbox-prefix>/g,
-  expiry: /<your-cap-expiry>/g,
+	caller: /<your-caller-id>/g,
+	sandbox: /<your-sandbox-prefix>/g,
+	expiry: /<your-cap-expiry>/g,
 } as const;
 
 /**
@@ -62,75 +62,82 @@ const PLACEHOLDER_PATTERNS = {
  * @param bindings       - operator-supplied placeholder values + per-tool overrides
  */
 export function planCaveats(
-  classification: ClassificationResults,
-  bindings: CaveatBindings,
+	classification: ClassificationResults,
+	bindings: CaveatBindings,
 ): CaveatsResults {
-  const plans = classification.classifications.map((entry) => planOne(entry, bindings));
+	const plans = classification.classifications.map((entry) =>
+		planOne(entry, bindings),
+	);
 
-  const ready = plans.filter((p) => !p.flagged).length;
-  const flagged = plans.length - ready;
+	const ready = plans.filter((p) => !p.flagged).length;
+	const flagged = plans.length - ready;
 
-  return {
-    schema: CAVEATS_SCHEMA,
-    scanned_at: new Date().toISOString(),
-    server: classification.server,
-    bindings,
-    plans,
-    summary: {
-      total: plans.length,
-      ready,
-      flagged,
-    },
-  };
+	return {
+		schema: CAVEATS_SCHEMA,
+		scanned_at: new Date().toISOString(),
+		server: classification.server,
+		bindings,
+		plans,
+		summary: {
+			total: plans.length,
+			ready,
+			flagged,
+		},
+	};
 }
 
 function planOne(
-  entry: ClassificationResults["classifications"][number],
-  bindings: CaveatBindings,
+	entry: ClassificationResults["classifications"][number],
+	bindings: CaveatBindings,
 ): CaveatPlan {
-  const { caveats: rawCaveats, comment } = parseRecommendedCaveat(entry.recommended_caveat);
-  const substituted = rawCaveats.map((c) => substitute(c, bindings));
+	const { caveats: rawCaveats, comment } = parseRecommendedCaveat(
+		entry.recommended_caveat,
+	);
+	const substituted = rawCaveats.map((c) => substitute(c, bindings));
 
-  const overrides = bindings.per_tool_overrides?.[entry.tool] ?? [];
-  const all_caveats = [...substituted, ...overrides];
+	const overrides = bindings.per_tool_overrides?.[entry.tool] ?? [];
+	const all_caveats = [...substituted, ...overrides];
 
-  const flag_reasons: FlagReason[] = [];
-  if (entry.data_class === "unknown") {
-    flag_reasons.push("classification_unknown");
-  }
-  if (entry.confidence < LOW_CONFIDENCE_THRESHOLD) {
-    flag_reasons.push("low_confidence");
-  }
-  if (entry.confused_deputy_candidate && !hasArgConstraint(all_caveats)) {
-    flag_reasons.push("cdc_without_arg_constraint");
-  }
-  if (all_caveats.some((c) => PLACEHOLDER_REMAINING.test(c))) {
-    flag_reasons.push("unsubstituted_placeholder");
-  }
+	const flag_reasons: FlagReason[] = [];
+	if (entry.data_class === "unknown") {
+		flag_reasons.push("classification_unknown");
+	}
+	if (entry.confidence < LOW_CONFIDENCE_THRESHOLD) {
+		flag_reasons.push("low_confidence");
+	}
+	if (entry.confused_deputy_candidate && !hasArgConstraint(all_caveats)) {
+		flag_reasons.push("cdc_without_arg_constraint");
+	}
+	if (all_caveats.some((c) => PLACEHOLDER_REMAINING.test(c))) {
+		flag_reasons.push("unsubstituted_placeholder");
+	}
 
-  const purpose = purposeFromEntry(entry);
+	const purpose = purposeFromEntry(entry);
 
-  return {
-    tool: entry.tool,
-    data_class: entry.data_class,
-    authority_level: entry.authority_level,
-    confused_deputy_candidate: entry.confused_deputy_candidate,
-    purpose,
-    caveats: all_caveats,
-    flagged: flag_reasons.length > 0,
-    flag_reasons,
-    ...(comment !== undefined ? { comment } : {}),
-  };
+	return {
+		tool: entry.tool,
+		data_class: entry.data_class,
+		authority_level: entry.authority_level,
+		confused_deputy_candidate: entry.confused_deputy_candidate,
+		purpose,
+		caveats: all_caveats,
+		flagged: flag_reasons.length > 0,
+		flag_reasons,
+		...(comment !== undefined ? { comment } : {}),
+	};
 }
 
-function parseRecommendedCaveat(raw: string): { caveats: string[]; comment?: string } {
-  const parts = raw.split(COMMENT_SPLIT);
-  const predicates_raw = parts[0] ?? "";
-  const comment = parts[1]?.trim();
-  const caveats = splitOnUnquotedAnd(predicates_raw)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  return comment ? { caveats, comment } : { caveats };
+function parseRecommendedCaveat(raw: string): {
+	caveats: string[];
+	comment?: string;
+} {
+	const parts = raw.split(COMMENT_SPLIT);
+	const predicates_raw = parts[0] ?? "";
+	const comment = parts[1]?.trim();
+	const caveats = splitOnUnquotedAnd(predicates_raw)
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0);
+	return comment ? { caveats, comment } : { caveats };
 }
 
 /**
@@ -149,34 +156,32 @@ function parseRecommendedCaveat(raw: string): { caveats: string[]; comment?: str
  * Pinned by `caveats.adversarial.test.ts` — cases 1 and 2.
  */
 function splitOnUnquotedAnd(input: string): string[] {
-  const out: string[] = [];
-  let buf = "";
-  let inQuotes = false;
-  let i = 0;
-  while (i < input.length) {
-    const ch = input[i];
-    if (ch === '"') {
-      inQuotes = !inQuotes;
-      buf += ch;
-      i++;
-      continue;
-    }
-    if (
-      !inQuotes &&
-      /\s/.test(ch ?? "") &&
-      input.slice(i).match(/^\s+AND\s+/i)
-    ) {
-      const m = input.slice(i).match(/^\s+AND\s+/i)!;
-      out.push(buf);
-      buf = "";
-      i += m[0].length;
-      continue;
-    }
-    buf += ch;
-    i++;
-  }
-  out.push(buf);
-  return out;
+	const out: string[] = [];
+	let buf = "";
+	let inQuotes = false;
+	let i = 0;
+	while (i < input.length) {
+		const ch = input[i];
+		if (ch === '"') {
+			inQuotes = !inQuotes;
+			buf += ch;
+			i++;
+			continue;
+		}
+		if (!inQuotes && /\s/.test(ch ?? "")) {
+			const m = input.slice(i).match(/^\s+AND\s+/i);
+			if (m) {
+				out.push(buf);
+				buf = "";
+				i += m[0].length;
+				continue;
+			}
+		}
+		buf += ch;
+		i++;
+	}
+	out.push(buf);
+	return out;
 }
 
 /**
@@ -193,34 +198,34 @@ function splitOnUnquotedAnd(input: string): string[] {
  * here would double-quote the result.
  */
 function substitute(caveat: string, bindings: CaveatBindings): string {
-  let out = caveat;
-  if (bindings.caller !== undefined) {
-    out = out.replaceAll(PLACEHOLDER_PATTERNS.caller, bindings.caller);
-  }
-  if (bindings.sandbox_prefix !== undefined) {
-    out = out.replaceAll(PLACEHOLDER_PATTERNS.sandbox, bindings.sandbox_prefix);
-  }
-  if (bindings.expiry !== undefined) {
-    out = out.replaceAll(PLACEHOLDER_PATTERNS.expiry, bindings.expiry);
-  }
-  return out;
+	let out = caveat;
+	if (bindings.caller !== undefined) {
+		out = out.replaceAll(PLACEHOLDER_PATTERNS.caller, bindings.caller);
+	}
+	if (bindings.sandbox_prefix !== undefined) {
+		out = out.replaceAll(PLACEHOLDER_PATTERNS.sandbox, bindings.sandbox_prefix);
+	}
+	if (bindings.expiry !== undefined) {
+		out = out.replaceAll(PLACEHOLDER_PATTERNS.expiry, bindings.expiry);
+	}
+	return out;
 }
 
 function hasArgConstraint(caveats: readonly string[]): boolean {
-  return caveats.some((c) => ARG_CONSTRAINT.test(c));
+	return caveats.some((c) => ARG_CONSTRAINT.test(c));
 }
 
 function purposeFromEntry(
-  entry: ClassificationResults["classifications"][number],
+	entry: ClassificationResults["classifications"][number],
 ): string {
-  const tag = entry.confused_deputy_candidate ? "cdc" : entry.authority_level;
-  return `${entry.data_class}.${tag}.${entry.tool}`;
+	const tag = entry.confused_deputy_candidate ? "cdc" : entry.authority_level;
+	return `${entry.data_class}.${tag}.${entry.tool}`;
 }
 
 export { CAVEATS_SCHEMA } from "./types.js";
 export type {
-  CaveatBindings,
-  CaveatPlan,
-  CaveatsResults,
-  FlagReason,
+	CaveatBindings,
+	CaveatPlan,
+	CaveatsResults,
+	FlagReason,
 } from "./types.js";

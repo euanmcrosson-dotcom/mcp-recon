@@ -16,63 +16,63 @@
  */
 
 export {
-  type ServerSpec,
-  parseServerSpec,
-  openClient,
-  closeClient,
+	type ServerSpec,
+	parseServerSpec,
+	openClient,
+	closeClient,
 } from "./transport.js";
 
 export {
-  type ToolInventory,
-  type EnumeratedTool,
-  type EnumerateOptions,
-  enumerate,
-  INVENTORY_SCHEMA,
-  DEFAULT_ENUMERATE_TIMEOUT_MS,
-  DEFAULT_MAX_DESCRIPTION_CHARS,
-  TRUNCATION_MARKER,
+	type ToolInventory,
+	type EnumeratedTool,
+	type EnumerateOptions,
+	enumerate,
+	INVENTORY_SCHEMA,
+	DEFAULT_ENUMERATE_TIMEOUT_MS,
+	DEFAULT_MAX_DESCRIPTION_CHARS,
+	TRUNCATION_MARKER,
 } from "./enumerate.js";
 
 export {
-  type FuzzAxis,
-  type FuzzCall,
-  type FuzzOutcome,
-  type FuzzResults,
-  type FuzzToolSummary,
-  type FuzzOptions,
-  fuzz,
-  FUZZ_SCHEMA,
+	type FuzzAxis,
+	type FuzzCall,
+	type FuzzOutcome,
+	type FuzzResults,
+	type FuzzToolSummary,
+	type FuzzOptions,
+	fuzz,
+	FUZZ_SCHEMA,
 } from "./fuzz/index.js";
 
 export {
-  type AuthorityLevel,
-  type Classification,
-  type ClassificationResults,
-  type DataClass,
-  classify,
-  noisyOr,
-  synthesizeCaveat,
-  CLASSIFICATION_SCHEMA,
+	type AuthorityLevel,
+	type Classification,
+	type ClassificationResults,
+	type DataClass,
+	classify,
+	noisyOr,
+	synthesizeCaveat,
+	CLASSIFICATION_SCHEMA,
 } from "./classify/index.js";
 
 export {
-  type RenderInput,
-  renderMarkdown,
+	type RenderInput,
+	renderMarkdown,
 } from "./report/index.js";
 
 export {
-  type CaveatBindings,
-  type CaveatPlan,
-  type CaveatsResults,
-  type FlagReason,
-  planCaveats,
-  CAVEATS_SCHEMA,
+	type CaveatBindings,
+	type CaveatPlan,
+	type CaveatsResults,
+	type FlagReason,
+	planCaveats,
+	CAVEATS_SCHEMA,
 } from "./caveats/index.js";
 
 export { renderCaveatsMarkdown } from "./caveats/render.js";
 
 export {
-  type ScanResult,
-  type ScanOptions,
-  scan,
+	type ScanResult,
+	type ScanOptions,
+	scan,
 } from "./scan/index.js";
