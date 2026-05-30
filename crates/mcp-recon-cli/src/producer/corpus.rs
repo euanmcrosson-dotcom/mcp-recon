@@ -5,6 +5,7 @@
 
 use anyhow::{anyhow, bail, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CorpusEntry {
@@ -18,6 +19,28 @@ pub struct CorpusEntry {
     /// Optional human-readable name. Defaults to the package name part of `handle`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// Optional sandbox overrides — extra argv + env vars to satisfy
+    /// servers that demand credentials at startup (most do, even just
+    /// to advertise tools/list). Static-manifest producer ignores this.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sandbox: Option<SandboxOverrides>,
+}
+
+/// Per-entry overrides applied only by the sandbox producer.
+///
+/// **Use dummy / test values only** — the corpus file is checked into
+/// a public repo. Real credentials must come from GHA secrets and be
+/// merged at runtime; this struct exists to let public servers boot
+/// far enough to advertise `tools/list`.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SandboxOverrides {
+    /// Extra positional arguments appended after the server binary
+    /// invocation (e.g. a dummy database URL).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<String>,
+    /// Environment variables forwarded to `docker run -e KEY=VALUE`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub env: BTreeMap<String, String>,
 }
 
 /// Parse a corpus JSON document. Accepts either a bare array or

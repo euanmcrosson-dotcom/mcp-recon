@@ -118,12 +118,13 @@ fn produce_one_sandbox(
     config: &SandboxConfig,
 ) -> Result<PathBuf> {
     let kind = corpus::ParsedHandle::from_handle(&entry.handle)?;
+    let overrides = entry.sandbox.as_ref();
     let server: McpServer = match kind {
         corpus::ParsedHandle::Npm { name, version } => {
-            sandbox::fetch_server_npm(&name, &version, config)?
+            sandbox::fetch_server_npm(&name, &version, overrides, config)?
         }
         corpus::ParsedHandle::Pypi { name, version } => {
-            sandbox::fetch_server_pypi(&name, &version, config)?
+            sandbox::fetch_server_pypi(&name, &version, overrides, config)?
         }
     };
     write_findings(entry, server, ProducerSource::Sandbox, out_dir, pretty)

@@ -25,11 +25,17 @@
   },
   {
     "handle": "npm:@modelcontextprotocol/server-postgres@0.6.2",
-    "name": "server-postgres"
+    "name": "server-postgres",
+    "sandbox": {
+      "args": ["postgres://dummy:dummy@127.0.0.1:5432/dummy"]
+    }
   },
   {
     "handle": "npm:@modelcontextprotocol/server-brave-search@0.6.2",
-    "name": "server-brave-search"
+    "name": "server-brave-search",
+    "sandbox": {
+      "env": { "BRAVE_API_KEY": "capframe-sandbox-probe" }
+    }
   },
   {
     "handle": "npm:@modelcontextprotocol/server-puppeteer@2025.5.12",
@@ -54,20 +60,11 @@
     "name": "mcp-server-fetch"
   },
   {
-    "handle": "pypi:mcp-server-git@2026.1.14",
-    "name": "mcp-server-git"
-  },
-  {
     "handle": "pypi:mcp-server-sqlite@2025.4.25",
     "name": "mcp-server-sqlite"
   },
   {
     "handle": "pypi:mcp-atlassian@0.21.1",
     "name": "mcp-atlassian"
-  },
-  {
-    "handle": "pypi:mcp-server-docker@0.2.1",
-    "name": "mcp-server-docker",
-    "repo_url": "https://github.com/ckreiling/mcp-server-docker"
   }
 ]
