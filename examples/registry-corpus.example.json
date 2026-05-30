@@ -129,5 +129,103 @@
   {
     "handle": "pypi:mcp-server-redis@0.1.1",
     "name": "mcp-server-redis"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-redis@2025.4.25",
+    "name": "server-redis"
+  },
+  {
+    "handle": "npm:@elastic/mcp-server-elasticsearch@0.3.1",
+    "name": "mcp-server-elasticsearch",
+    "repo_url": "https://github.com/elastic/mcp-server-elasticsearch"
+  },
+  {
+    "handle": "npm:firecrawl-mcp@3.20.1",
+    "name": "firecrawl-mcp",
+    "repo_url": "https://github.com/firecrawl/firecrawl-mcp-server"
+  },
+  {
+    "handle": "npm:perplexity-mcp@0.2.3",
+    "name": "perplexity-mcp",
+    "repo_url": "https://github.com/DaInfernalCoder/researcher-mcp"
+  },
+  {
+    "handle": "npm:exa-mcp-server@3.2.1",
+    "name": "exa-mcp-server",
+    "repo_url": "https://github.com/exa-labs/exa-mcp-server"
+  },
+  {
+    "handle": "npm:linear-mcp@1.2.0",
+    "name": "linear-mcp",
+    "repo_url": "https://github.com/dvcrn/linear-mcp"
+  },
+  {
+    "handle": "npm:@sentry/mcp-server@0.35.0",
+    "name": "mcp-server"
+  },
+  {
+    "handle": "npm:@e2b/mcp-server@0.2.3",
+    "name": "mcp-server",
+    "repo_url": "https://github.com/e2b-dev/mcp-server"
+  },
+  {
+    "handle": "npm:@kazuph/mcp-fetch@1.6.2",
+    "name": "mcp-fetch",
+    "repo_url": "https://github.com/kazuph/mcp-fetch"
+  },
+  {
+    "handle": "npm:@gongrzhe/server-gmail-autoauth-mcp@1.1.11",
+    "name": "server-gmail-autoauth-mcp",
+    "repo_url": "https://github.com/gongrzhe/server-gmail-autoauth-mcp"
+  },
+  {
+    "handle": "npm:@gongrzhe/server-calendar-autoauth-mcp@1.0.2",
+    "name": "server-calendar-autoauth-mcp",
+    "repo_url": "https://github.com/gongrzhe/server-calendar-autoauth-mcp"
+  },
+  {
+    "handle": "npm:@browsermcp/mcp@0.1.3",
+    "name": "mcp"
+  },
+  {
+    "handle": "npm:@apify/actors-mcp-server@0.10.11",
+    "name": "actors-mcp-server",
+    "repo_url": "https://github.com/apify/apify-mcp-server"
+  },
+  {
+    "handle": "npm:obsidian-mcp@1.0.6",
+    "name": "obsidian-mcp",
+    "repo_url": "https://github.com/StevenStavrakis/obsidian-mcp"
+  },
+  {
+    "handle": "pypi:mcp-server-bigquery@0.3.2",
+    "name": "mcp-server-bigquery"
+  },
+  {
+    "handle": "pypi:mcp-server-snowflake@0.3.8",
+    "name": "mcp-server-snowflake"
+  },
+  {
+    "handle": "pypi:mcp-server-mssql@0.1.0",
+    "name": "mcp-server-mssql",
+    "repo_url": "https://github.com/daedalus/mcp-server-mssql"
+  },
+  {
+    "handle": "pypi:mcp-server-mysql@0.1.4",
+    "name": "mcp-server-mysql"
+  },
+  {
+    "handle": "pypi:mcp-azure-devops@0.6.0",
+    "name": "mcp-azure-devops",
+    "repo_url": "https://github.com/Vortiago/mcp-azure-devops"
+  },
+  {
+    "handle": "pypi:mcp-server-jira@0.1.1",
+    "name": "mcp-server-jira",
+    "repo_url": "https://github.com/your-username/mcp-jira-v3"
+  },
+  {
+    "handle": "pypi:mcp-llms-txt@0.2.0",
+    "name": "mcp-llms-txt"
   }
 ]
