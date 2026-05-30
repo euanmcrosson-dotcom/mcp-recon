@@ -13,8 +13,10 @@
 //! the same `docker run` API surface and runs anywhere the producer
 //! runs. Substituting a remote provider is a `Command::new` swap.
 //!
-//! Today this module covers **npm packages only**. PyPI follows the
-//! same pattern with a Python shim (next session).
+//! Covers npm and PyPI. Each registry has its own shim that runs
+//! inside the container (Node for npm, Python for PyPI). The shims
+//! emit `tools/list` results wrapped in the same marker pair, so the
+//! host parser is registry-agnostic.
 
 use anyhow::{anyhow, Context, Result};
 use mcp_recon_core::{McpServer, SideEffect, Tool, Transport};
@@ -31,8 +33,10 @@ pub struct SandboxConfig {
     pub timeout_secs: u32,
     /// Memory limit passed to `docker run --memory`.
     pub memory_mb: u32,
-    /// Docker image used as the runtime. Defaults to `node:20`.
+    /// Docker image used for npm entries. Defaults to `node:20`.
     pub image: String,
+    /// Docker image used for PyPI entries. Defaults to `python:3.12-slim`.
+    pub image_pypi: String,
 }
 
 impl Default for SandboxConfig {
@@ -41,22 +45,39 @@ impl Default for SandboxConfig {
             timeout_secs: 120,
             memory_mb: 512,
             image: "node:20".to_string(),
+            image_pypi: "python:3.12-slim".to_string(),
         }
     }
 }
 
-/// Shim script (Node.js) — runs inside the container and performs
-/// the MCP handshake. Output is wrapped in markers the host parses.
+/// Shim scripts — run inside the container and perform the MCP
+/// handshake. Output is wrapped in the same markers regardless of
+/// registry so the host parser is shared.
 const SHIM_JS: &str = include_str!("./sandbox_shim.js");
+const SHIM_PY: &str = include_str!("./sandbox_shim.py");
 
 /// Entry point matching [`super::npm::fetch_server`] /
 /// [`super::pypi::fetch_server`] so the corpus walker can dispatch
 /// to the sandbox path without knowing about Docker.
 pub fn fetch_server_npm(name: &str, version: &str, config: &SandboxConfig) -> Result<McpServer> {
-    let raw = run_docker(name, version, config)
+    let script = build_npm_script(name, version);
+    let raw = run_docker(&script, &config.image, config)
         .with_context(|| format!("sandbox docker run for npm:{name}@{version}"))?;
-    let tools_list = extract_tools_list(&raw)
-        .ok_or_else(|| anyhow!("sandbox did not emit a tools/list result for {name}@{version}"))?;
+    finalize(name, &raw)
+}
+
+/// Entry point for PyPI handles — mirrors `fetch_server_npm` shape.
+/// Uses `pip install` + a Python shim instead of `npm install` + node.
+pub fn fetch_server_pypi(name: &str, version: &str, config: &SandboxConfig) -> Result<McpServer> {
+    let script = build_pypi_script(name, version);
+    let raw = run_docker(&script, &config.image_pypi, config)
+        .with_context(|| format!("sandbox docker run for pypi:{name}@{version}"))?;
+    finalize(name, &raw)
+}
+
+fn finalize(name: &str, raw: &str) -> Result<McpServer> {
+    let tools_list = extract_tools_list(raw)
+        .ok_or_else(|| anyhow!("sandbox did not emit a tools/list result for {name}"))?;
     let inventory = normalise_tools_list(tools_list)?;
     Ok(McpServer {
         name: name.to_string(),
@@ -65,16 +86,11 @@ pub fn fetch_server_npm(name: &str, version: &str, config: &SandboxConfig) -> Re
     })
 }
 
-/// Build the `docker run` invocation script + execute. Returns the
-/// container's combined stdout for the parser.
-fn run_docker(name: &str, version: &str, config: &SandboxConfig) -> Result<String> {
-    // Compose a tiny shell script that prepares the workspace, installs
-    // the package, writes the shim to /w/shim.js, and runs it.
-    //
+fn build_npm_script(name: &str, version: &str) -> String {
     // Sequencing matters: we suppress install chatter on stdout (npm is
     // noisy) so the shim's marker line is the only thing on stdout when
     // the handshake succeeds.
-    let script = format!(
+    format!(
         r#"set -e
 mkdir -p /w
 cd /w
@@ -85,8 +101,29 @@ cat > /w/shim.js <<'EOSHIM_CAPFRAME'
 EOSHIM_CAPFRAME
 node /w/shim.js {name}
 "#
-    );
+    )
+}
 
+fn build_pypi_script(name: &str, version: &str) -> String {
+    // python:3.12-slim has pip but is otherwise minimal. We install
+    // into /usr (system site-packages) for simplicity — this is a
+    // throwaway container.
+    format!(
+        r#"set -e
+mkdir -p /w
+cd /w
+pip install --quiet --root-user-action=ignore "{name}=={version}" >/tmp/install.log 2>&1 || (cat /tmp/install.log >&2; exit 8)
+cat > /w/shim.py <<'EOSHIM_CAPFRAME'
+{SHIM_PY}
+EOSHIM_CAPFRAME
+python /w/shim.py {name}
+"#
+    )
+}
+
+/// Run a prepared shell script inside an ephemeral container. Returns
+/// the container's combined stdout for the marker-parser.
+fn run_docker(script: &str, image: &str, config: &SandboxConfig) -> Result<String> {
     let mut cmd = Command::new("docker");
     cmd.args([
         "run",
@@ -100,7 +137,7 @@ node /w/shim.js {name}
         // budget — defense against runaway servers.
         "--stop-timeout",
         "5",
-        &config.image,
+        image,
         "sh",
     ]);
     cmd.stdin(Stdio::piped());
@@ -115,7 +152,6 @@ node /w/shim.js {name}
         .write_all(script.as_bytes())
         .context("writing sandbox script to docker stdin")?;
 
-    // Poll for completion with a timeout.
     let start = std::time::Instant::now();
     let deadline = Duration::from_secs(u64::from(config.timeout_secs));
     let output = loop {
@@ -126,7 +162,7 @@ node /w/shim.js {name}
                     let _ = child.kill();
                     let _ = child.wait();
                     return Err(anyhow!(
-                        "sandbox timed out after {}s for {name}@{version}",
+                        "sandbox timed out after {}s",
                         config.timeout_secs
                     ));
                 }
@@ -138,7 +174,7 @@ node /w/shim.js {name}
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(anyhow!(
-            "docker run exited {} for {name}@{version}: {}",
+            "docker run exited {}: {}",
             output.status,
             stderr.lines().last().unwrap_or("(no stderr)")
         ));
@@ -295,5 +331,23 @@ mod tests {
         assert!(cfg.timeout_secs <= 600);
         assert!(cfg.memory_mb >= 256);
         assert_eq!(cfg.image, "node:20");
+        assert_eq!(cfg.image_pypi, "python:3.12-slim");
+    }
+
+    #[test]
+    fn pypi_script_uses_pip_install_with_pin() {
+        let s = build_pypi_script("mcp-server-git", "1.2.3");
+        assert!(s.contains("pip install"));
+        assert!(s.contains("\"mcp-server-git==1.2.3\""));
+        assert!(s.contains("python /w/shim.py mcp-server-git"));
+        // Marker heredoc must terminate cleanly.
+        assert!(s.contains("EOSHIM_CAPFRAME"));
+    }
+
+    #[test]
+    fn npm_script_uses_npm_install_with_pin() {
+        let s = build_npm_script("@modelcontextprotocol/server-everything", "2026.1.26");
+        assert!(s.contains("npm install @modelcontextprotocol/server-everything@2026.1.26"));
+        assert!(s.contains("node /w/shim.js @modelcontextprotocol/server-everything"));
     }
 }

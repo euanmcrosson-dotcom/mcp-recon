@@ -122,8 +122,8 @@ fn produce_one_sandbox(
         corpus::ParsedHandle::Npm { name, version } => {
             sandbox::fetch_server_npm(&name, &version, config)?
         }
-        corpus::ParsedHandle::Pypi { .. } => {
-            anyhow::bail!("sandbox producer does not yet support PyPI handles");
+        corpus::ParsedHandle::Pypi { name, version } => {
+            sandbox::fetch_server_pypi(&name, &version, config)?
         }
     };
     write_findings(entry, server, ProducerSource::Sandbox, out_dir, pretty)
