@@ -65,12 +65,20 @@ pub fn parse(body: &str) -> Result<Vec<CorpusEntry>> {
 /// Discriminated handle — the producer dispatches on this.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParsedHandle {
-    Npm { name: String, version: String },
-    Pypi { name: String, version: String },
+    Npm {
+        name: String,
+        version: String,
+    },
+    Pypi {
+        name: String,
+        version: String,
+    },
     /// Live HTTP MCP endpoint. The handle is the URL itself
     /// (e.g. `https://example.com/mcp`); no version field, since
     /// HTTP servers are versioned by the operator behind the URL.
-    Http { url: String },
+    Http {
+        url: String,
+    },
 }
 
 impl ParsedHandle {

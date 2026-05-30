@@ -82,9 +82,7 @@ fn produce_one(entry: &CorpusEntry, out_dir: &Path, pretty: bool) -> Result<Path
         // HTTP handles share the registry-walker command surface (one
         // corpus file feeds both) but emit a different source label so
         // the leaderboard can tell readers which path scanned them.
-        corpus::ParsedHandle::Http { url } => {
-            (http::fetch_server(&url)?, ProducerSource::Http)
-        }
+        corpus::ParsedHandle::Http { url } => (http::fetch_server(&url)?, ProducerSource::Http),
     };
     write_findings(entry, server, source, out_dir, pretty)
 }

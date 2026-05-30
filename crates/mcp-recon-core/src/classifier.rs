@@ -296,7 +296,8 @@ fn rule_r3_side_effect_mismatch(tool: &Tool) -> Option<Finding> {
 /// Parameter names that strongly imply a monetary or quota-style value.
 const MONEY_PARAM_NAMES: &[&str] = &[
     "amount", "price", "cost", "value", "limit", "qty", "quantity", "total", "fee", "charge",
-    "refund", "credit", "debit",
+    "refund", "credit",
+    "debit",
     // NB: bare "max" intentionally excluded -- it matched content/pagination
     // caps like `max_length` / `max_results` / `max_tokens` that move no money.
     // Real spend caps (`max_amount`) are still caught via "amount".
@@ -590,7 +591,11 @@ fn implies_code_execution(tool: &Tool) -> bool {
     // Don't double-check against name — disclaimers belong in descriptions,
     // and name-only matches (e.g. `exec` tool with no description) should
     // still fire to avoid letting bad actors paper over the rule.
-    let desc = tool.description.as_deref().unwrap_or("").to_ascii_lowercase();
+    let desc = tool
+        .description
+        .as_deref()
+        .unwrap_or("")
+        .to_ascii_lowercase();
     if NON_EXECUTION_DISCLAIMERS.iter().any(|t| desc.contains(t)) {
         return false;
     }

@@ -41,8 +41,15 @@ jobs:
       - name: Typecheck (workspaces)
         run: npm run --workspaces --if-present typecheck
 
-      # Lint is informational today — the repo has pre-existing Biome diagnostics
-      # that are tracked separately. Keep the signal visible without gating CI.
+      # Lint is informational today. Test-file exemptions are already
+      # codified in packages/mcp-recon-cli/biome.json (noNonNullAssertion
+      # and noAssignInExpressions allowed in `src/__tests__/**`). What's
+      # blocking gating: ~20 residual production-code violations, mostly
+      # `noUnusedTemplateLiteral` and `useLiteralKeys` — both safe to
+      # auto-fix with `biome check --write --unsafe`. Plus one production
+      # `noNonNullAssertion` in `src/caveats/index.ts:176` that needs a
+      # manual decision. Drop this `continue-on-error` once those are
+      # addressed.
       - name: Lint (workspaces, informational)
         continue-on-error: true
         run: npm run --workspaces --if-present lint
@@ -89,11 +96,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # rustfmt is informational today — there is one known import-order diff
-      # tracked separately from this CI bringup PR. Keep the signal visible
-      # without gating master.
-      - name: cargo fmt --check (informational)
-        continue-on-error: true
+      - name: cargo fmt --check
         run: cargo fmt --all -- --check
 
       - name: cargo clippy --all-targets -- -D warnings
