@@ -11,9 +11,13 @@ const path = require("path");
 
 const pkgName = process.argv[2];
 if (!pkgName) {
-  process.stderr.write("usage: shim.js <package-name>\n");
+  process.stderr.write("usage: shim.js <package-name> [server-arg ...]\n");
   process.exit(2);
 }
+// Any additional positional args are forwarded to the spawned MCP
+// server — used for servers that demand startup args (e.g.
+// server-postgres takes a database URL as argv[1]).
+const extraArgs = process.argv.slice(3);
 
 // Discover the bin to spawn. npm packages declare it under
 // `bin` in package.json — either a single string (named after the
@@ -42,7 +46,8 @@ function findBin(pkg) {
   process.exit(4);
 }
 
-const [cmd, args] = findBin(pkgName);
+const [cmd, baseArgs] = findBin(pkgName);
+const args = baseArgs.concat(extraArgs);
 const proc = spawn(cmd, args, {
   stdio: ["pipe", "pipe", "pipe"],
   env: { ...process.env, NODE_ENV: "production" },

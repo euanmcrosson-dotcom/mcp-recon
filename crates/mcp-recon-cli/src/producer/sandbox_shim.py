@@ -113,11 +113,15 @@ def _top_level(dist: ilmd.Distribution) -> Optional[str]:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        sys.stderr.write("usage: shim.py <package-name>\n")
+        sys.stderr.write("usage: shim.py <package-name> [server-arg ...]\n")
         sys.exit(2)
     pkg = sys.argv[1]
+    # Forwarded positional args (e.g. a connection string the server
+    # consumes from its own argv[1]).
+    extra_args = sys.argv[2:]
 
-    cmd, args = find_entry(pkg)
+    cmd, base_args = find_entry(pkg)
+    args = base_args + extra_args
 
     env = dict(os.environ)
     env["PYTHONUNBUFFERED"] = "1"

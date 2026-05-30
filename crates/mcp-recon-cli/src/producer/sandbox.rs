@@ -59,20 +59,44 @@ const SHIM_PY: &str = include_str!("./sandbox_shim.py");
 /// Entry point matching [`super::npm::fetch_server`] /
 /// [`super::pypi::fetch_server`] so the corpus walker can dispatch
 /// to the sandbox path without knowing about Docker.
-pub fn fetch_server_npm(name: &str, version: &str, config: &SandboxConfig) -> Result<McpServer> {
-    let script = build_npm_script(name, version);
-    let raw = run_docker(&script, &config.image, config)
+pub fn fetch_server_npm(
+    name: &str,
+    version: &str,
+    overrides: Option<&super::corpus::SandboxOverrides>,
+    config: &SandboxConfig,
+) -> Result<McpServer> {
+    let (extra_args, env) = split_overrides(overrides);
+    let script = build_npm_script(name, version, extra_args);
+    let raw = run_docker(&script, &config.image, env, config)
         .with_context(|| format!("sandbox docker run for npm:{name}@{version}"))?;
     finalize(name, &raw)
 }
 
 /// Entry point for PyPI handles — mirrors `fetch_server_npm` shape.
 /// Uses `pip install` + a Python shim instead of `npm install` + node.
-pub fn fetch_server_pypi(name: &str, version: &str, config: &SandboxConfig) -> Result<McpServer> {
-    let script = build_pypi_script(name, version);
-    let raw = run_docker(&script, &config.image_pypi, config)
+pub fn fetch_server_pypi(
+    name: &str,
+    version: &str,
+    overrides: Option<&super::corpus::SandboxOverrides>,
+    config: &SandboxConfig,
+) -> Result<McpServer> {
+    let (extra_args, env) = split_overrides(overrides);
+    let script = build_pypi_script(name, version, extra_args);
+    let raw = run_docker(&script, &config.image_pypi, env, config)
         .with_context(|| format!("sandbox docker run for pypi:{name}@{version}"))?;
     finalize(name, &raw)
+}
+
+fn split_overrides(
+    overrides: Option<&super::corpus::SandboxOverrides>,
+) -> (
+    &[String],
+    Option<&std::collections::BTreeMap<String, String>>,
+) {
+    match overrides {
+        Some(o) => (o.args.as_slice(), Some(&o.env)),
+        None => (&[], None),
+    }
 }
 
 fn finalize(name: &str, raw: &str) -> Result<McpServer> {
@@ -86,10 +110,11 @@ fn finalize(name: &str, raw: &str) -> Result<McpServer> {
     })
 }
 
-fn build_npm_script(name: &str, version: &str) -> String {
+fn build_npm_script(name: &str, version: &str, extra_args: &[String]) -> String {
     // Sequencing matters: we suppress install chatter on stdout (npm is
     // noisy) so the shim's marker line is the only thing on stdout when
     // the handshake succeeds.
+    let args = format_extra_args(extra_args);
     format!(
         r#"set -e
 mkdir -p /w
@@ -99,15 +124,16 @@ npm install {name}@{version} > /tmp/install.log 2>&1 || (cat /tmp/install.log >&
 cat > /w/shim.js <<'EOSHIM_CAPFRAME'
 {SHIM_JS}
 EOSHIM_CAPFRAME
-node /w/shim.js {name}
+node /w/shim.js {name}{args}
 "#
     )
 }
 
-fn build_pypi_script(name: &str, version: &str) -> String {
+fn build_pypi_script(name: &str, version: &str, extra_args: &[String]) -> String {
     // python:3.12-slim has pip but is otherwise minimal. We install
     // into /usr (system site-packages) for simplicity — this is a
     // throwaway container.
+    let args = format_extra_args(extra_args);
     format!(
         r#"set -e
 mkdir -p /w
@@ -116,14 +142,42 @@ pip install --quiet --root-user-action=ignore "{name}=={version}" >/tmp/install.
 cat > /w/shim.py <<'EOSHIM_CAPFRAME'
 {SHIM_PY}
 EOSHIM_CAPFRAME
-python /w/shim.py {name}
+python /w/shim.py {name}{args}
 "#
     )
 }
 
+/// POSIX-sh single-quote each extra argv element. The leading space
+/// is included so the result can be concatenated directly after the
+/// shim invocation.
+fn format_extra_args(extra: &[String]) -> String {
+    if extra.is_empty() {
+        return String::new();
+    }
+    let mut out = String::new();
+    for a in extra {
+        out.push(' ');
+        out.push('\'');
+        for ch in a.chars() {
+            if ch == '\'' {
+                out.push_str("'\\''");
+            } else {
+                out.push(ch);
+            }
+        }
+        out.push('\'');
+    }
+    out
+}
+
 /// Run a prepared shell script inside an ephemeral container. Returns
 /// the container's combined stdout for the marker-parser.
-fn run_docker(script: &str, image: &str, config: &SandboxConfig) -> Result<String> {
+fn run_docker(
+    script: &str,
+    image: &str,
+    env: Option<&std::collections::BTreeMap<String, String>>,
+    config: &SandboxConfig,
+) -> Result<String> {
     let mut cmd = Command::new("docker");
     cmd.args([
         "run",
@@ -137,9 +191,20 @@ fn run_docker(script: &str, image: &str, config: &SandboxConfig) -> Result<Strin
         // budget — defense against runaway servers.
         "--stop-timeout",
         "5",
-        image,
-        "sh",
     ]);
+    // Forward per-entry env vars (`docker run -e KEY=VALUE`). The
+    // corpus file is public, so values here are dummies that just let
+    // the server boot far enough to advertise tools/list. Real
+    // credentials live in GHA secrets and would be merged at the cron
+    // layer if ever wanted.
+    if let Some(m) = env {
+        for (k, v) in m {
+            cmd.arg("-e");
+            cmd.arg(format!("{k}={v}"));
+        }
+    }
+    cmd.arg(image);
+    cmd.arg("sh");
     cmd.stdin(Stdio::piped());
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
@@ -336,7 +401,7 @@ mod tests {
 
     #[test]
     fn pypi_script_uses_pip_install_with_pin() {
-        let s = build_pypi_script("mcp-server-git", "1.2.3");
+        let s = build_pypi_script("mcp-server-git", "1.2.3", &[]);
         assert!(s.contains("pip install"));
         assert!(s.contains("\"mcp-server-git==1.2.3\""));
         assert!(s.contains("python /w/shim.py mcp-server-git"));
@@ -346,8 +411,35 @@ mod tests {
 
     #[test]
     fn npm_script_uses_npm_install_with_pin() {
-        let s = build_npm_script("@modelcontextprotocol/server-everything", "2026.1.26");
+        let s = build_npm_script(
+            "@modelcontextprotocol/server-everything",
+            "2026.1.26",
+            &[],
+        );
         assert!(s.contains("npm install @modelcontextprotocol/server-everything@2026.1.26"));
         assert!(s.contains("node /w/shim.js @modelcontextprotocol/server-everything"));
+    }
+
+    #[test]
+    fn extra_args_are_single_quoted_in_npm_script() {
+        let s = build_npm_script(
+            "@modelcontextprotocol/server-postgres",
+            "0.6.2",
+            &["postgres://x:y@127.0.0.1:5432/z".to_string()],
+        );
+        assert!(s.contains(
+            "node /w/shim.js @modelcontextprotocol/server-postgres 'postgres://x:y@127.0.0.1:5432/z'"
+        ));
+    }
+
+    #[test]
+    fn format_extra_args_escapes_embedded_single_quotes() {
+        let out = format_extra_args(&["it's".to_string()]);
+        assert_eq!(out, " 'it'\\''s'");
+    }
+
+    #[test]
+    fn format_extra_args_is_empty_when_no_args() {
+        assert_eq!(format_extra_args(&[]), "");
     }
 }
