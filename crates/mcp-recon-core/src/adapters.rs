@@ -76,11 +76,16 @@ impl std::error::Error for AdapterError {}
 /// `{ tools: [...] }`. The `server_name` becomes the only [`McpServer`]'s
 /// `name`; the transport is recorded as [`Transport::Stdio`] since Anthropic
 /// tools are local to the agent-side process.
-pub fn from_anthropic_tools(payload: &Value, server_name: &str) -> Result<McpInventory, AdapterError> {
+pub fn from_anthropic_tools(
+    payload: &Value,
+    server_name: &str,
+) -> Result<McpInventory, AdapterError> {
     let arr = unwrap_tools_array(payload)?;
     let mut tools = Vec::with_capacity(arr.len());
     for (i, entry) in arr.iter().enumerate() {
-        let obj = entry.as_object().ok_or(AdapterError::ToolNotAnObject { index: i })?;
+        let obj = entry
+            .as_object()
+            .ok_or(AdapterError::ToolNotAnObject { index: i })?;
         let name = obj
             .get("name")
             .and_then(|v| v.as_str())
@@ -116,7 +121,9 @@ pub fn from_openai_tools(payload: &Value, server_name: &str) -> Result<McpInvent
     let arr = unwrap_tools_array(payload)?;
     let mut tools = Vec::with_capacity(arr.len());
     for (i, entry) in arr.iter().enumerate() {
-        let obj = entry.as_object().ok_or(AdapterError::ToolNotAnObject { index: i })?;
+        let obj = entry
+            .as_object()
+            .ok_or(AdapterError::ToolNotAnObject { index: i })?;
 
         // Current shape wraps the function under `function`; legacy shape is
         // flat. Detect by presence of the wrapper.
@@ -169,7 +176,9 @@ pub fn from_langchain_tools(
     let arr = unwrap_tools_array(payload)?;
     let mut tools = Vec::with_capacity(arr.len());
     for (i, entry) in arr.iter().enumerate() {
-        let obj = entry.as_object().ok_or(AdapterError::ToolNotAnObject { index: i })?;
+        let obj = entry
+            .as_object()
+            .ok_or(AdapterError::ToolNotAnObject { index: i })?;
         let name = obj
             .get("name")
             .and_then(|v| v.as_str())
@@ -181,10 +190,7 @@ pub fn from_langchain_tools(
             .map(|s| s.to_string());
         // Canonical LangChain field is `args_schema`; some dumps use the
         // shorter `args` (the property dict alone). Prefer the schema.
-        let parameters = obj
-            .get("args_schema")
-            .or_else(|| obj.get("args"))
-            .cloned();
+        let parameters = obj.get("args_schema").or_else(|| obj.get("args")).cloned();
         tools.push(Tool {
             name,
             description,
@@ -207,7 +213,9 @@ fn unwrap_tools_array(payload: &Value) -> Result<&Vec<Value>, AdapterError> {
         if let Some(arr) = obj.get("tools").and_then(|v| v.as_array()) {
             return Ok(arr);
         }
-        return Err(AdapterError::UnexpectedShape("object without a `tools` array"));
+        return Err(AdapterError::UnexpectedShape(
+            "object without a `tools` array",
+        ));
     }
     Err(AdapterError::UnexpectedShape(value_type_name(payload)))
 }
@@ -264,9 +272,15 @@ mod tests {
         assert_eq!(server.tools.len(), 1);
         let t = &server.tools[0];
         assert_eq!(t.name, "get_weather");
-        assert_eq!(t.description.as_deref(), Some("Get the current weather in a given location"));
+        assert_eq!(
+            t.description.as_deref(),
+            Some("Get the current weather in a given location")
+        );
         // input_schema is carried through unchanged so the classifier can read it.
-        assert_eq!(t.parameters.as_ref().unwrap()["properties"]["location"]["type"], "string");
+        assert_eq!(
+            t.parameters.as_ref().unwrap()["properties"]["location"]["type"],
+            "string"
+        );
         // No declared side-effects / auth — left for the rules to infer.
         assert!(t.side_effects.is_empty());
         assert_eq!(t.auth_required, None);
@@ -305,7 +319,10 @@ mod tests {
     #[test]
     fn anthropic_top_level_garbage_is_a_clean_error() {
         for garbage in [json!(null), json!(42), json!("nope"), json!({})] {
-            assert!(from_anthropic_tools(&garbage, "s").is_err(), "{garbage} should fail");
+            assert!(
+                from_anthropic_tools(&garbage, "s").is_err(),
+                "{garbage} should fail"
+            );
         }
     }
 
@@ -383,8 +400,14 @@ mod tests {
         let inv = from_langchain_tools(&payload, "lc").expect("adapter");
         let t = &inv.servers[0].tools[0];
         assert_eq!(t.name, "calculator");
-        assert_eq!(t.description.as_deref(), Some("Evaluate a math expression."));
-        assert_eq!(t.parameters.as_ref().unwrap()["properties"]["expr"]["maxLength"], 256);
+        assert_eq!(
+            t.description.as_deref(),
+            Some("Evaluate a math expression.")
+        );
+        assert_eq!(
+            t.parameters.as_ref().unwrap()["properties"]["expr"]["maxLength"],
+            256
+        );
     }
 
     #[test]
@@ -399,10 +422,7 @@ mod tests {
         ]);
         let inv = from_langchain_tools(&payload, "lc").expect("adapter");
         let t = &inv.servers[0].tools[0];
-        assert_eq!(
-            t.parameters.as_ref().unwrap()["expr"]["type"],
-            "string"
-        );
+        assert_eq!(t.parameters.as_ref().unwrap()["expr"]["type"], "string");
     }
 
     #[test]
@@ -457,11 +477,13 @@ mod tests {
         let findings = classify(&inv);
         let ids: Vec<&str> = findings.iter().map(|f| f.id.as_str()).collect();
         assert!(
-            ids.iter().any(|id| id.contains("r7") && id.contains("shell")),
+            ids.iter()
+                .any(|id| id.contains("r7") && id.contains("shell")),
             "R7 should fire on the shell tool; got {ids:?}"
         );
         assert!(
-            ids.iter().any(|id| id.contains("r4") && id.contains("refund_payment")),
+            ids.iter()
+                .any(|id| id.contains("r4") && id.contains("refund_payment")),
             "R4 should fire on unbounded refund amount; got {ids:?}"
         );
     }

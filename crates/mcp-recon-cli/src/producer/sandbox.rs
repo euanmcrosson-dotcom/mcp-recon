@@ -226,10 +226,7 @@ fn run_docker(
                 if start.elapsed() > deadline {
                     let _ = child.kill();
                     let _ = child.wait();
-                    return Err(anyhow!(
-                        "sandbox timed out after {}s",
-                        config.timeout_secs
-                    ));
+                    return Err(anyhow!("sandbox timed out after {}s", config.timeout_secs));
                 }
                 std::thread::sleep(Duration::from_millis(250));
             }
@@ -411,11 +408,7 @@ mod tests {
 
     #[test]
     fn npm_script_uses_npm_install_with_pin() {
-        let s = build_npm_script(
-            "@modelcontextprotocol/server-everything",
-            "2026.1.26",
-            &[],
-        );
+        let s = build_npm_script("@modelcontextprotocol/server-everything", "2026.1.26", &[]);
         assert!(s.contains("npm install @modelcontextprotocol/server-everything@2026.1.26"));
         assert!(s.contains("node /w/shim.js @modelcontextprotocol/server-everything"));
     }
