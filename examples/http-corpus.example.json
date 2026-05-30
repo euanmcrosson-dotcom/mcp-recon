@@ -1,0 +1,35 @@
+[
+  {
+    "handle": "https://mcp.deepwiki.com/mcp",
+    "name": "DeepWiki MCP",
+    "repo_url": "https://github.com/AsyncFuncAI/deepwiki-open"
+  },
+  {
+    "handle": "https://mcp.roundtable.now/mcp",
+    "name": "Roundtable MCP"
+  },
+  {
+    "handle": "https://chainflip-broker.io/mcp",
+    "name": "Chainflip Broker MCP",
+    "repo_url": "https://github.com/chainflip-io/chainflip-mcp"
+  },
+  {
+    "handle": "https://game.spacemolt.com/mcp",
+    "name": "SpaceMolt"
+  },
+  {
+    "handle": "https://docs.mcp.cloudflare.com/mcp",
+    "name": "Cloudflare Docs MCP",
+    "repo_url": "https://github.com/cloudflare/mcp-server-cloudflare"
+  },
+  {
+    "handle": "https://mcp.context7.com/mcp",
+    "name": "Context7 MCP",
+    "repo_url": "https://github.com/upstash/context7"
+  },
+  {
+    "handle": "https://gitmcp.io/docs",
+    "name": "GitMCP",
+    "repo_url": "https://github.com/idosal/git-mcp"
+  }
+]
