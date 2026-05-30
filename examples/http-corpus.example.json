@@ -31,5 +31,74 @@
     "handle": "https://gitmcp.io/docs",
     "name": "GitMCP",
     "repo_url": "https://github.com/idosal/git-mcp"
+  },
+  {
+    "handle": "https://huggingface.co/mcp",
+    "name": "Hugging Face Hub MCP",
+    "repo_url": "https://github.com/huggingface/hf-mcp-server"
+  },
+  {
+    "handle": "https://knowledge-mcp.global.api.aws",
+    "name": "AWS Knowledge MCP"
+  },
+  {
+    "handle": "https://api.findadomain.dev/mcp",
+    "name": "Find-A-Domain MCP"
+  },
+  {
+    "handle": "https://mcp.peek.com",
+    "name": "Peek Experiences MCP"
+  },
+  {
+    "handle": "https://webzum.com/api/mcp",
+    "name": "Webzum MCP"
+  },
+  {
+    "handle": "https://mcp.docs.astro.build/mcp",
+    "name": "Astro Docs MCP"
+  },
+  {
+    "handle": "https://mcp.exa.ai/mcp",
+    "name": "Exa Search MCP"
+  },
+  {
+    "handle": "https://mcp.remote-mcp.com",
+    "name": "Remote MCP Directory"
+  },
+  {
+    "handle": "https://mcp.openzeppelin.com/contracts/solidity/mcp",
+    "name": "OpenZeppelin Solidity Contracts MCP"
+  },
+  {
+    "handle": "https://mcp.openzeppelin.com/contracts/cairo/mcp",
+    "name": "OpenZeppelin Cairo Contracts MCP"
+  },
+  {
+    "handle": "https://mcp.openzeppelin.com/contracts/stellar/mcp",
+    "name": "OpenZeppelin Stellar Contracts MCP"
+  },
+  {
+    "handle": "https://mcp.openzeppelin.com/contracts/stylus/mcp",
+    "name": "OpenZeppelin Stylus Contracts MCP"
+  },
+  {
+    "handle": "https://www.javadocs.dev/mcp",
+    "name": "Javadocs.dev MCP"
+  },
+  {
+    "handle": "https://mcp.ferryhopper.com/mcp",
+    "name": "Ferryhopper MCP"
+  },
+  {
+    "handle": "https://subwayinfo.nyc/mcp",
+    "name": "NYC Subway Info MCP"
+  },
+  {
+    "handle": "https://zip1.io/mcp",
+    "name": "zip1.io MCP"
+  },
+  {
+    "handle": "https://mcp.tweetsave.org/mcp",
+    "name": "TweetSave MCP"
   }
 ]
