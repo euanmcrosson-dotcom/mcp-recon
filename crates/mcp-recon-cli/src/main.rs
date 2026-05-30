@@ -145,7 +145,7 @@ enum ProducerKind {
     /// container, capture the real `tools/list` (incl. parameter schemas),
     /// classify, and emit one `findings.v2.json` per server. Lights up
     /// R1/R2/R4 rules that the static-manifest path can't see. Requires a
-    /// working local `docker` CLI. npm packages only for now.
+    /// working local `docker` CLI. Supports npm + PyPI.
     Sandbox {
         /// Path to a corpus JSON file (array of `{handle, repo_url?, name?}`).
         corpus: PathBuf,
@@ -164,9 +164,12 @@ enum ProducerKind {
         /// Memory cap passed to `docker run --memory`.
         #[arg(long, default_value_t = 512)]
         memory_mb: u32,
-        /// Docker image to use as the runtime.
+        /// Docker image for npm entries.
         #[arg(long, default_value = "node:20")]
         image: String,
+        /// Docker image for PyPI entries.
+        #[arg(long, default_value = "python:3.12-slim")]
+        image_pypi: String,
     },
 }
 
@@ -221,11 +224,13 @@ fn main() -> Result<()> {
                 timeout_secs,
                 memory_mb,
                 image,
+                image_pypi,
             } => {
                 let config = producer::sandbox::SandboxConfig {
                     timeout_secs,
                     memory_mb,
                     image,
+                    image_pypi,
                 };
                 let ok = producer::run_sandbox(&corpus, &out_dir, pretty, limit, &config)?;
                 eprintln!(
