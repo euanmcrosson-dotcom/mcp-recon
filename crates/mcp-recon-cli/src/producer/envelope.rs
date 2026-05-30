@@ -21,8 +21,7 @@ pub enum ProducerSource {
     /// Wired in a follow-up phase when the HTTP producer lands.
     #[allow(dead_code)]
     Http,
-    /// Wired in a follow-up phase when the sandbox producer lands.
-    #[allow(dead_code)]
+    /// Live `tools/list` captured in an ephemeral container.
     Sandbox,
     /// Used by hand-authored inventories; not produced by `mcp-recon producer`.
     #[allow(dead_code)]

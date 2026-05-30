@@ -140,6 +140,34 @@ enum ProducerKind {
         #[arg(long)]
         limit: Option<usize>,
     },
+
+    /// Live-handshake path: run each corpus entry in an ephemeral Docker
+    /// container, capture the real `tools/list` (incl. parameter schemas),
+    /// classify, and emit one `findings.v2.json` per server. Lights up
+    /// R1/R2/R4 rules that the static-manifest path can't see. Requires a
+    /// working local `docker` CLI. npm packages only for now.
+    Sandbox {
+        /// Path to a corpus JSON file (array of `{handle, repo_url?, name?}`).
+        corpus: PathBuf,
+        /// Output directory; one `<slug>.findings.v2.json` per entry.
+        #[arg(long, default_value = "findings/")]
+        out_dir: PathBuf,
+        /// Pretty-print emitted JSON.
+        #[arg(long)]
+        pretty: bool,
+        /// Process at most N entries (for smoke tests).
+        #[arg(long)]
+        limit: Option<usize>,
+        /// Per-entry wall-clock budget for the container.
+        #[arg(long, default_value_t = 120)]
+        timeout_secs: u32,
+        /// Memory cap passed to `docker run --memory`.
+        #[arg(long, default_value_t = 512)]
+        memory_mb: u32,
+        /// Docker image to use as the runtime.
+        #[arg(long, default_value = "node:20")]
+        image: String,
+    },
 }
 
 /// Source format accepted by `mcp-recon adapt`.
@@ -183,6 +211,28 @@ fn main() -> Result<()> {
             } => {
                 let ok = producer::run_registry(&corpus, &out_dir, pretty, limit)?;
                 eprintln!("[producer] {} entries written to {}", ok, out_dir.display());
+                Ok(())
+            }
+            ProducerKind::Sandbox {
+                corpus,
+                out_dir,
+                pretty,
+                limit,
+                timeout_secs,
+                memory_mb,
+                image,
+            } => {
+                let config = producer::sandbox::SandboxConfig {
+                    timeout_secs,
+                    memory_mb,
+                    image,
+                };
+                let ok = producer::run_sandbox(&corpus, &out_dir, pretty, limit, &config)?;
+                eprintln!(
+                    "[producer/sandbox] {} entries written to {}",
+                    ok,
+                    out_dir.display()
+                );
                 Ok(())
             }
         },

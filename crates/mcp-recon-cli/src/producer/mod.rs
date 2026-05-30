@@ -27,6 +27,7 @@ use uuid::Uuid;
 
 use corpus::CorpusEntry;
 use envelope::ProducerSource;
+use sandbox::SandboxConfig;
 
 /// Drive the producer end-to-end for a corpus file. For each entry:
 /// 1. Fetch the package's tool surface from the appropriate registry.
@@ -72,7 +73,69 @@ fn produce_one(entry: &CorpusEntry, out_dir: &Path, pretty: bool) -> Result<Path
         corpus::ParsedHandle::Npm { name, version } => npm::fetch_server(&name, &version)?,
         corpus::ParsedHandle::Pypi { name, version } => pypi::fetch_server(&name, &version)?,
     };
+    write_findings(entry, server, ProducerSource::Registry, out_dir, pretty)
+}
 
+/// Drive the sandbox producer end-to-end. Same shape as `run_registry` but
+/// each entry is executed inside an ephemeral Docker container so we capture
+/// the live `tools/list` (including parameter schemas → R1/R2/R4 signal).
+///
+/// Today the sandbox handles **npm packages only**; PyPI entries are skipped
+/// with a notice and counted as failures.
+pub fn run_sandbox(
+    corpus_path: &Path,
+    out_dir: &Path,
+    pretty: bool,
+    limit: Option<usize>,
+    config: &SandboxConfig,
+) -> Result<usize> {
+    let body = fs::read_to_string(corpus_path)
+        .with_context(|| format!("read corpus {}", corpus_path.display()))?;
+    let entries =
+        corpus::parse(&body).with_context(|| format!("parse corpus {}", corpus_path.display()))?;
+    fs::create_dir_all(out_dir).with_context(|| format!("create out dir {}", out_dir.display()))?;
+
+    let take = limit.unwrap_or(entries.len()).min(entries.len());
+    let mut ok = 0_usize;
+    for entry in entries.into_iter().take(take) {
+        match produce_one_sandbox(&entry, out_dir, pretty, config) {
+            Ok(path) => {
+                eprintln!("[sandbox/ok] {} -> {}", entry.handle, path.display());
+                ok += 1;
+            }
+            Err(err) => {
+                eprintln!("[sandbox/err] {} -- {err:#}", entry.handle);
+            }
+        }
+    }
+    Ok(ok)
+}
+
+fn produce_one_sandbox(
+    entry: &CorpusEntry,
+    out_dir: &Path,
+    pretty: bool,
+    config: &SandboxConfig,
+) -> Result<PathBuf> {
+    let kind = corpus::ParsedHandle::from_handle(&entry.handle)?;
+    let server: McpServer = match kind {
+        corpus::ParsedHandle::Npm { name, version } => {
+            sandbox::fetch_server_npm(&name, &version, config)?
+        }
+        corpus::ParsedHandle::Pypi { .. } => {
+            anyhow::bail!("sandbox producer does not yet support PyPI handles");
+        }
+    };
+    write_findings(entry, server, ProducerSource::Sandbox, out_dir, pretty)
+}
+
+fn write_findings(
+    entry: &CorpusEntry,
+    server: McpServer,
+    source: ProducerSource,
+    out_dir: &Path,
+    pretty: bool,
+) -> Result<PathBuf> {
     let inventory = McpInventory {
         schema: INVENTORY_SCHEMA.to_string(),
         servers: vec![server],
@@ -85,7 +148,7 @@ fn produce_one(entry: &CorpusEntry, out_dir: &Path, pretty: bool) -> Result<Path
         scanner_name: "mcp-recon",
         scanner_version: env!("CARGO_PKG_VERSION"),
         handle: entry.handle.clone(),
-        source: ProducerSource::Registry,
+        source,
         repo_url: entry.repo_url.clone(),
         name: entry.name.clone(),
         inventory: &inventory,
