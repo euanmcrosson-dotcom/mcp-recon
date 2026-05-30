@@ -555,14 +555,46 @@ const EXECUTION_TOKENS: &[&str] = &[
     "system(",
 ];
 
+/// Phrases that explicitly disclaim execution semantics — a code-generator
+/// tool that *returns* source code and disclaims any host-side effect
+/// should not be flagged by R7 just because its description mentions what
+/// the *generated code* would later do.
+///
+/// Surfaced by OpenZeppelin's `cairo-account` / `cairo-multisig` tools,
+/// which scored 2 false-positive R7 Criticals because their descriptions
+/// said the generated contracts "execute transactions" — the MCP tools
+/// themselves only return Markdown.
+const NON_EXECUTION_DISCLAIMERS: &[&str] = &[
+    "returns the source code",
+    "returns the generated",
+    "does not write to disk",
+    "returns a markdown code block",
+    "formatted in a markdown code block",
+];
+
 /// True if name+description (lowercased) implies code/command execution.
+///
+/// Hit suppression: even if an EXECUTION_TOKEN matches, the rule does NOT
+/// fire when the description carries a [`NON_EXECUTION_DISCLAIMERS`] phrase
+/// — those phrases reliably mark code-generator tools whose execution
+/// language refers to the generated artefact, not the tool itself.
 fn implies_code_execution(tool: &Tool) -> bool {
     let mut hay = tool.name.to_ascii_lowercase();
     hay.push(' ');
     if let Some(d) = &tool.description {
         hay.push_str(&d.to_ascii_lowercase());
     }
-    EXECUTION_TOKENS.iter().any(|t| hay.contains(t))
+    if !EXECUTION_TOKENS.iter().any(|t| hay.contains(t)) {
+        return false;
+    }
+    // Don't double-check against name — disclaimers belong in descriptions,
+    // and name-only matches (e.g. `exec` tool with no description) should
+    // still fire to avoid letting bad actors paper over the rule.
+    let desc = tool.description.as_deref().unwrap_or("").to_ascii_lowercase();
+    if NON_EXECUTION_DISCLAIMERS.iter().any(|t| desc.contains(t)) {
+        return false;
+    }
+    true
 }
 
 /// R7 -- Code / command execution surface.
@@ -885,6 +917,69 @@ mod tests {
             findings.iter().filter(|f| f.id.contains("r7")).count(),
             0,
             "R7 should not fire on benign evaluate tool; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r7_silent_on_code_generator_tools_with_disclaimer() {
+        // Reproduces the OpenZeppelin Cairo MCP false-positive class:
+        // tools that *return* source code as Markdown should not be
+        // flagged as execution surfaces just because their description
+        // mentions what the generated code does (e.g. "execute transactions").
+        let cases = [
+            (
+                "cairo-account",
+                "Make a custom smart contract that represents an account that can be \
+                 deployed and interacted with other contracts, and can be extended to \
+                 implement custom logic. An account is a special type of contract that \
+                 is used to validate and execute transactions.\n\nReturns the source \
+                 code of the generated contract, formatted in a Markdown code block. \
+                 Does not write to disk.",
+            ),
+            (
+                "cairo-multisig",
+                "Make a multi-signature smart contract, requiring a quorum of \
+                 registered signers to approve and collectively execute transactions.\n\n\
+                 Returns the source code of the generated contract, formatted in a \
+                 Markdown code block. Does not write to disk.",
+            ),
+        ];
+        for (name, desc) in cases {
+            let tool = Tool {
+                name: name.into(),
+                description: Some(desc.into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: None,
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r7")).count(),
+                0,
+                "R7 should not fire on code-generator `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r7_still_fires_when_disclaimer_is_absent() {
+        // Regression check: an `execute_transaction` tool with no source-
+        // code disclaimer is still a critical R7 — we only suppress when
+        // the description literally disclaims execution semantics.
+        let tool = Tool {
+            name: "execute_transaction".into(),
+            description: Some("Execute an on-chain transaction.".into()),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r7")).count(),
+            1,
+            "R7 must still fire without a disclaimer; got {findings:?}"
         );
     }
 
