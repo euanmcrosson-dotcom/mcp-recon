@@ -1,0 +1,22 @@
+[
+  {
+    "handle": "npm:@modelcontextprotocol/server-everything@2026.1.26",
+    "name": "server-everything",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-memory@2026.1.26",
+    "name": "server-memory",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-sequential-thinking@2025.12.18",
+    "name": "server-sequential-thinking",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
+  },
+  {
+    "handle": "npm:@modelcontextprotocol/server-filesystem@2026.1.14",
+    "name": "server-filesystem",
+    "repo_url": "https://github.com/modelcontextprotocol/servers"
+  }
+]

@@ -1,129 +1,299 @@
-//! Sandbox producer — the high-fidelity path of the Capframe leaderboard
+//! Sandbox producer — high-fidelity path of the Capframe leaderboard
 //! pipeline.
 //!
-//! **Scaffold status:** this module declares the public surface
-//! (`SandboxConfig`, `fetch_server`) and the orchestration shape
-//! [`produce_sandboxed`]. The actual provider integration (Vercel
-//! Sandbox / Firecracker microVMs) is its own multi-session build —
-//! the entry points return a clear "not implemented" with a pointer to
-//! the design doc so callers fail loudly instead of silently emitting
-//! empty inventories.
+//! Each corpus entry runs in an ephemeral Docker container: `npm install`
+//! the package, spawn the MCP server over stdio, perform the canonical
+//! `initialize` + `tools/list` handshake, capture the live tool surface,
+//! tear down. Parameter schemas survive, so the classifier's R1/R2/R4
+//! rules can fire — not just the name/description rules.
 //!
-//! See `docs/SANDBOX-PRODUCER.md` for the architecture: per-package
-//! ephemeral microVM → `npm install` / `pip install` → spawn stdio
-//! server → MCP `initialize` + `tools/list` handshake → capture tools →
-//! teardown.
+//! Provider for now: local Docker. The original design doc
+//! (`docs/SANDBOX-PRODUCER.md`) covered Vercel Sandbox / Firecracker as
+//! the production target; Docker is the local equivalent that works on
+//! the same `docker run` API surface and runs anywhere the producer
+//! runs. Substituting a remote provider is a `Command::new` swap.
 //!
-//! Why this lives behind a separate producer rather than feature-flagged
-//! on top of [`super::npm`] / [`super::pypi`]:
-//!
-//!   - Different cost profile (per-scan dollars, not per-scan
-//!     bandwidth)
-//!   - Different concurrency story (sandbox provider rate limits + VM
-//!     warmup time)
-//!   - Different failure modes (sandbox provisioning timeout / OOM)
-//!   - Different invocation cadence (probably weekly, not daily — too
-//!     expensive for a 1000-server corpus every 24 h)
-//!
-//! The classifier and findings.v2 envelope are unchanged: the sandbox
-//! producer emits the same `McpServer` shape as the registry producer,
-//! just with richer tool surfaces and `server.source = "sandbox"`.
+//! Today this module covers **npm packages only**. PyPI follows the
+//! same pattern with a Python shim (next session).
 
-// Scaffold-only: the API surface is intentionally not wired into the
-// CLI dispatch yet. Tests reference these symbols; no production
-// caller does. Clippy's dead-code lint isn't the signal we want here.
-#![allow(dead_code)]
+use anyhow::{anyhow, Context, Result};
+use mcp_recon_core::{McpServer, SideEffect, Tool, Transport};
+use serde_json::Value;
+use std::io::Write;
+use std::process::{Command, Stdio};
+use std::time::Duration;
 
-use anyhow::{anyhow, Result};
-use mcp_recon_core::McpServer;
-
-/// Per-corpus-entry sandbox config. Today only the timeout is honoured;
-/// the rest are placeholders for the real provider integration.
+/// Per-corpus-entry config. Hard caps wall-clock + memory so a single
+/// hung server can't tank the corpus walk.
 #[derive(Debug, Clone)]
 pub struct SandboxConfig {
-    /// Maximum wall-clock seconds per package (provisioning + install
-    /// + handshake + teardown). Hard-stop to bound dollar cost.
+    /// Hard timeout for the entire `docker run` invocation.
     pub timeout_secs: u32,
-    /// Provider identifier. Reserved for `"vercel"` / `"firecracker"` /
-    /// `"docker"` etc. once a provider is wired.
-    pub provider: String,
+    /// Memory limit passed to `docker run --memory`.
+    pub memory_mb: u32,
+    /// Docker image used as the runtime. Defaults to `node:20`.
+    pub image: String,
 }
 
 impl Default for SandboxConfig {
     fn default() -> Self {
         Self {
             timeout_secs: 120,
-            provider: "vercel".to_string(),
+            memory_mb: 512,
+            image: "node:20".to_string(),
         }
     }
 }
 
-/// Entry point matching [`super::npm::fetch_server`] / [`super::pypi::fetch_server`]
-/// so the producer orchestrator can dispatch identically.
-///
-/// **Not yet implemented.** Returns an explicit error pointing at the
-/// design doc. The orchestrator should call this when
-/// `--with-sandbox` is set on the corpus walk; until provider wiring
-/// lands, the corpus entry is logged-and-skipped exactly like any
-/// other producer failure.
-pub fn fetch_server(handle: &str, _config: &SandboxConfig) -> Result<McpServer> {
-    Err(anyhow!(
-        "sandbox producer not yet wired (see docs/SANDBOX-PRODUCER.md). \
-         Corpus entry `{handle}` skipped.",
-    ))
+/// Shim script (Node.js) — runs inside the container and performs
+/// the MCP handshake. Output is wrapped in markers the host parses.
+const SHIM_JS: &str = include_str!("./sandbox_shim.js");
+
+/// Entry point matching [`super::npm::fetch_server`] /
+/// [`super::pypi::fetch_server`] so the corpus walker can dispatch
+/// to the sandbox path without knowing about Docker.
+pub fn fetch_server_npm(name: &str, version: &str, config: &SandboxConfig) -> Result<McpServer> {
+    let raw = run_docker(name, version, config)
+        .with_context(|| format!("sandbox docker run for npm:{name}@{version}"))?;
+    let tools_list = extract_tools_list(&raw)
+        .ok_or_else(|| anyhow!("sandbox did not emit a tools/list result for {name}@{version}"))?;
+    let inventory = normalise_tools_list(tools_list)?;
+    Ok(McpServer {
+        name: name.to_string(),
+        transport: Some(Transport::Stdio),
+        tools: inventory,
+    })
 }
 
-/// Orchestration shape — what the real implementation will look like.
-/// Kept as a deliberately-empty function so the scaffold compiles and
-/// any future caller wires in the same shape.
-#[allow(dead_code)]
-fn produce_sandboxed(_handle: &str, _config: &SandboxConfig) -> Result<McpServer> {
-    // 1. Resolve handle → package name + version + ecosystem (npm/pypi)
-    //    (use `super::corpus::ParsedHandle::from_handle`)
+/// Build the `docker run` invocation script + execute. Returns the
+/// container's combined stdout for the parser.
+fn run_docker(name: &str, version: &str, config: &SandboxConfig) -> Result<String> {
+    // Compose a tiny shell script that prepares the workspace, installs
+    // the package, writes the shim to /w/shim.js, and runs it.
     //
-    // 2. Provision a microVM via the provider API
-    //    (Vercel Sandbox: POST /v1/sandboxes with the runtime hint)
-    //
-    // 3. Inside the VM:
-    //      - npm install <name>@<version>   OR   pip install <name>==<version>
-    //      - spawn the package's bin/entry_point as a stdio subprocess
-    //      - write JSON-RPC frames:
-    //          {"jsonrpc":"2.0","id":1,"method":"initialize",...}
-    //          {"jsonrpc":"2.0","method":"notifications/initialized"}
-    //          {"jsonrpc":"2.0","id":2,"method":"tools/list"}
-    //      - read responses until tools/list returns
-    //      - normalize the live tools/list payload into Vec<Tool>
-    //      - send shutdown / kill subprocess
-    //
-    // 4. Tear down the VM (provider DELETE /v1/sandboxes/<id>)
-    //
-    // 5. Return McpServer { name, transport: Stdio, tools }
-    //
-    // Error budget: any step can fail. The classifier + leaderboard
-    // continue with whatever finished — same one-bad-package-doesn't-
-    // tank-corpus-walk contract as the registry producer.
-    unreachable!("scaffold — produce_sandboxed not yet wired")
+    // Sequencing matters: we suppress install chatter on stdout (npm is
+    // noisy) so the shim's marker line is the only thing on stdout when
+    // the handshake succeeds.
+    let script = format!(
+        r#"set -e
+mkdir -p /w
+cd /w
+npm init -y > /dev/null 2>&1
+npm install {name}@{version} > /tmp/install.log 2>&1 || (cat /tmp/install.log >&2; exit 8)
+cat > /w/shim.js <<'EOSHIM_CAPFRAME'
+{SHIM_JS}
+EOSHIM_CAPFRAME
+node /w/shim.js {name}
+"#
+    );
+
+    let mut cmd = Command::new("docker");
+    cmd.args([
+        "run",
+        "--rm",
+        "-i",
+        "--network",
+        "bridge",
+        "--memory",
+        &format!("{}m", config.memory_mb),
+        // Stop containers that ignore SIGTERM after the wall-clock
+        // budget — defense against runaway servers.
+        "--stop-timeout",
+        "5",
+        &config.image,
+        "sh",
+    ]);
+    cmd.stdin(Stdio::piped());
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd.spawn().context("spawning docker run")?;
+    child
+        .stdin
+        .take()
+        .ok_or_else(|| anyhow!("docker run: no stdin"))?
+        .write_all(script.as_bytes())
+        .context("writing sandbox script to docker stdin")?;
+
+    // Poll for completion with a timeout.
+    let start = std::time::Instant::now();
+    let deadline = Duration::from_secs(u64::from(config.timeout_secs));
+    let output = loop {
+        match child.try_wait()? {
+            Some(_) => break child.wait_with_output()?,
+            None => {
+                if start.elapsed() > deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err(anyhow!(
+                        "sandbox timed out after {}s for {name}@{version}",
+                        config.timeout_secs
+                    ));
+                }
+                std::thread::sleep(Duration::from_millis(250));
+            }
+        }
+    };
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow!(
+            "docker run exited {} for {name}@{version}: {}",
+            output.status,
+            stderr.lines().last().unwrap_or("(no stderr)")
+        ));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+/// Pull the JSON body of the tools/list result out of the shim's
+/// stdout. The shim emits a marker pair around the JSON so any server
+/// logging is safely ignored.
+fn extract_tools_list(stdout: &str) -> Option<&str> {
+    const START: &str = "___CAPFRAME_TOOLS_LIST_START___";
+    const END: &str = "___CAPFRAME_TOOLS_LIST_END___";
+    let i = stdout.find(START)?;
+    let body_start = i + START.len();
+    let rel_end = stdout[body_start..].find(END)?;
+    Some(&stdout[body_start..body_start + rel_end])
+}
+
+/// Map an MCP `tools/list` response into our `mcp_recon_core::Tool`
+/// vec. The MCP shape is:
+/// ```json
+/// { "tools": [{ "name", "description", "inputSchema": {...} }, ...] }
+/// ```
+fn normalise_tools_list(raw_json: &str) -> Result<Vec<Tool>> {
+    let v: Value = serde_json::from_str(raw_json).context("parse tools/list JSON")?;
+    let tools = v
+        .get("tools")
+        .and_then(Value::as_array)
+        .ok_or_else(|| anyhow!("tools/list response missing `tools` array"))?;
+    let mut out = Vec::with_capacity(tools.len());
+    for t in tools {
+        let name = t
+            .get("name")
+            .and_then(Value::as_str)
+            .ok_or_else(|| anyhow!("tool entry missing `name`"))?
+            .to_string();
+        let description = t
+            .get("description")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let parameters = t.get("inputSchema").cloned();
+        // MCP doesn't carry side_effects/auth_required in tools/list yet,
+        // but we infer "execute" from common name patterns so R7 has a
+        // signal beyond what the static-manifest path already gives.
+        let side_effects = infer_side_effects(&name);
+        out.push(Tool {
+            name,
+            description,
+            parameters,
+            side_effects,
+            auth_required: None,
+            rate_limited: None,
+        });
+    }
+    Ok(out)
+}
+
+fn infer_side_effects(name: &str) -> Vec<SideEffect> {
+    // Light heuristic — the classifier still owns the R3 / R5 / R7 logic.
+    // We add Execute only when the name strongly implies arbitrary
+    // command execution, so R3 can fire on the gap between declared
+    // and implied effects for OTHER mutation names.
+    let n = name.to_lowercase();
+    if n.contains("exec_") || n.starts_with("exec ") || n == "exec" || n.contains("run_command") {
+        vec![SideEffect::Execute]
+    } else {
+        vec![]
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
-    fn fetch_returns_explicit_not_implemented_error() {
-        let cfg = SandboxConfig::default();
-        let err = fetch_server("npm:@scope/x@1.0.0", &cfg).unwrap_err();
-        let msg = err.to_string();
-        assert!(msg.contains("not yet wired"));
-        assert!(msg.contains("docs/SANDBOX-PRODUCER.md"));
-        assert!(msg.contains("npm:@scope/x@1.0.0"));
+    fn extracts_tools_list_between_markers() {
+        let stdout = "noise before\n\
+                      some logs\n\
+                      ___CAPFRAME_TOOLS_LIST_START___{\"tools\":[{\"name\":\"x\"}]}___CAPFRAME_TOOLS_LIST_END___\n\
+                      trailing noise\n";
+        let extracted = extract_tools_list(stdout).unwrap();
+        assert_eq!(extracted, r#"{"tools":[{"name":"x"}]}"#);
     }
 
     #[test]
-    fn default_config_has_safe_timeout() {
+    fn extract_returns_none_when_marker_missing() {
+        assert!(extract_tools_list("plain server log line").is_none());
+    }
+
+    #[test]
+    fn normalises_tools_list_with_input_schemas() {
+        let raw = json!({
+            "tools": [
+                {
+                    "name": "fetch_url",
+                    "description": "Fetch a URL and return body",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": { "url": { "type": "string", "format": "uri" } },
+                        "required": ["url"]
+                    }
+                },
+                {
+                    "name": "exec_shell",
+                    "description": "Execute a shell command",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": { "cmd": { "type": "string" } }
+                    }
+                }
+            ]
+        });
+        let tools = normalise_tools_list(&raw.to_string()).unwrap();
+        assert_eq!(tools.len(), 2);
+        assert_eq!(tools[0].name, "fetch_url");
+        assert_eq!(
+            tools[0].description.as_deref(),
+            Some("Fetch a URL and return body")
+        );
+        assert!(tools[0].parameters.is_some());
+        assert_eq!(tools[1].name, "exec_shell");
+        assert!(tools[1]
+            .side_effects
+            .iter()
+            .any(|s| matches!(s, SideEffect::Execute)));
+    }
+
+    #[test]
+    fn errors_when_response_lacks_tools_array() {
+        let err = normalise_tools_list(r#"{"foo":"bar"}"#).unwrap_err();
+        assert!(err.to_string().contains("missing `tools` array"));
+    }
+
+    #[test]
+    fn infers_execute_only_on_obvious_names() {
+        assert!(matches!(
+            infer_side_effects("exec_shell")[..],
+            [SideEffect::Execute]
+        ));
+        assert!(matches!(
+            infer_side_effects("run_command")[..],
+            [SideEffect::Execute]
+        ));
+        assert!(infer_side_effects("read_file").is_empty());
+        assert!(infer_side_effects("create_user").is_empty());
+    }
+
+    #[test]
+    fn default_config_caps_compute() {
         let cfg = SandboxConfig::default();
         assert!(cfg.timeout_secs > 0);
         assert!(cfg.timeout_secs <= 600);
-        assert_eq!(cfg.provider, "vercel");
+        assert!(cfg.memory_mb >= 256);
+        assert_eq!(cfg.image, "node:20");
     }
 }
