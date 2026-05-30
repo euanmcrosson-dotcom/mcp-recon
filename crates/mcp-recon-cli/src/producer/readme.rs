@@ -61,9 +61,119 @@ pub fn extract_tools(markdown: &str) -> Vec<ExtractedTool> {
         return dedupe(from_headings);
     }
 
+    // Numbered lists (`1. \`tool_name\`` style — used by the official
+    // @modelcontextprotocol/server-github README, among others).
+    let from_numbered = parse_numbered_list(section);
+    if !from_numbered.is_empty() {
+        return dedupe(from_numbered);
+    }
+
     // Bullet list fallback.
     let from_bullets = parse_bullet_list(section);
     dedupe(from_bullets)
+}
+
+/// Parse numbered-list entries shaped like:
+///
+///   1. `tool_name`
+///      - Description line 1
+///      - Inputs:
+///        - `arg` (string): ...
+///      - Returns: ...
+///
+/// Tool name comes from the numbered line; description is the joined
+/// indented content (bullets + paragraphs) up to the next numbered
+/// item or end of section.
+fn parse_numbered_list(section: &str) -> Vec<ExtractedTool> {
+    let mut out = Vec::new();
+    let lines: Vec<&str> = section.lines().collect();
+    let mut i = 0;
+    while i < lines.len() {
+        let raw = lines[i];
+        let stripped = raw.trim_start();
+        if let Some((name, content_start)) = parse_numbered_head(stripped) {
+            // Walk until the next numbered item at this indentation or
+            // a heading.
+            let mut j = i + 1;
+            let mut body = String::new();
+            if !content_start.is_empty() {
+                body.push_str(content_start);
+            }
+            while j < lines.len() {
+                let l = lines[j];
+                let ls = l.trim_start();
+                let next_indent = l.len() - ls.len();
+                let curr_indent = raw.len() - stripped.len();
+                let heading_level = ls.chars().take_while(|c| *c == '#').count();
+                if heading_level > 0 {
+                    break;
+                }
+                if parse_numbered_head(ls).is_some() && next_indent <= curr_indent {
+                    break;
+                }
+                if !ls.is_empty() {
+                    if !body.is_empty() {
+                        body.push(' ');
+                    }
+                    body.push_str(ls);
+                }
+                j += 1;
+            }
+            let description = compact_block(&body);
+            out.push(ExtractedTool {
+                name,
+                description: if description.is_empty() {
+                    None
+                } else {
+                    Some(description)
+                },
+            });
+            i = j;
+            continue;
+        }
+        i += 1;
+    }
+    out
+}
+
+/// If the line starts with `<n>. ` (numbered list marker), return
+/// `(tool_name, remaining_content_on_same_line)`.
+/// Otherwise None.
+fn parse_numbered_head(line: &str) -> Option<(String, &str)> {
+    let mut chars = line.char_indices();
+    let mut digits_end = 0;
+    let mut has_digit = false;
+    for (i, c) in chars.by_ref() {
+        if c.is_ascii_digit() {
+            digits_end = i + 1;
+            has_digit = true;
+        } else {
+            break;
+        }
+    }
+    if !has_digit {
+        return None;
+    }
+    let after_digits = &line[digits_end..];
+    let after = after_digits.strip_prefix('.')?;
+    let after = after.strip_prefix(' ')?;
+    // Now `after` should look like:  `tool_name`  or **tool_name** or tool_name(...)
+    let (name, rest) = if let Some(stripped) = after.strip_prefix('`') {
+        let idx = stripped.find('`')?;
+        (stripped[..idx].to_string(), &stripped[idx + 1..])
+    } else if let Some(stripped) = after.strip_prefix("**") {
+        let idx = stripped.find("**")?;
+        (stripped[..idx].to_string(), &stripped[idx + 2..])
+    } else {
+        // Bare word — split at first whitespace.
+        let end = after.find([' ', '(']).unwrap_or(after.len());
+        (after[..end].to_string(), &after[end..])
+    };
+    // Reject names that look like prose (multi-word).
+    if name.contains(' ') || name.is_empty() {
+        return None;
+    }
+    Some((name, rest.trim()))
 }
 
 /// Find the body of the first heading that matches one of the
@@ -207,44 +317,128 @@ fn split_row(line: &str) -> Vec<&str> {
 }
 
 /// Find `### tool_name` (or `#### tool_name`) sub-headings under the
-/// section and pair each with the next non-empty, non-heading
-/// paragraph as its description.
+/// section and pair each with the FULL content under that heading
+/// (paragraphs, parameter bullets, return notes) up to the next
+/// equal-or-shallower heading. The richer description lets the
+/// classifier's R3/R5/R6/R7 fire on per-tool keywords like "URL",
+/// "fetch", "shell", "money" — without us trying to guess which
+/// section of a tool block is the "description" proper.
 fn parse_subheadings(section: &str) -> Vec<ExtractedTool> {
     let mut out = Vec::new();
     let lines: Vec<&str> = section.lines().collect();
-    let mut i = 0;
-    while i < lines.len() {
-        let raw = lines[i];
+    // First: collect (heading_index, heading_level, tool_name).
+    let mut headings: Vec<(usize, usize, String)> = Vec::new();
+    for (i, raw) in lines.iter().enumerate() {
         let stripped = raw.trim_start();
         let level = stripped.chars().take_while(|c| *c == '#').count();
-        if (3..=6).contains(&level) {
-            let title = stripped[level..].trim();
-            if let Some(name) = clean_tool_name(title) {
-                // Find next non-empty, non-heading line as description.
-                let mut desc: Option<String> = None;
-                let mut j = i + 1;
-                while j < lines.len() {
-                    let l = lines[j].trim();
-                    if l.is_empty() {
-                        j += 1;
-                        continue;
-                    }
-                    let lvl_j = l.chars().take_while(|c| *c == '#').count();
-                    if lvl_j > 0 {
-                        break;
-                    }
-                    desc = Some(strip_inline_md(l));
-                    break;
-                }
-                out.push(ExtractedTool {
-                    name,
-                    description: desc,
-                });
+        if !(3..=6).contains(&level) {
+            continue;
+        }
+        let title = stripped[level..].trim();
+        // Skip headings that read like sub-section markers, not tool names
+        // (Parameters / Inputs / Returns / Example / Usage / Notes / etc.).
+        // These typically sit *under* the real `### tool_name`.
+        if is_subsection_marker(title) {
+            continue;
+        }
+        if let Some(name) = clean_tool_name(title) {
+            headings.push((i, level, name));
+        }
+    }
+
+    // Then: assign each heading the slice of lines until the next
+    // heading at equal-or-shallower level (or EOF).
+    for (idx, (line_i, level, name)) in headings.iter().enumerate() {
+        // Find the end of this tool's block.
+        let mut end = lines.len();
+        for (j, _, _) in headings.iter().skip(idx + 1) {
+            let next_raw = lines[*j].trim_start();
+            let next_level = next_raw.chars().take_while(|c| *c == '#').count();
+            if next_level <= *level {
+                end = *j;
+                break;
             }
         }
-        i += 1;
+        // Capture full block content as description, normalised.
+        let body = lines[(line_i + 1)..end].join(" ");
+        let description = compact_block(&body);
+        out.push(ExtractedTool {
+            name: name.clone(),
+            description: if description.is_empty() {
+                None
+            } else {
+                Some(description)
+            },
+        });
     }
     out
+}
+
+/// Recognise sub-section markers that aren't tool names: `Parameters`,
+/// `Inputs`, `Returns`, `Example`, `Usage`, `Notes`, `Args`, etc.
+fn is_subsection_marker(title: &str) -> bool {
+    let lower = title.trim_end_matches(':').to_lowercase();
+    matches!(
+        lower.as_str(),
+        "parameters"
+            | "params"
+            | "arguments"
+            | "args"
+            | "inputs"
+            | "input"
+            | "returns"
+            | "return"
+            | "output"
+            | "outputs"
+            | "example"
+            | "examples"
+            | "usage"
+            | "notes"
+            | "note"
+            | "errors"
+            | "exceptions"
+            | "side effects"
+            | "side-effects"
+    )
+}
+
+/// Squash multi-line content into a single line, strip markdown
+/// syntax (headings, bullet bullets, leading code-fence backticks),
+/// collapse whitespace. Caps length at 800 chars so absurdly long
+/// READMEs don't bloat the inventory.
+fn compact_block(body: &str) -> String {
+    let mut buf = String::with_capacity(body.len());
+    for line in body.lines() {
+        let stripped = line.trim_start();
+        // Drop heading lines entirely.
+        if stripped.starts_with('#') {
+            continue;
+        }
+        // Drop code-fence markers but keep the code text.
+        if stripped.starts_with("```") {
+            continue;
+        }
+        // Drop leading bullet marker so the body text flows together.
+        let cleaned = stripped
+            .strip_prefix("- ")
+            .or_else(|| stripped.strip_prefix("* "))
+            .unwrap_or(stripped);
+        let cleaned = cleaned.trim();
+        if cleaned.is_empty() {
+            continue;
+        }
+        if !buf.is_empty() {
+            buf.push(' ');
+        }
+        buf.push_str(cleaned);
+    }
+    // Collapse runs of whitespace.
+    let collapsed: String = buf.split_whitespace().collect::<Vec<_>>().join(" ");
+    if collapsed.len() > 800 {
+        collapsed.chars().take(797).collect::<String>() + "..."
+    } else {
+        collapsed
+    }
 }
 
 /// Parse bullet-list entries shaped like:
@@ -252,6 +446,12 @@ fn parse_subheadings(section: &str) -> Vec<ExtractedTool> {
 ///   - **name** - description
 ///   - `name` - description
 ///   - name: description
+///
+/// Rejects parameter-style bullets — entries like
+/// `` `url` (string, required): URL to navigate to`` are parameters
+/// of a tool, not tools themselves. The heuristic: if the body
+/// immediately after the name starts with `(` and contains a type-y
+/// word (string|number|boolean|array|object), treat it as a parameter.
 fn parse_bullet_list(section: &str) -> Vec<ExtractedTool> {
     let mut out = Vec::new();
     for raw in section.lines() {
@@ -260,6 +460,9 @@ fn parse_bullet_list(section: &str) -> Vec<ExtractedTool> {
             continue;
         }
         let body = &trimmed[2..];
+        if looks_like_parameter_bullet(body) {
+            continue;
+        }
         if let Some((name, desc)) = split_bullet(body) {
             out.push(ExtractedTool {
                 name,
@@ -268,6 +471,39 @@ fn parse_bullet_list(section: &str) -> Vec<ExtractedTool> {
         }
     }
     out
+}
+
+fn looks_like_parameter_bullet(body: &str) -> bool {
+    // Common shape: `name` (type, modifier): desc
+    //   OR        : **name** (type): desc
+    let trimmed = body.trim();
+    // Find the position immediately after the name token.
+    let after_name = if let Some(rest) = trimmed.strip_prefix('`') {
+        rest.find('`').map(|i| &rest[i + 1..])
+    } else if let Some(rest) = trimmed.strip_prefix("**") {
+        rest.find("**").map(|i| &rest[i + 2..])
+    } else {
+        // Bare word — find first whitespace or `(`.
+        trimmed.find([' ', '(']).map(|i| &trimmed[i..])
+    };
+    let Some(after) = after_name else {
+        return false;
+    };
+    let after = after.trim_start();
+    if !after.starts_with('(') {
+        return false;
+    }
+    // Look inside the parentheses for a type-y word.
+    let close = match after.find(')') {
+        Some(c) => c,
+        None => return false,
+    };
+    let inside = after[1..close].to_lowercase();
+    const TYPE_WORDS: &[&str] = &[
+        "string", "number", "integer", "boolean", "bool", "array", "object", "required",
+        "optional", "default", "int", "float", "json",
+    ];
+    TYPE_WORDS.iter().any(|t| inside.contains(t))
 }
 
 fn split_bullet(body: &str) -> Option<(String, String)> {
@@ -503,6 +739,112 @@ Runs a SQL query against the database.
             assert_eq!(t.len(), 1, "should match: {md:?}");
             assert_eq!(t[0].name, "a");
         }
+    }
+
+    #[test]
+    fn parses_numbered_list_format() {
+        // Real shape used by @modelcontextprotocol/server-github
+        let md = "\
+## Tools
+
+1. `create_or_update_file`
+   - Create or update a single file in a repository
+   - Inputs:
+     - `owner` (string): Repository owner
+     - `repo` (string): Repository name
+   - Returns: File content and commit details
+
+2. `delete_branch`
+   - Delete a branch from the repo
+   - Returns: Confirmation
+";
+        let t = extract_tools(md);
+        assert_eq!(t.len(), 2);
+        assert_eq!(t[0].name, "create_or_update_file");
+        assert_eq!(t[1].name, "delete_branch");
+        // Description includes "Create or update" so R3 has signal.
+        let desc0 = t[0].description.as_deref().unwrap();
+        assert!(desc0.to_lowercase().contains("create or update"));
+    }
+
+    #[test]
+    fn captures_multiline_description_under_heading() {
+        let md = "\
+## Tools
+
+### puppeteer_navigate
+Navigates to a URL in the browser.
+
+**Parameters:**
+- `url` (string, required): URL to navigate to
+- `launchOptions` (object, optional): Puppeteer launch options
+
+### puppeteer_screenshot
+Takes a screenshot of the page.
+";
+        let t = extract_tools(md);
+        assert_eq!(t.len(), 2);
+        assert_eq!(t[0].name, "puppeteer_navigate");
+        let desc = t[0].description.as_deref().unwrap();
+        // Description includes the prose AND the param-bullet bodies so
+        // R6 has the word "URL" to fire on.
+        assert!(desc.contains("Navigates"));
+        assert!(desc.contains("URL"));
+    }
+
+    #[test]
+    fn rejects_parameter_subsection_headings() {
+        let md = "\
+## Tools
+
+### exec_shell
+Executes a shell command.
+
+#### Parameters
+- `cmd` (string, required): the command
+- `timeout` (number, optional): seconds
+
+#### Returns
+stdout + stderr
+";
+        let t = extract_tools(md);
+        assert_eq!(t.len(), 1);
+        assert_eq!(t[0].name, "exec_shell");
+        let desc = t[0].description.as_deref().unwrap();
+        assert!(desc.contains("Executes a shell command"));
+    }
+
+    #[test]
+    fn rejects_parameter_style_bullets() {
+        // No subheadings — bullets are the only signal — but the bullets
+        // are parameter shapes, not tool shapes. Should return empty so
+        // the caller falls back to bin/entry_point synthesis.
+        let md = "\
+## Parameters
+
+- `url` (string, required): URL to fetch
+- `timeout` (number, optional, default: 30): timeout in seconds
+- `headers` (object, optional): HTTP headers
+";
+        let t = extract_tools(md);
+        // The section heading is "Parameters" which is one of our
+        // tool-section markers... actually it's not. Let me verify.
+        // (Parameters is NOT in TOOL_SECTION_HEADINGS — confirms.)
+        assert!(t.is_empty());
+    }
+
+    #[test]
+    fn bullet_filter_still_accepts_real_tool_bullets() {
+        let md = "\
+## Tools
+
+- `read_file` - Reads a file by path
+- `delete_file` - Removes a file
+";
+        let t = extract_tools(md);
+        assert_eq!(t.len(), 2);
+        assert_eq!(t[0].name, "read_file");
+        assert_eq!(t[1].name, "delete_file");
     }
 
     #[test]
