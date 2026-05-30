@@ -27,7 +27,11 @@ use std::io::{BufRead, BufReader};
 use std::time::Duration;
 
 const HTTP_TIMEOUT_SECS: u64 = 30;
-const PROTOCOL_VERSION: &str = "2024-11-05";
+// Latest stable spec we can claim. Newer servers (e.g. Cloudflare's
+// Streamable HTTP gateways) reject the original 2024-11-05 outright;
+// older servers tolerate a higher claimed version and reply with
+// whatever they actually implement.
+const PROTOCOL_VERSION: &str = "2025-06-18";
 
 /// Fetch live `tools/list` from an HTTP MCP endpoint and synthesise
 /// an McpServer for the classifier. Errors propagate; the caller
