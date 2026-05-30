@@ -13,6 +13,7 @@
 
 pub mod corpus;
 pub mod envelope;
+pub mod http;
 pub mod npm;
 pub mod pypi;
 pub mod readme;
@@ -69,11 +70,23 @@ pub fn run_registry(
 
 fn produce_one(entry: &CorpusEntry, out_dir: &Path, pretty: bool) -> Result<PathBuf> {
     let kind = corpus::ParsedHandle::from_handle(&entry.handle)?;
-    let server: McpServer = match kind {
-        corpus::ParsedHandle::Npm { name, version } => npm::fetch_server(&name, &version)?,
-        corpus::ParsedHandle::Pypi { name, version } => pypi::fetch_server(&name, &version)?,
+    let (server, source) = match kind {
+        corpus::ParsedHandle::Npm { name, version } => (
+            npm::fetch_server(&name, &version)?,
+            ProducerSource::Registry,
+        ),
+        corpus::ParsedHandle::Pypi { name, version } => (
+            pypi::fetch_server(&name, &version)?,
+            ProducerSource::Registry,
+        ),
+        // HTTP handles share the registry-walker command surface (one
+        // corpus file feeds both) but emit a different source label so
+        // the leaderboard can tell readers which path scanned them.
+        corpus::ParsedHandle::Http { url } => {
+            (http::fetch_server(&url)?, ProducerSource::Http)
+        }
     };
-    write_findings(entry, server, ProducerSource::Registry, out_dir, pretty)
+    write_findings(entry, server, source, out_dir, pretty)
 }
 
 /// Drive the sandbox producer end-to-end. Same shape as `run_registry` but
@@ -125,6 +138,11 @@ fn produce_one_sandbox(
         }
         corpus::ParsedHandle::Pypi { name, version } => {
             sandbox::fetch_server_pypi(&name, &version, overrides, config)?
+        }
+        corpus::ParsedHandle::Http { .. } => {
+            anyhow::bail!(
+                "sandbox producer does not handle HTTP endpoints (they're already live; use `producer registry`)"
+            );
         }
     };
     write_findings(entry, server, ProducerSource::Sandbox, out_dir, pretty)

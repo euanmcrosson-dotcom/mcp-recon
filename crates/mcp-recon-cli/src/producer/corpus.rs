@@ -67,15 +67,29 @@ pub fn parse(body: &str) -> Result<Vec<CorpusEntry>> {
 pub enum ParsedHandle {
     Npm { name: String, version: String },
     Pypi { name: String, version: String },
+    /// Live HTTP MCP endpoint. The handle is the URL itself
+    /// (e.g. `https://example.com/mcp`); no version field, since
+    /// HTTP servers are versioned by the operator behind the URL.
+    Http { url: String },
 }
 
 impl ParsedHandle {
-    /// Parse `<registry>:<name>@<version>`. The `name` may itself contain
-    /// `@` (e.g. `@scope/pkg`) and `/`; we split on the LAST `@` to find
-    /// the version boundary.
+    /// Parse a handle.
+    ///
+    /// Two forms are supported:
+    /// - **Registry handle:** `<registry>:<name>@<version>`. The name
+    ///   may contain `@` (e.g. `@scope/pkg`); we split on the LAST `@`
+    ///   to find the version boundary.
+    /// - **HTTP handle:** a bare `http://` or `https://` URL. No
+    ///   version segment; the URL is the identity.
     pub fn from_handle(handle: &str) -> Result<Self> {
+        if handle.starts_with("http://") || handle.starts_with("https://") {
+            return Ok(ParsedHandle::Http {
+                url: handle.to_string(),
+            });
+        }
         let (prefix, rest) = handle.split_once(':').ok_or_else(|| {
-            anyhow!("handle '{handle}' missing registry prefix (expected `<registry>:<name>@<version>`)")
+            anyhow!("handle '{handle}' missing registry prefix (expected `<registry>:<name>@<version>` or a `https://` URL)")
         })?;
         let at = rest
             .rfind('@')
@@ -101,7 +115,7 @@ impl ParsedHandle {
                 version,
             }),
             other => Err(anyhow!(
-                "handle '{handle}': unsupported registry prefix '{other}' (want `npm` or `pypi`)"
+                "handle '{handle}': unsupported registry prefix '{other}' (want `npm`, `pypi`, or a `https://` URL)"
             )),
         }
     }
@@ -171,6 +185,28 @@ mod tests {
             ParsedHandle::Pypi {
                 name: "mcp-server-git".into(),
                 version: "0.6.0".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn parses_http_url() {
+        let h = ParsedHandle::from_handle("https://example.com/mcp").unwrap();
+        assert_eq!(
+            h,
+            ParsedHandle::Http {
+                url: "https://example.com/mcp".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn parses_plain_http_url_too() {
+        let h = ParsedHandle::from_handle("http://localhost:8080/mcp").unwrap();
+        assert_eq!(
+            h,
+            ParsedHandle::Http {
+                url: "http://localhost:8080/mcp".into(),
             }
         );
     }

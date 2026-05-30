@@ -1,0 +1,8 @@
+[
+  {
+    "_comment": "HTTP corpus example. Each handle is a bare URL to a live MCP server endpoint speaking the Streamable HTTP transport. Add entries here for any public/unauthenticated HTTP MCP server you want scanned. Authenticated endpoints belong in a private corpus file with secrets supplied at the cron layer.",
+    "handle": "http://127.0.0.1:8765/mcp",
+    "name": "capframe-http-test",
+    "repo_url": "https://github.com/euanmcrosson-dotcom/mcp-recon/blob/master/examples/http-test-server.py"
+  }
+]
