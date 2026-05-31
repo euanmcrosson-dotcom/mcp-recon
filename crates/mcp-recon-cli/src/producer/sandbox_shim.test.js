@@ -1,5 +1,7 @@
 // Unit test for the sandbox shim's bin resolution (pure part).
 // Run: node crates/mcp-recon-cli/src/producer/sandbox_shim.test.js
+// (the sibling package.json marks this dir CommonJS so it loads despite
+//  the repo root's "type": "module".)
 //
 // Regression guard for the scoped-bin-name bug: a package may declare a
 // `bin` NAME containing a slash (e.g. e2b: {"@e2b/mcp-server": "..."}).

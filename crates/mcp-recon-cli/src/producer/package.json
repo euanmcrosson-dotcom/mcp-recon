@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "commonjs",
+  "//": "The sandbox shims are CommonJS (require/module.exports) and run in-container under /w (no type:module). This marker lets the shim + its test load as CommonJS on the host too, despite the repo root declaring \"type\": \"module\". Not an npm workspace (root workspaces = packages/*); cargo include_str! and the container are unaffected."
+}
