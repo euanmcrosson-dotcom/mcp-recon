@@ -57,6 +57,14 @@ jobs:
       - name: Test (workspaces)
         run: npm run --workspaces --if-present test
 
+      # The sandbox shim (crates/mcp-recon-cli/src/producer/sandbox_shim.js)
+      # is embedded into the Rust crate via include_str! and runs in-container,
+      # so it sits outside the packages/* npm workspaces. Run its bin-resolution
+      # regression test directly. The sibling package.json marks the dir
+      # CommonJS so it loads despite the repo root's "type": "module".
+      - name: Test sandbox shim (bin resolution)
+        run: node crates/mcp-recon-cli/src/producer/sandbox_shim.test.js
+
       - name: Upload test results (best-effort)
         if: always()
         continue-on-error: true
