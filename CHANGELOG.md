@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Sandbox producer: bin names containing a slash now launch.** The
+  sandbox shim resolved a package's launcher at `.bin/<binName>` using the
+  declared bin name verbatim. npm names the launcher after the *basename*
+  of the bin name (it strips any directory component), so a package
+  declaring a bin name with a slash — e.g. `@e2b/mcp-server`'s
+  `{"@e2b/mcp-server": "./build/index.js"}` — installs `.bin/mcp-server`
+  while the shim spawned `.bin/@e2b/mcp-server` → `CAPFRAME_SPAWN_ERROR`
+  (`ENOENT`), silently dropping such packages from the sandbox path. This
+  was never about scoped packages per se: `server-github`'s bin key
+  `mcp-server-github` has no slash and always worked. Fixed by taking
+  `path.basename()` of the bin name, with a `node <pkg>/<target>` fallback
+  when the `.bin` launcher is absent. Extracted a pure `resolveBin()`
+  (guarded `main`) and added `sandbox_shim.test.js` as a regression guard.
+  Recovers e2b (R7 critical on `run_code`), context7, 21st-dev/magic,
+  browsermcp, and other npm servers with slash-containing bin names in the
+  leaderboard sandbox walk.
+
 ## [0.2.4] — 2026-05-28
 
 ### Added
