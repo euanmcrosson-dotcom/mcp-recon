@@ -64,7 +64,7 @@
     "@types/node": "25.6.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "tinybench": "^2.9.0",
+    "tinybench": "^6.0.2",
     "tsx": "^4.21.0",
     "typescript": "6.0.3",
     "vitest": "^4.1.5"
