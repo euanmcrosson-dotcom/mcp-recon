@@ -67,6 +67,6 @@
     "tinybench": "^2.9.0",
     "tsx": "^4.21.0",
     "typescript": "6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.8"
   }
 }
