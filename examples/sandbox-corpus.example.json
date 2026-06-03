@@ -117,11 +117,6 @@
     "sandbox": { "args": ["--access-token", "sbp_capframe_sandbox_probe"] }
   },
   {
-    "handle": "npm:@neondatabase/mcp-server-neon@0.6.5",
-    "name": "Neon MCP",
-    "sandbox": { "args": ["start", "napi_capframe_sandbox_probe"] }
-  },
-  {
     "handle": "npm:resend-mcp@2.6.1",
     "name": "Resend MCP",
     "sandbox": { "env": { "RESEND_API_KEY": "re_capframe_sandbox_probe" } }
@@ -129,17 +124,12 @@
   {
     "handle": "npm:@sentry/mcp-server@0.35.0",
     "name": "Sentry MCP",
-    "sandbox": { "env": { "SENTRY_AUTH_TOKEN": "capframe-sandbox-probe", "SENTRY_HOST": "sentry.io" } }
+    "sandbox": { "args": ["--access-token=capframe-sandbox-probe", "--agent-provider=anthropic"] }
   },
   {
     "handle": "npm:mongodb-mcp-server@1.11.0",
     "name": "MongoDB MCP",
     "sandbox": { "env": { "MDB_MCP_CONNECTION_STRING": "mongodb://dummy:dummy@127.0.0.1:27017/dummy" } }
-  },
-  {
-    "handle": "npm:@stripe/mcp@0.3.3",
-    "name": "Stripe MCP",
-    "sandbox": { "args": ["--tools=all", "--api-key=sk_test_capframe_sandbox_probe"] }
   },
   {
     "handle": "npm:@notionhq/notion-mcp-server@2.2.1",
@@ -155,10 +145,5 @@
     "handle": "npm:@posthog/mcp@0.0.9",
     "name": "PostHog MCP",
     "sandbox": { "env": { "POSTHOG_AUTH_HEADER": "Bearer phx_capframe_sandbox_probe" } }
-  },
-  {
-    "handle": "npm:@twilio-alpha/mcp@0.7.0",
-    "name": "Twilio MCP",
-    "sandbox": { "args": ["ACcapframesandboxprobe00000000000000/SKdummy:dummysecret"] }
   }
 ]
