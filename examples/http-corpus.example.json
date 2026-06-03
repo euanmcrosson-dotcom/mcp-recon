@@ -100,5 +100,29 @@
   {
     "handle": "https://mcp.tweetsave.org/mcp",
     "name": "TweetSave MCP"
+  },
+  {
+    "handle": "https://developers.openai.com/mcp",
+    "name": "OpenAI Docs MCP"
+  },
+  {
+    "handle": "https://learn.microsoft.com/api/mcp",
+    "name": "Microsoft Learn MCP"
+  },
+  {
+    "handle": "https://mcp.grep.app",
+    "name": "grep.app MCP"
+  },
+  {
+    "handle": "https://www.context-awesome.com/api/mcp",
+    "name": "Context Awesome MCP"
+  },
+  {
+    "handle": "https://api.openmesh.dev/mcp",
+    "name": "OpenMesh MCP"
+  },
+  {
+    "handle": "https://api.manifold.markets/v0/mcp",
+    "name": "Manifold Markets MCP"
   }
 ]
