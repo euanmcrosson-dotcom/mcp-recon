@@ -66,5 +66,49 @@
   {
     "handle": "pypi:mcp-atlassian@0.21.1",
     "name": "mcp-atlassian"
+  },
+  {
+    "handle": "npm:firecrawl-mcp@3.20.2",
+    "name": "Firecrawl MCP",
+    "repo_url": "https://github.com/mendableai/firecrawl-mcp-server",
+    "sandbox": { "env": { "FIRECRAWL_API_KEY": "fc-capframe-sandbox-probe" } }
+  },
+  {
+    "handle": "npm:@browserbasehq/mcp-server-browserbase@2.4.3",
+    "name": "Browserbase MCP",
+    "sandbox": { "env": { "BROWSERBASE_API_KEY": "bb-capframe-sandbox-probe", "BROWSERBASE_PROJECT_ID": "capframe-sandbox-probe" } }
+  },
+  {
+    "handle": "npm:@apify/actors-mcp-server@0.10.11",
+    "name": "Apify Actors MCP",
+    "sandbox": { "env": { "APIFY_TOKEN": "apify_api_capframe_sandbox_probe" } }
+  },
+  {
+    "handle": "npm:airtable-mcp-server@1.13.0",
+    "name": "Airtable MCP",
+    "sandbox": { "env": { "AIRTABLE_API_KEY": "patCapframeSandboxProbe" } }
+  },
+  {
+    "handle": "npm:figma-developer-mcp@0.12.0",
+    "name": "Figma (Framelink) MCP",
+    "sandbox": { "args": ["--stdio"], "env": { "FIGMA_API_KEY": "figd_capframe-sandbox-probe" } }
+  },
+  {
+    "handle": "npm:@hubspot/mcp-server@0.4.0",
+    "name": "HubSpot MCP",
+    "sandbox": { "env": { "PRIVATE_APP_ACCESS_TOKEN": "pat-capframe-sandbox-probe" } }
+  },
+  {
+    "handle": "npm:@wonderwhy-er/desktop-commander@0.2.41",
+    "name": "Desktop Commander MCP",
+    "repo_url": "https://github.com/wonderwhy-er/DesktopCommanderMCP"
+  },
+  {
+    "handle": "npm:@antv/mcp-server-chart@0.9.10",
+    "name": "AntV Chart MCP"
+  },
+  {
+    "handle": "npm:@playwright/mcp@0.0.75",
+    "name": "Playwright MCP"
   }
 ]
