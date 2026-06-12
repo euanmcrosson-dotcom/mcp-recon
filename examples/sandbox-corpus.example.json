@@ -145,5 +145,10 @@
     "handle": "npm:@posthog/mcp@0.0.9",
     "name": "PostHog MCP",
     "sandbox": { "env": { "POSTHOG_AUTH_HEADER": "Bearer phx_capframe_sandbox_probe" } }
+  },
+  {
+    "handle": "npm:@magicuidesign/mcp@2.0.0",
+    "name": "Magic UI MCP",
+    "repo_url": "https://github.com/magicuidesign/magicui"
   }
 ]
