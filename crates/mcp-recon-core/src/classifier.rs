@@ -75,6 +75,9 @@ pub fn classify(inventory: &McpInventory) -> Vec<Finding> {
             out.extend(rule_r5_description_money_no_side_effect(tool));
             out.extend(rule_r6_external_fetch_surface(tool));
             out.extend(rule_r7_code_execution_surface(tool));
+            out.extend(rule_r8_ssrf_surface(tool));
+            out.extend(rule_r9_filesystem_egress(tool));
+            out.extend(rule_r10_secret_exposure(tool));
         }
     }
     out
@@ -642,6 +645,273 @@ fn rule_r7_code_execution_surface(tool: &Tool) -> Option<Finding> {
             owasp_llm: vec!["LLM08".into()],
             nist_rmf: vec!["MANAGE-2.2".into()],
             mitre_atlas: vec!["T0051".into()],
+        },
+    })
+}
+
+// ─── R8: SSRF Surface ─────────────────────────────────────────────────────
+
+/// Substrings in a lowercased parameter name that strongly indicate the
+/// parameter is a URL or remote endpoint — the canonical SSRF precondition.
+const SSRF_PARAM_NAMES: &[&str] = &["url", "uri", "endpoint", "webhook", "callback"];
+
+/// Returns names of string parameters that look like URL / endpoint inputs
+/// and carry no `pattern` or `enum` constraint — i.e., the agent can freely
+/// choose any destination host.
+fn unconstrained_url_params(tool: &Tool) -> Vec<String> {
+    let Some(params) = tool.parameters.as_ref() else {
+        return Vec::new();
+    };
+    let Some(props) = params.get("properties").and_then(|p| p.as_object()) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for (name, schema) in props {
+        let Some(ty) = schema.get("type").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        if ty != "string" {
+            continue;
+        }
+        let lower = name.to_ascii_lowercase();
+        if !SSRF_PARAM_NAMES.iter().any(|k| lower.contains(k)) {
+            continue;
+        }
+        // A pattern or enum limits the destination — don't fire.
+        if schema.get("pattern").is_some() || schema.get("enum").is_some() {
+            continue;
+        }
+        out.push(name.clone());
+    }
+    out.sort();
+    out
+}
+
+/// R8 -- SSRF surface: unconstrained URL / endpoint parameter.
+///
+/// A string parameter whose name implies a URL or endpoint with no
+/// pattern or enum constraint lets an agent (or an attacker-controlled
+/// prompt) redirect the tool at internal services, cloud-metadata
+/// endpoints, or arbitrary internet hosts.
+fn rule_r8_ssrf_surface(tool: &Tool) -> Option<Finding> {
+    let offenders = unconstrained_url_params(tool);
+    if offenders.is_empty() {
+        return None;
+    }
+    let pretty = offenders
+        .iter()
+        .map(|s| format!("`{s}`"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    Some(Finding {
+        id: stable_id("r8", &tool.name),
+        severity: Severity::High,
+        category: Category::SsrfSurface,
+        title: format!(
+            "Tool `{}` accepts an unconstrained URL / endpoint parameter",
+            tool.name
+        ),
+        description: Some(format!(
+            "The parameter(s) {pretty} look like URL or endpoint inputs but carry no \
+             `pattern` or `enum` constraint. An agent tricked by an indirect-injection \
+             payload can invoke this tool with an internal-service URL \
+             (e.g. `http://169.254.169.254/`) to exfiltrate cloud metadata, probe \
+             internal APIs, or pivot to services the host can reach but the \
+             caller cannot."
+        )),
+        tool: Some(tool.name.clone()),
+        remediation: Some(
+            "Constrain the URL parameter with an allow-list `enum`, or a `pattern` \
+             that restricts scheme and domain. Validate server-side against an \
+             allow-list and reject private / loopback / link-local address ranges \
+             at the HTTP client level."
+                .into(),
+        ),
+        mappings: Mappings {
+            owasp_llm: vec!["LLM07".into()],
+            nist_rmf: vec!["MANAGE-2.2".into()],
+            mitre_atlas: vec!["T0051".into()],
+        },
+    })
+}
+
+// ─── R9: Filesystem Egress ────────────────────────────────────────────────
+
+/// Phrases (lowercased) in a tool's name or description that imply it writes,
+/// creates, moves, or deletes files on the host filesystem.
+const FILESYSTEM_WRITE_PHRASES: &[&str] = &[
+    "write to file",
+    "write file",
+    "write a file",
+    "writes to file",
+    "writes a file",
+    "creates a file",
+    "create a file",
+    "create file",
+    "saves to disk",
+    "save to disk",
+    "saves to file",
+    "save to file",
+    "save file",
+    "overwrite",
+    "delete the file",
+    "delete a file",
+    "delete file",
+    "deletes file",
+    "remove the file",
+    "remove a file",
+    "removes file",
+    "move file",
+    "move the file",
+    "rename file",
+    "rename the file",
+    "append to file",
+    "append file",
+    "edit_file",
+    "write_file",
+    "create_file",
+    "save_file",
+    "delete_file",
+    "move_file",
+    "rename_file",
+    "append_file",
+    "patch_file",
+    "update_file",
+];
+
+fn implies_filesystem_write(tool: &Tool) -> bool {
+    let mut hay = tool.name.to_ascii_lowercase();
+    hay.push(' ');
+    if let Some(d) = &tool.description {
+        hay.push_str(&d.to_ascii_lowercase());
+    }
+    FILESYSTEM_WRITE_PHRASES.iter().any(|p| hay.contains(p))
+}
+
+/// R9 -- Filesystem write / delete egress surface.
+///
+/// A tool that writes, creates, moves, or deletes files on the host
+/// filesystem can be weaponised by a compromised agent to plant backdoors,
+/// corrupt application state, or overwrite sensitive paths (SSH keys, shell
+/// configs, cron jobs). Rated High regardless of declared auth, because the
+/// risk is in unrestricted path targeting, not just missing authentication.
+fn rule_r9_filesystem_egress(tool: &Tool) -> Option<Finding> {
+    if !implies_filesystem_write(tool) {
+        return None;
+    }
+    Some(Finding {
+        id: stable_id("r9", &tool.name),
+        severity: Severity::High,
+        category: Category::FilesystemEgress,
+        title: format!(
+            "Tool `{}` writes to or deletes from the host filesystem",
+            tool.name
+        ),
+        description: Some(format!(
+            "`{}` appears to write, create, move, or delete files on the host \
+             filesystem ({}). An agent manipulated by an indirect-injection \
+             payload can target sensitive paths (SSH keys, shell configs, \
+             application secrets) or establish persistence via cron / systemd.",
+            tool.name,
+            tool.description.as_deref().unwrap_or("name match")
+        )),
+        tool: Some(tool.name.clone()),
+        remediation: Some(
+            "Restrict the tool to an explicit allow-list of safe directories. \
+             Validate all path parameters server-side, reject traversal sequences \
+             (`../`), and gate write / delete operations behind a capframe-bind \
+             `path starts_with /safe/dir` caveat."
+                .into(),
+        ),
+        mappings: Mappings {
+            owasp_llm: vec!["LLM08".into()],
+            nist_rmf: vec!["MANAGE-2.2".into()],
+            mitre_atlas: vec!["T0051".into()],
+        },
+    })
+}
+
+// ─── R10: Secret / Credential Exposure ───────────────────────────────────
+
+/// Phrases (lowercased) in a tool's name or description that imply it reads
+/// or returns secrets, API keys, credentials, or environment variables.
+const SECRET_EXPOSURE_PHRASES: &[&str] = &[
+    "environment variable",
+    "env_var",
+    "api key",
+    "api_key",
+    "secret key",
+    "secret token",
+    "read secret",
+    "get secret",
+    "fetch secret",
+    "retrieve secret",
+    "retrieves secret",
+    "access secret",
+    "private key",
+    ".env",
+    "aws secret",
+    "get_env",
+    "read_env",
+    "list_env",
+    "get_secret",
+    "read_secret",
+    "fetch_secret",
+    "get_credentials",
+    "read_credentials",
+    "fetch_credentials",
+    "get_api_key",
+    "fetch_api_key",
+    "list_secrets",
+];
+
+fn implies_secret_exposure(tool: &Tool) -> bool {
+    let mut hay = tool.name.to_ascii_lowercase();
+    hay.push(' ');
+    if let Some(d) = &tool.description {
+        hay.push_str(&d.to_ascii_lowercase());
+    }
+    SECRET_EXPOSURE_PHRASES.iter().any(|p| hay.contains(p))
+}
+
+/// R10 -- Secret / credential exposure to the agent.
+///
+/// A tool that reads environment variables, API keys, or other credentials
+/// surfaces those values to the model context. Any prompt with injection
+/// access can then exfiltrate them — e.g. by chaining with an R8 SSRF
+/// gadget or an R6 external-fetch surface.
+fn rule_r10_secret_exposure(tool: &Tool) -> Option<Finding> {
+    if !implies_secret_exposure(tool) {
+        return None;
+    }
+    Some(Finding {
+        id: stable_id("r10", &tool.name),
+        severity: Severity::High,
+        category: Category::SecretExposure,
+        title: format!(
+            "Tool `{}` exposes secrets or credentials to the agent",
+            tool.name
+        ),
+        description: Some(format!(
+            "`{}` appears to read or return secrets, API keys, credentials, or \
+             environment variables ({}). Values surfaced in the model context \
+             are visible to any prompt with injection access; a compromised \
+             agent can relay them to an attacker-controlled server.",
+            tool.name,
+            tool.description.as_deref().unwrap_or("name match")
+        )),
+        tool: Some(tool.name.clone()),
+        remediation: Some(
+            "Do not expose secrets to the agent: inject them server-side at \
+             call time rather than passing them through the model context. If a \
+             tool must return a credential, scope it with a capframe-bind \
+             time-limited caveat and log every issuance."
+                .into(),
+        ),
+        mappings: Mappings {
+            owasp_llm: vec!["LLM06".into()],
+            nist_rmf: vec!["MANAGE-2.2".into()],
+            mitre_atlas: vec!["T0040".into()],
         },
     })
 }
@@ -1336,6 +1606,305 @@ mod tests {
         let findings = classify(&inventory_with_one_tool(tool));
         let r6 = findings.iter().filter(|f| f.id.contains("r6")).count();
         assert_eq!(r6, 0);
+    }
+
+    // ── R8: SSRF Surface ──────────────────────────────────────────────────
+
+    #[test]
+    fn r8_fires_on_unconstrained_url_param() {
+        let tool = Tool {
+            name: "fetch_data".into(),
+            description: Some("Fetch data from a remote source.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "url": { "type": "string" } }
+            })),
+            side_effects: vec![SideEffect::Network],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r8: Vec<_> = findings.iter().filter(|f| f.id.contains("r8")).collect();
+        assert_eq!(r8.len(), 1, "expected one R8 finding; got {findings:?}");
+        let f = r8[0];
+        assert_eq!(f.severity, Severity::High);
+        assert_eq!(f.category, Category::SsrfSurface);
+        assert_eq!(f.mappings.owasp_llm, vec!["LLM07"]);
+    }
+
+    #[test]
+    fn r8_fires_on_endpoint_and_webhook_params() {
+        for param in ["endpoint", "webhook", "callback", "uri"] {
+            let tool = Tool {
+                name: "send_event".into(),
+                description: None,
+                parameters: Some(json!({
+                    "type": "object",
+                    "properties": { param: { "type": "string" } }
+                })),
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r8")).count(),
+                1,
+                "R8 should fire on param `{param}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r8_silent_when_url_param_has_pattern_constraint() {
+        let tool = Tool {
+            name: "notify".into(),
+            description: None,
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "pattern": "^https://hooks\\.example\\.com/"
+                    }
+                }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r8")).count(),
+            0,
+            "R8 should not fire when url has a pattern constraint; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r8_silent_when_url_param_has_enum_constraint() {
+        let tool = Tool {
+            name: "call_service".into(),
+            description: None,
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "endpoint": {
+                        "type": "string",
+                        "enum": ["https://api.example.com/v1", "https://api.example.com/v2"]
+                    }
+                }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r8")).count(),
+            0,
+            "R8 should not fire when endpoint has an enum constraint; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r8_silent_on_non_url_string_param() {
+        // "username" contains "url" as a suffix — but it's not a URL parameter.
+        // Verify the substring match is for the keyword alone, not inside longer words.
+        // (Actually "url" IS a substring of "username"? No: u-s-e-r-n-a-m-e does not
+        //  contain "url". But "curl_options" does contain "url" — that's fine to flag.)
+        let tool = Tool {
+            name: "greet".into(),
+            description: None,
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "name": { "type": "string" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r8")).count(),
+            0,
+            "R8 should not fire on a plain `name` string param; got {findings:?}"
+        );
+    }
+
+    // ── R9: Filesystem Egress ─────────────────────────────────────────────
+
+    #[test]
+    fn r9_fires_on_write_file_in_description() {
+        let tool = Tool {
+            name: "store".into(),
+            description: Some("Write file contents to the specified path.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string" },
+                    "content": { "type": "string" }
+                }
+            })),
+            side_effects: vec![SideEffect::Filesystem, SideEffect::Write],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r9: Vec<_> = findings.iter().filter(|f| f.id.contains("r9")).collect();
+        assert_eq!(r9.len(), 1, "expected one R9 finding; got {findings:?}");
+        let f = r9[0];
+        assert_eq!(f.severity, Severity::High);
+        assert_eq!(f.category, Category::FilesystemEgress);
+        assert_eq!(f.mappings.owasp_llm, vec!["LLM08"]);
+    }
+
+    #[test]
+    fn r9_fires_on_tool_name_write_file() {
+        let tool = Tool {
+            name: "write_file".into(),
+            description: Some("Write data to a file.".into()),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r9")).count(),
+            1,
+            "R9 should fire on `write_file` tool name; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r9_fires_on_delete_and_overwrite_phrases() {
+        let cases = [
+            ("remover", "Delete the file at the given path."),
+            ("patcher", "Overwrite the target file with new content."),
+            ("archiver", "Move the file to the archive directory."),
+        ];
+        for (name, desc) in cases {
+            let tool = Tool {
+                name: name.into(),
+                description: Some(desc.into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r9")).count(),
+                1,
+                "R9 should fire on desc {desc:?}; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r9_silent_on_read_only_filesystem_tool() {
+        let tool = Tool {
+            name: "read_file".into(),
+            description: Some("Read and return the contents of a file.".into()),
+            parameters: None,
+            side_effects: vec![SideEffect::Read, SideEffect::Filesystem],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r9")).count(),
+            0,
+            "R9 should not fire on a read-only filesystem tool; got {findings:?}"
+        );
+    }
+
+    // ── R10: Secret / Credential Exposure ─────────────────────────────────
+
+    #[test]
+    fn r10_fires_on_environment_variable_in_description() {
+        let tool = Tool {
+            name: "config_reader".into(),
+            description: Some(
+                "Read an environment variable by name and return its value.".into(),
+            ),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "name": { "type": "string", "maxLength": 128 } }
+            })),
+            side_effects: vec![SideEffect::Read],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r10: Vec<_> = findings.iter().filter(|f| f.id.contains("r10")).collect();
+        assert_eq!(r10.len(), 1, "expected one R10 finding; got {findings:?}");
+        let f = r10[0];
+        assert_eq!(f.severity, Severity::High);
+        assert_eq!(f.category, Category::SecretExposure);
+        assert_eq!(f.mappings.owasp_llm, vec!["LLM06"]);
+    }
+
+    #[test]
+    fn r10_fires_on_get_secret_tool_name() {
+        let tool = Tool {
+            name: "get_secret".into(),
+            description: Some("Retrieve a secret value from the vault.".into()),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r10")).count(),
+            1,
+            "R10 should fire on `get_secret` tool name; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r10_fires_on_api_key_and_private_key_phrases() {
+        let cases = [
+            ("token_getter", "Returns the API key for the current session."),
+            ("auth_helper", "Reads the private key from disk."),
+            ("aws_helper", "Reads from AWS Secrets Manager."),
+        ];
+        for (name, desc) in cases {
+            let tool = Tool {
+                name: name.into(),
+                description: Some(desc.into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r10")).count(),
+                1,
+                "R10 should fire on desc {desc:?}; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r10_silent_on_generic_read_tool() {
+        let tool = Tool {
+            name: "get_user_profile".into(),
+            description: Some("Fetch user profile information.".into()),
+            parameters: None,
+            side_effects: vec![SideEffect::Read],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r10")).count(),
+            0,
+            "R10 should not fire on a generic profile read; got {findings:?}"
+        );
     }
 
     #[test]
