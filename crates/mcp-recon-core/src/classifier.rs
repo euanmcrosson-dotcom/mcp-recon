@@ -98,7 +98,10 @@ fn rule_r1_unconstrained_string(tool: &Tool) -> Option<Finding> {
         if ty != "string" {
             continue;
         }
-        if schema.get("maxLength").is_none() {
+        if schema.get("maxLength").is_none()
+            && schema.get("enum").is_none()
+            && schema.get("pattern").is_none()
+        {
             offenders.push(name.as_str());
         }
     }
@@ -1314,6 +1317,101 @@ mod tests {
     }
 
     #[test]
+    fn r1_silent_when_string_has_enum_constraint() {
+        let tool = Tool {
+            name: "set_status".into(),
+            description: Some("Update status".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "enum": ["active", "inactive", "pending"]}
+                }
+            })),
+            side_effects: vec![],
+            auth_required: None,
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r1: Vec<_> = findings
+            .iter()
+            .filter(|f| f.category == Category::UnconstrainedInput)
+            .collect();
+        assert!(
+            r1.is_empty(),
+            "R1 must not fire on an enum-constrained string param; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r1_silent_when_string_has_pattern_constraint() {
+        let tool = Tool {
+            name: "lookup_user".into(),
+            description: Some("Look up a user by ID".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string", "pattern": "^[a-zA-Z0-9_-]{1,64}$"}
+                }
+            })),
+            side_effects: vec![],
+            auth_required: None,
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r1: Vec<_> = findings
+            .iter()
+            .filter(|f| f.category == Category::UnconstrainedInput)
+            .collect();
+        assert!(
+            r1.is_empty(),
+            "R1 must not fire on a pattern-constrained string param; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r1_only_lists_unconstrained_params_when_mixed() {
+        // A tool with one enum-constrained param and one truly unconstrained
+        // param: only the unconstrained one should appear in the finding.
+        let tool = Tool {
+            name: "mixed_params".into(),
+            description: Some("Has both constrained and unconstrained strings".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "role":    {"type": "string", "enum": ["admin", "user"]},
+                    "comment": {"type": "string"}
+                }
+            })),
+            side_effects: vec![],
+            auth_required: None,
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        let r1: Vec<_> = findings
+            .iter()
+            .filter(|f| f.category == Category::UnconstrainedInput)
+            .collect();
+        assert_eq!(
+            r1.len(),
+            1,
+            "exactly one R1 finding expected; got {findings:?}"
+        );
+        assert!(
+            r1[0]
+                .description
+                .as_deref()
+                .unwrap_or("")
+                .contains("comment"),
+            "finding must name `comment`, not `role`; got {:?}",
+            r1[0].description
+        );
+        assert!(
+            !r1[0].description.as_deref().unwrap_or("").contains("role"),
+            "`role` is enum-constrained and must not appear in the finding"
+        );
+    }
+
+    #[test]
     fn r2_fires_when_side_effecting_tool_has_no_auth() {
         let tool = Tool {
             name: "order.refund".into(),
@@ -1826,9 +1924,7 @@ mod tests {
     fn r10_fires_on_environment_variable_in_description() {
         let tool = Tool {
             name: "config_reader".into(),
-            description: Some(
-                "Read an environment variable by name and return its value.".into(),
-            ),
+            description: Some("Read an environment variable by name and return its value.".into()),
             parameters: Some(json!({
                 "type": "object",
                 "properties": { "name": { "type": "string", "maxLength": 128 } }
@@ -1867,7 +1963,10 @@ mod tests {
     #[test]
     fn r10_fires_on_api_key_and_private_key_phrases() {
         let cases = [
-            ("token_getter", "Returns the API key for the current session."),
+            (
+                "token_getter",
+                "Returns the API key for the current session.",
+            ),
             ("auth_helper", "Reads the private key from disk."),
             ("aws_helper", "Reads from AWS Secrets Manager."),
         ];
