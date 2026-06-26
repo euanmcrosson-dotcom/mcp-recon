@@ -14,7 +14,7 @@ fn load(name: &str) -> McpInventory {
 }
 
 #[test]
-fn shopify_inventory_produces_six_findings() {
+fn shopify_inventory_produces_expected_findings() {
     let inv = load("shopify-mcp.inventory.json");
     let findings = classify(&inv);
     let by_rule: std::collections::BTreeMap<&str, usize> =
@@ -25,8 +25,8 @@ fn shopify_inventory_produces_six_findings() {
         });
     assert_eq!(
         findings.len(),
-        6,
-        "expected 6 findings; got {} ({:?})\nfull dump:\n{}",
+        7,
+        "expected 7 findings; got {} ({:?})\nfull dump:\n{}",
         findings.len(),
         by_rule,
         serde_json::to_string_pretty(&findings).unwrap()
@@ -55,6 +55,11 @@ fn shopify_inventory_produces_six_findings() {
         by_rule.get("r6").copied().unwrap_or(0),
         1,
         "R6 once on product.summarize_competitor"
+    );
+    assert_eq!(
+        by_rule.get("r8").copied().unwrap_or(0),
+        1,
+        "R8 once on product.summarize_competitor (unconstrained URL param)"
     );
 }
 
