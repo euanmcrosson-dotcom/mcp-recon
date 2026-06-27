@@ -227,5 +227,15 @@
   {
     "handle": "pypi:mcp-llms-txt@0.2.0",
     "name": "mcp-llms-txt"
+  },
+  {
+    "handle": "npm:@phantom/mcp-server@1.2.7",
+    "name": "phantom-wallet-mcp",
+    "repo_url": "https://github.com/phantom"
+  },
+  {
+    "handle": "npm:@currents/mcp@2.3.3",
+    "name": "currents-mcp",
+    "repo_url": "https://github.com/currents-dev"
   }
 ]
