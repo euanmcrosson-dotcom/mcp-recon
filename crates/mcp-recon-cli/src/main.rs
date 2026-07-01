@@ -392,6 +392,7 @@ fn build_findings(target: &Path) -> Result<serde_json::Value> {
                 tool: None,
                 remediation: Some("Pass an mcp-recon.inventory.v1 JSON file via --target.".into()),
                 mappings: Default::default(),
+                cast_category: Vec::new(),
             }],
             target.display().to_string(),
         ),

@@ -7,7 +7,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::findings::{Category, Finding, Mappings, Severity};
+use crate::findings::{category_to_cast, Category, Finding, Mappings, Severity};
 use crate::inventory::{McpInventory, SideEffect, Tool};
 
 /// Top-level data-class assignment. Retained from v0.1 scaffold for backward
@@ -80,6 +80,11 @@ pub fn classify(inventory: &McpInventory) -> Vec<Finding> {
             out.extend(rule_r10_secret_exposure(tool));
         }
     }
+    // Tag every finding with its CAST categories from one canonical mapping, so
+    // producer scans carry CAST identically to the `capframe find` CLI path.
+    for f in &mut out {
+        f.cast_category = category_to_cast(f.category);
+    }
     out
 }
 
@@ -115,6 +120,7 @@ fn rule_r1_unconstrained_string(tool: &Tool) -> Option<Finding> {
         .collect::<Vec<_>>()
         .join(", ");
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r1", &tool.name),
         severity: Severity::Medium,
         category: Category::UnconstrainedInput,
@@ -160,6 +166,7 @@ fn rule_r2_missing_auth(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r2", &tool.name),
         severity: Severity::High,
         category: Category::MissingAuthz,
@@ -272,6 +279,7 @@ fn rule_r3_side_effect_mismatch(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r3", &tool.name),
         severity: Severity::High,
         category: Category::ExcessiveAgency,
@@ -355,6 +363,7 @@ fn rule_r4_unbounded_money_param(tool: &Tool) -> Option<Finding> {
         .collect::<Vec<_>>()
         .join(", ");
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r4", &tool.name),
         severity: Severity::High,
         category: Category::ExcessiveAgency,
@@ -426,6 +435,7 @@ fn rule_r5_description_money_no_side_effect(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r5", &tool.name),
         severity: Severity::Medium,
         category: Category::ExcessiveAgency,
@@ -503,6 +513,7 @@ fn rule_r6_external_fetch_surface(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r6", &tool.name),
         severity: Severity::Medium,
         category: Category::IndirectInjection,
@@ -621,6 +632,7 @@ fn rule_r7_code_execution_surface(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r7", &tool.name),
         severity: Severity::Critical,
         category: Category::ExcessiveAgency,
@@ -707,6 +719,7 @@ fn rule_r8_ssrf_surface(tool: &Tool) -> Option<Finding> {
         .collect::<Vec<_>>()
         .join(", ");
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r8", &tool.name),
         severity: Severity::High,
         category: Category::SsrfSurface,
@@ -803,6 +816,7 @@ fn rule_r9_filesystem_egress(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r9", &tool.name),
         severity: Severity::High,
         category: Category::FilesystemEgress,
@@ -888,6 +902,7 @@ fn rule_r10_secret_exposure(tool: &Tool) -> Option<Finding> {
         return None;
     }
     Some(Finding {
+        cast_category: Vec::new(),
         id: stable_id("r10", &tool.name),
         severity: Severity::High,
         category: Category::SecretExposure,
@@ -937,6 +952,7 @@ fn stable_id(rule: &str, tool: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::findings::CastCategory;
     use crate::inventory::{McpInventory, McpServer, Transport};
     use serde_json::json;
 
@@ -972,6 +988,45 @@ mod tests {
         assert_eq!(f.category, Category::ExcessiveAgency);
         assert_eq!(f.tool.as_deref(), Some("execute_shell_command"));
         assert_eq!(f.mappings.owasp_llm, vec!["LLM08"]);
+    }
+
+    #[test]
+    fn classify_tags_every_finding_with_cast_category() {
+        // Producer scans previously emitted no cast_category at all; classify()
+        // must now CAST-tag every finding from the canonical category mapping.
+        // This tool fires R7 (shell exec -> ExcessiveAgency -> CAST-01) and R1
+        // (unconstrained `command` string -> UnconstrainedInput -> CAST-03).
+        let tool = Tool {
+            name: "execute_shell_command".into(),
+            description: Some("Execute a shell command for system management.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "command": { "type": "string" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert!(!findings.is_empty());
+        for f in &findings {
+            assert!(
+                !f.cast_category.is_empty(),
+                "finding {} (category {:?}) was not CAST-tagged",
+                f.id,
+                f.category
+            );
+        }
+        let r7 = findings.iter().find(|f| f.id.contains("r7")).unwrap();
+        assert_eq!(r7.cast_category, vec![CastCategory::Cast01]);
+        // Wire representation must match capframe's reader ("CAST-01", not "Cast01").
+        let json = serde_json::to_string(r7).unwrap();
+        assert!(
+            json.contains("\"CAST-01\""),
+            "cast_category must serialize as CAST-01: {json}"
+        );
+        let r1 = findings.iter().find(|f| f.id.contains("r1")).unwrap();
+        assert_eq!(r1.cast_category, vec![CastCategory::Cast03]);
     }
 
     #[test]

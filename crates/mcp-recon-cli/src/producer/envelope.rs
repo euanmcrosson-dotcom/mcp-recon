@@ -197,6 +197,7 @@ mod tests {
                 tool: None,
                 remediation: None,
                 mappings: Mappings::default(),
+                cast_category: Vec::new(),
             },
             Finding {
                 id: "b".into(),
@@ -207,6 +208,7 @@ mod tests {
                 tool: None,
                 remediation: None,
                 mappings: Mappings::default(),
+                cast_category: Vec::new(),
             },
             Finding {
                 id: "c".into(),
@@ -217,6 +219,7 @@ mod tests {
                 tool: None,
                 remediation: None,
                 mappings: Mappings::default(),
+                cast_category: Vec::new(),
             },
         ];
         let v = summarize(&findings);

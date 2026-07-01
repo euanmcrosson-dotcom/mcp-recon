@@ -29,6 +29,12 @@ pub struct Finding {
     /// Compliance-framework mappings.
     #[serde(default, skip_serializing_if = "Mappings::is_empty")]
     pub mappings: Mappings,
+    /// CAST (Capframe Agent Security Taxonomy) categories, derived from
+    /// `category`. Populated centrally by the classifier via [`category_to_cast`]
+    /// so every emitted finding carries its CAST tag — not just the ones that
+    /// pass through the `capframe find` CLI.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cast_category: Vec<CastCategory>,
 }
 
 /// Severity ordering (Info < Low < Medium < High < Critical).
@@ -78,6 +84,62 @@ pub enum Category {
     UntrustedDependency,
     /// Anything else.
     Other,
+}
+
+/// CAST v0.1 risk category (Capframe Agent Security Taxonomy). Wire representation
+/// (`"CAST-01"` …) is identical to `capframe_findings::CastCategory` so findings
+/// round-trip into the Capframe report and leaderboard unchanged.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum CastCategory {
+    /// CAST-01 — Tool Capability Excess.
+    #[serde(rename = "CAST-01")]
+    Cast01,
+    /// CAST-02 — Indirect Injection via Tool Output.
+    #[serde(rename = "CAST-02")]
+    Cast02,
+    /// CAST-03 — Insufficient Capability Scoping.
+    #[serde(rename = "CAST-03")]
+    Cast03,
+    /// CAST-04 — Tool Metadata Poisoning.
+    #[serde(rename = "CAST-04")]
+    Cast04,
+    /// CAST-05 — Capability Boundary Violation.
+    #[serde(rename = "CAST-05")]
+    Cast05,
+    /// CAST-06 — Cross-Tool Propagation.
+    #[serde(rename = "CAST-06")]
+    Cast06,
+    /// CAST-07 — Persistent State Poisoning.
+    #[serde(rename = "CAST-07")]
+    Cast07,
+    /// CAST-08 — Uncontrolled Tool Invocation.
+    #[serde(rename = "CAST-08")]
+    Cast08,
+    /// CAST-09 — Multi-Agent Authority Delegation.
+    #[serde(rename = "CAST-09")]
+    Cast09,
+}
+
+/// Mapping from a finding [`Category`] to its CAST categories — the source of
+/// truth for CAST tagging in the producer/classifier path. Wire-identical to the
+/// parallel mapping in the `capframe find` CLI, so both paths tag findings the same.
+pub fn category_to_cast(c: Category) -> Vec<CastCategory> {
+    use CastCategory::*;
+    match c {
+        Category::ExcessiveAgency => vec![Cast01],
+        Category::IndirectInjection => vec![Cast02],
+        Category::UnconstrainedInput => vec![Cast03],
+        Category::MissingAuthz => vec![Cast03],
+        Category::InsecureOutputHandling => vec![Cast01],
+        Category::SecretExposure => vec![Cast01],
+        Category::SsrfSurface => vec![Cast02],
+        Category::FilesystemEgress => vec![Cast01],
+        Category::NetworkEgress => vec![Cast02],
+        Category::ToolNamingConflict => vec![Cast04],
+        Category::UntrustedDependency => vec![Cast04],
+        Category::Deserialization => vec![Cast01],
+        Category::Other => vec![],
+    }
 }
 
 /// Compliance-framework mappings attached to a finding.
