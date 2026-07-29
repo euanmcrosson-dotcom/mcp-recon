@@ -150,5 +150,11 @@
     "handle": "npm:@magicuidesign/mcp@2.0.0",
     "name": "Magic UI MCP",
     "repo_url": "https://github.com/magicuidesign/magicui"
+  },
+  {
+    "handle": "npm:@currents/mcp@2.3.3",
+    "name": "currents-mcp",
+    "repo_url": "https://github.com/currents-dev/currents-mcp",
+    "sandbox": { "env": { "CURRENTS_API_KEY": "capframe-sandbox-probe" } }
   }
 ]
