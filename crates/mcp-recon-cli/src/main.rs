@@ -371,32 +371,24 @@ fn build_findings(target: &Path) -> Result<serde_json::Value> {
         .format(&Rfc3339)
         .context("format current time")?;
 
-    // Try to read + parse the target as an inventory. Any failure becomes a
-    // single info-level finding so the CLI never emits broken output.
-    let outcome = read_and_classify(target);
+    // Read + parse the target as an inventory. A failure here means we never
+    // saw the tool surface, so there is nothing to report on — fail closed.
+    //
+    // This used to be downgraded to a single info-level finding with an empty
+    // `tools` array. That produced a syntactically valid findings file with
+    // zero severities and a zero exit code, so a scan that never ran was
+    // indistinguishable from a hardened server — and `capframe report`
+    // happily rendered it as a clean report.
+    let (inv, findings) = read_and_classify(target).with_context(|| {
+        format!(
+            "scan target {} could not be read as an mcp-recon.inventory.v1 \
+             JSON file — refusing to emit findings for a scan that did not run",
+            target.display()
+        )
+    })?;
 
-    let (tools_json, findings, scan_target_path) = match outcome {
-        Ok((inv, findings)) => (
-            inventory_tools_to_findings_v1(&inv),
-            findings,
-            target.display().to_string(),
-        ),
-        Err(e) => (
-            serde_json::Value::Array(vec![]),
-            vec![Finding {
-                id: "f-target-unreadable".into(),
-                severity: Severity::Info,
-                category: mcp_recon_core::Category::Other,
-                title: "Target inventory could not be read".into(),
-                description: Some(format!("{e:#}")),
-                tool: None,
-                remediation: Some("Pass an mcp-recon.inventory.v1 JSON file via --target.".into()),
-                mappings: Default::default(),
-                cast_category: Vec::new(),
-            }],
-            target.display().to_string(),
-        ),
-    };
+    let tools_json = inventory_tools_to_findings_v1(&inv);
+    let scan_target_path = target.display().to_string();
 
     let severity_counts = count_by_severity(&findings);
     let total: u32 = severity_counts.values().sum();
@@ -471,14 +463,39 @@ fn count_by_severity(findings: &[Finding]) -> std::collections::HashMap<Severity
 mod tests {
     use super::*;
 
+    /// A target we cannot read is a failed scan, not a clean one.
+    ///
+    /// This previously returned Ok with a single info-level
+    /// `f-target-unreadable` finding and `tools: []`. The CLI then wrote that
+    /// file and exited 0, so `capframe report` rendered a clean-looking report
+    /// for a scan that never ran — a failed scan was indistinguishable from a
+    /// hardened server. Fail closed instead.
     #[test]
-    fn missing_target_yields_info_finding() {
+    fn unreadable_target_fails_closed_rather_than_reporting_clean() {
         let nope = std::path::PathBuf::from("/__nope__/does-not-exist.toml");
-        let v = build_findings(&nope).unwrap();
-        assert_eq!(v["schema_version"], "capframe.findings.v1");
-        assert_eq!(v["summary"]["total"], 1);
-        assert_eq!(v["summary"]["by_severity"]["info"], 1);
-        assert_eq!(v["findings"][0]["id"], "f-target-unreadable");
+        let err = build_findings(&nope).expect_err("unreadable target must be an error");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("does-not-exist.toml"),
+            "error should name the offending target, got: {msg}"
+        );
+    }
+
+    /// The failure must not leave a findings file behind — a stale or empty
+    /// artifact on disk is what downstream `capframe report` would pick up.
+    #[test]
+    fn unreadable_target_writes_no_findings_file() {
+        let nope = std::path::PathBuf::from("/__nope__/does-not-exist.toml");
+        let out = std::env::temp_dir().join("mcp-recon-failclosed-out.json");
+        let _ = fs::remove_file(&out);
+        assert!(
+            run_classify(Some(&nope), &out, false).is_err(),
+            "classify must fail on an unreadable target"
+        );
+        assert!(
+            !out.exists(),
+            "no findings file may be written for a failed scan"
+        );
     }
 
     #[test]
