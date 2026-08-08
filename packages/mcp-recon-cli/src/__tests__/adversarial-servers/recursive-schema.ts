@@ -11,39 +11,43 @@
  * resolvers that don't track seen-paths will recurse forever; mature
  * resolvers will short-circuit on revisiting the same `$ref`.
  */
-import { initializeResponse, runStdioLoop, type JsonRpcRequest } from "./_lib.js";
+import {
+	type JsonRpcRequest,
+	initializeResponse,
+	runStdioLoop,
+} from "./_lib.js";
 
 const tools = [
-  {
-    name: "ouroboros",
-    description: "input schema is self-referential via $ref",
-    inputSchema: {
-      type: "object",
-      properties: {
-        node: { $ref: "#/definitions/Node" },
-      },
-      definitions: {
-        Node: {
-          type: "object",
-          properties: {
-            child: { $ref: "#/definitions/Node" },
-            value: { type: "string" },
-          },
-        },
-      },
-    },
-  },
+	{
+		name: "ouroboros",
+		description: "input schema is self-referential via $ref",
+		inputSchema: {
+			type: "object",
+			properties: {
+				node: { $ref: "#/definitions/Node" },
+			},
+			definitions: {
+				Node: {
+					type: "object",
+					properties: {
+						child: { $ref: "#/definitions/Node" },
+						value: { type: "string" },
+					},
+				},
+			},
+		},
+	},
 ];
 
 runStdioLoop((req: JsonRpcRequest) => {
-  if (req.method === "initialize") return initializeResponse(req.id ?? 0);
-  if (req.method === "notifications/initialized") return undefined;
-  if (req.method === "tools/list") {
-    return { jsonrpc: "2.0", id: req.id ?? 0, result: { tools } };
-  }
-  return {
-    jsonrpc: "2.0",
-    id: req.id ?? 0,
-    error: { code: -32601, message: "method not implemented" },
-  };
+	if (req.method === "initialize") return initializeResponse(req.id ?? 0);
+	if (req.method === "notifications/initialized") return undefined;
+	if (req.method === "tools/list") {
+		return { jsonrpc: "2.0", id: req.id ?? 0, result: { tools } };
+	}
+	return {
+		jsonrpc: "2.0",
+		id: req.id ?? 0,
+		error: { code: -32601, message: "method not implemented" },
+	};
 });

@@ -18,8 +18,8 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 
 /** A parsed server-spec — the union of supported transport variants. */
 export type ServerSpec =
-  | { kind: "stdio"; command: string; args: string[] }
-  | { kind: "http"; url: string };
+	| { kind: "stdio"; command: string; args: string[] }
+	| { kind: "http"; url: string };
 
 /**
  * Parse a server-spec string into structured form.
@@ -29,29 +29,31 @@ export type ServerSpec =
  * mistyped spec produces a confusing connect-failure later.
  */
 export function parseServerSpec(spec: string): ServerSpec {
-  if (spec.startsWith("stdio:")) {
-    const rest = spec.slice("stdio:".length).trim();
-    if (rest === "") {
-      throw new Error(
-        `parseServerSpec: stdio: prefix requires a command after the colon (got "${spec}")`,
-      );
-    }
-    // Naive shell-splitting: split on whitespace. Good enough for
-    // `stdio:npx @modelcontextprotocol/server-filesystem /tmp` and
-    // similar. v0.2 may add proper quoting if real specs need it.
-    const parts = rest.split(/\s+/).filter((p) => p.length > 0);
-    const command = parts[0];
-    if (command === undefined) {
-      throw new Error(`parseServerSpec: command empty after split (got "${spec}")`);
-    }
-    return { kind: "stdio", command, args: parts.slice(1) };
-  }
-  if (spec.startsWith("http://") || spec.startsWith("https://")) {
-    return { kind: "http", url: spec };
-  }
-  throw new Error(
-    `parseServerSpec: unrecognised spec "${spec}" — expected stdio:<cmd> or http(s)://...`,
-  );
+	if (spec.startsWith("stdio:")) {
+		const rest = spec.slice("stdio:".length).trim();
+		if (rest === "") {
+			throw new Error(
+				`parseServerSpec: stdio: prefix requires a command after the colon (got "${spec}")`,
+			);
+		}
+		// Naive shell-splitting: split on whitespace. Good enough for
+		// `stdio:npx @modelcontextprotocol/server-filesystem /tmp` and
+		// similar. v0.2 may add proper quoting if real specs need it.
+		const parts = rest.split(/\s+/).filter((p) => p.length > 0);
+		const command = parts[0];
+		if (command === undefined) {
+			throw new Error(
+				`parseServerSpec: command empty after split (got "${spec}")`,
+			);
+		}
+		return { kind: "stdio", command, args: parts.slice(1) };
+	}
+	if (spec.startsWith("http://") || spec.startsWith("https://")) {
+		return { kind: "http", url: spec };
+	}
+	throw new Error(
+		`parseServerSpec: unrecognised spec "${spec}" — expected stdio:<cmd> or http(s)://...`,
+	);
 }
 
 /**
@@ -62,31 +64,31 @@ export function parseServerSpec(spec: string): ServerSpec {
  * commands (`scan`) hold the client across multiple steps.
  */
 export async function openClient(spec: ServerSpec): Promise<Client> {
-  const client = new Client(
-    { name: "mcp-recon", version: "0.0.1" },
-    { capabilities: {} },
-  );
+	const client = new Client(
+		{ name: "mcp-recon", version: "0.0.1" },
+		{ capabilities: {} },
+	);
 
-  switch (spec.kind) {
-    case "stdio": {
-      const transport = new StdioClientTransport({
-        command: spec.command,
-        args: spec.args,
-      });
-      await client.connect(transport);
-      return client;
-    }
-    case "http": {
-      // Stub — v0.1 week 2 will wire this against an HTTP MCP
-      // server. The MCP SDK's HTTP transport is the natural target.
-      throw new Error(
-        `openClient: http transport not implemented in v0.1 scaffold (got ${spec.url})`,
-      );
-    }
-  }
+	switch (spec.kind) {
+		case "stdio": {
+			const transport = new StdioClientTransport({
+				command: spec.command,
+				args: spec.args,
+			});
+			await client.connect(transport);
+			return client;
+		}
+		case "http": {
+			// Stub — v0.1 week 2 will wire this against an HTTP MCP
+			// server. The MCP SDK's HTTP transport is the natural target.
+			throw new Error(
+				`openClient: http transport not implemented in v0.1 scaffold (got ${spec.url})`,
+			);
+		}
+	}
 }
 
 /** Close a client opened by `openClient`. Safe to call multiple times. */
 export async function closeClient(client: Client): Promise<void> {
-  await client.close();
+	await client.close();
 }

@@ -21,25 +21,29 @@
  * expected outcome — the test asserts the rejection rather than
  * the bypass.
  */
-import { initializeResponse, runStdioLoop, type JsonRpcRequest } from "./_lib.js";
+import {
+	type JsonRpcRequest,
+	initializeResponse,
+	runStdioLoop,
+} from "./_lib.js";
 
 runStdioLoop((req: JsonRpcRequest) => {
-  if (req.method === "initialize") return initializeResponse(req.id ?? 0);
-  if (req.method === "notifications/initialized") return undefined;
-  if (req.method === "tools/list") {
-    // Multiple violations in one response. Pick the most aggressive:
-    // tools is a non-array.
-    return {
-      jsonrpc: "2.0",
-      id: req.id ?? 0,
-      result: {
-        tools: "not-an-array",
-      },
-    };
-  }
-  return {
-    jsonrpc: "2.0",
-    id: req.id ?? 0,
-    error: { code: -32601, message: "method not implemented" },
-  };
+	if (req.method === "initialize") return initializeResponse(req.id ?? 0);
+	if (req.method === "notifications/initialized") return undefined;
+	if (req.method === "tools/list") {
+		// Multiple violations in one response. Pick the most aggressive:
+		// tools is a non-array.
+		return {
+			jsonrpc: "2.0",
+			id: req.id ?? 0,
+			result: {
+				tools: "not-an-array",
+			},
+		};
+	}
+	return {
+		jsonrpc: "2.0",
+		id: req.id ?? 0,
+		error: { code: -32601, message: "method not implemented" },
+	};
 });

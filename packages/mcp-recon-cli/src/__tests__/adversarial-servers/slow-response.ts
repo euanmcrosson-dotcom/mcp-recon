@@ -8,18 +8,22 @@
  * `enumerate` should accept a shorter cap (or the integration test
  * passes one explicitly).
  */
-import { initializeResponse, runStdioLoop, type JsonRpcRequest } from "./_lib.js";
+import {
+	type JsonRpcRequest,
+	initializeResponse,
+	runStdioLoop,
+} from "./_lib.js";
 
 runStdioLoop((req: JsonRpcRequest) => {
-  if (req.method === "initialize") return initializeResponse(req.id ?? 0);
-  if (req.method === "notifications/initialized") return undefined;
-  if (req.method === "tools/list") {
-    // Intentionally never reply. The client should time out.
-    return undefined;
-  }
-  return {
-    jsonrpc: "2.0",
-    id: req.id ?? 0,
-    error: { code: -32601, message: "method not implemented" },
-  };
+	if (req.method === "initialize") return initializeResponse(req.id ?? 0);
+	if (req.method === "notifications/initialized") return undefined;
+	if (req.method === "tools/list") {
+		// Intentionally never reply. The client should time out.
+		return undefined;
+	}
+	return {
+		jsonrpc: "2.0",
+		id: req.id ?? 0,
+		error: { code: -32601, message: "method not implemented" },
+	};
 });

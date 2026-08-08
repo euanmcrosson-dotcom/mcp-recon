@@ -27,70 +27,70 @@ export const CAVEATS_SCHEMA = "mcp-recon/v0.1/caveats" as const;
  * exactly what they need to bind before issuance.
  */
 export interface CaveatBindings {
-  /** Substitutes `<your-caller-id>`. */
-  caller?: string;
-  /** Substitutes `<your-sandbox-prefix>`. */
-  sandbox_prefix?: string;
-  /** Substitutes `<your-cap-expiry>`. ISO-8601 string. */
-  expiry?: string;
-  /**
-   * Optional per-tool caveat overrides. Each entry's caveats are
-   * appended after the substituted ones — useful for tightening
-   * confused-deputy candidates the classifier didn't constrain.
-   */
-  per_tool_overrides?: Record<string, string[]>;
+	/** Substitutes `<your-caller-id>`. */
+	caller?: string;
+	/** Substitutes `<your-sandbox-prefix>`. */
+	sandbox_prefix?: string;
+	/** Substitutes `<your-cap-expiry>`. ISO-8601 string. */
+	expiry?: string;
+	/**
+	 * Optional per-tool caveat overrides. Each entry's caveats are
+	 * appended after the substituted ones — useful for tightening
+	 * confused-deputy candidates the classifier didn't constrain.
+	 */
+	per_tool_overrides?: Record<string, string[]>;
 }
 
 /** Why a plan was flagged (zero or more reasons). */
 export type FlagReason =
-  /** Classifier returned `unknown` for this tool — operator must classify by hand. */
-  | "classification_unknown"
-  /** Classifier confidence < 0.5 — review before trusting. */
-  | "low_confidence"
-  /** Tool is a confused-deputy candidate but no `arg.*` constraint after substitution. */
-  | "cdc_without_arg_constraint"
-  /** A `<your-...>` placeholder remains in at least one caveat. */
-  | "unsubstituted_placeholder";
+	/** Classifier returned `unknown` for this tool — operator must classify by hand. */
+	| "classification_unknown"
+	/** Classifier confidence < 0.5 — review before trusting. */
+	| "low_confidence"
+	/** Tool is a confused-deputy candidate but no `arg.*` constraint after substitution. */
+	| "cdc_without_arg_constraint"
+	/** A `<your-...>` placeholder remains in at least one caveat. */
+	| "unsubstituted_placeholder";
 
 /** One issuance plan per classified tool. */
 export interface CaveatPlan {
-  /** Tool name from the classification. */
-  tool: string;
-  /** Pass-through from classification. */
-  data_class: DataClass;
-  /** Pass-through from classification. */
-  authority_level: AuthorityLevel;
-  /** Pass-through from classification. */
-  confused_deputy_candidate: boolean;
-  /** Operator-readable purpose string for the issuer. */
-  purpose: string;
-  /** Caveats to apply to the issuer, one DSL predicate per array entry. */
-  caveats: string[];
-  /** True if the plan needs review before issuance. */
-  flagged: boolean;
-  /** Specific flag reasons, when flagged. */
-  flag_reasons: FlagReason[];
-  /**
-   * Free-form trailing comment from the classifier's
-   * `recommended_caveat` (e.g. "READ filesystem; bound the sandbox
-   * prefix tightly"). Preserved for operator review.
-   */
-  comment?: string;
+	/** Tool name from the classification. */
+	tool: string;
+	/** Pass-through from classification. */
+	data_class: DataClass;
+	/** Pass-through from classification. */
+	authority_level: AuthorityLevel;
+	/** Pass-through from classification. */
+	confused_deputy_candidate: boolean;
+	/** Operator-readable purpose string for the issuer. */
+	purpose: string;
+	/** Caveats to apply to the issuer, one DSL predicate per array entry. */
+	caveats: string[];
+	/** True if the plan needs review before issuance. */
+	flagged: boolean;
+	/** Specific flag reasons, when flagged. */
+	flag_reasons: FlagReason[];
+	/**
+	 * Free-form trailing comment from the classifier's
+	 * `recommended_caveat` (e.g. "READ filesystem; bound the sandbox
+	 * prefix tightly"). Preserved for operator review.
+	 */
+	comment?: string;
 }
 
 /** Top-level caveats document. */
 export interface CaveatsResults {
-  schema: typeof CAVEATS_SCHEMA;
-  scanned_at: string;
-  server: { name?: string; version?: string };
-  bindings: CaveatBindings;
-  plans: CaveatPlan[];
-  summary: {
-    /** Total plans (one per classified tool). */
-    total: number;
-    /** Plans with `flagged === false` — directly issuable. */
-    ready: number;
-    /** Plans with `flagged === true` — review required. */
-    flagged: number;
-  };
+	schema: typeof CAVEATS_SCHEMA;
+	scanned_at: string;
+	server: { name?: string; version?: string };
+	bindings: CaveatBindings;
+	plans: CaveatPlan[];
+	summary: {
+		/** Total plans (one per classified tool). */
+		total: number;
+		/** Plans with `flagged === false` — directly issuable. */
+		ready: number;
+		/** Plans with `flagged === true` — review required. */
+		flagged: number;
+	};
 }

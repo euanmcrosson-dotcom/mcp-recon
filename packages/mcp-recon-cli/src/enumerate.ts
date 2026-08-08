@@ -15,25 +15,25 @@ export const INVENTORY_SCHEMA = "mcp-recon/v0.1/inventory" as const;
 
 /** One tool as it appears in the inventory. */
 export interface EnumeratedTool {
-  /** Tool name as the server reported it. */
-  name: string;
-  /** Optional human-readable description from the server. */
-  description?: string;
-  /** JSON Schema for the tool's input arguments — opaque to v0.1 enumerate. */
-  inputSchema: unknown;
+	/** Tool name as the server reported it. */
+	name: string;
+	/** Optional human-readable description from the server. */
+	description?: string;
+	/** JSON Schema for the tool's input arguments — opaque to v0.1 enumerate. */
+	inputSchema: unknown;
 }
 
 /** A complete inventory document. */
 export interface ToolInventory {
-  schema: typeof INVENTORY_SCHEMA;
-  scanned_at: string;
-  server: {
-    /** Whatever name the server self-identified as via initialize. */
-    name?: string;
-    /** Whatever version the server self-identified as. */
-    version?: string;
-  };
-  tools: EnumeratedTool[];
+	schema: typeof INVENTORY_SCHEMA;
+	scanned_at: string;
+	server: {
+		/** Whatever name the server self-identified as via initialize. */
+		name?: string;
+		/** Whatever version the server self-identified as. */
+		version?: string;
+	};
+	tools: EnumeratedTool[];
 }
 
 /**
@@ -57,10 +57,10 @@ export interface ToolInventory {
  * (see `__tests__/adversarial.integration.test.ts`).
  */
 export interface EnumerateOptions {
-  /** Max time, in ms, to wait for `tools/list`. Default: 30000. */
-  timeoutMs?: number;
-  /** Per-tool description cap, in chars. Default: 65536. */
-  maxDescriptionChars?: number;
+	/** Max time, in ms, to wait for `tools/list`. Default: 30000. */
+	timeoutMs?: number;
+	/** Per-tool description cap, in chars. Default: 65536. */
+	maxDescriptionChars?: number;
 }
 
 /** Default `tools/list` timeout. See `EnumerateOptions.timeoutMs`. */
@@ -72,12 +72,15 @@ export const DEFAULT_MAX_DESCRIPTION_CHARS = 64 * 1024;
 /** Marker appended to truncated descriptions so reviewers see the cap fired. */
 export const TRUNCATION_MARKER = "…[truncated by mcp-recon]";
 
-function clampDescription(s: string | undefined, cap: number): string | undefined {
-  if (s === undefined) return undefined;
-  if (s.length <= cap) return s;
-  // Reserve room for the marker so the final string is at most `cap`.
-  const room = Math.max(0, cap - TRUNCATION_MARKER.length);
-  return s.slice(0, room) + TRUNCATION_MARKER;
+function clampDescription(
+	s: string | undefined,
+	cap: number,
+): string | undefined {
+	if (s === undefined) return undefined;
+	if (s.length <= cap) return s;
+	// Reserve room for the marker so the final string is at most `cap`.
+	const room = Math.max(0, cap - TRUNCATION_MARKER.length);
+	return s.slice(0, room) + TRUNCATION_MARKER;
 }
 
 /**
@@ -93,31 +96,34 @@ function clampDescription(s: string | undefined, cap: number): string | undefine
  * `tools/list` cannot hang the operator forever.
  */
 export async function enumerate(
-  client: Client,
-  opts: EnumerateOptions = {},
+	client: Client,
+	opts: EnumerateOptions = {},
 ): Promise<ToolInventory> {
-  const timeoutMs = opts.timeoutMs ?? DEFAULT_ENUMERATE_TIMEOUT_MS;
-  const maxDescriptionChars = opts.maxDescriptionChars ?? DEFAULT_MAX_DESCRIPTION_CHARS;
-  const result = await client.listTools(undefined, { timeout: timeoutMs });
-  // The SDK exposes the server's identity via getServerVersion(); in
-  // some SDK versions this is an awaitable getter and in others a
-  // direct property. Probe defensively so we don't break across
-  // minor version bumps.
-  const serverInfo = (client as unknown as {
-    getServerVersion?: () => { name?: string; version?: string } | undefined;
-  }).getServerVersion?.();
+	const timeoutMs = opts.timeoutMs ?? DEFAULT_ENUMERATE_TIMEOUT_MS;
+	const maxDescriptionChars =
+		opts.maxDescriptionChars ?? DEFAULT_MAX_DESCRIPTION_CHARS;
+	const result = await client.listTools(undefined, { timeout: timeoutMs });
+	// The SDK exposes the server's identity via getServerVersion(); in
+	// some SDK versions this is an awaitable getter and in others a
+	// direct property. Probe defensively so we don't break across
+	// minor version bumps.
+	const serverInfo = (
+		client as unknown as {
+			getServerVersion?: () => { name?: string; version?: string } | undefined;
+		}
+	).getServerVersion?.();
 
-  return {
-    schema: INVENTORY_SCHEMA,
-    scanned_at: new Date().toISOString(),
-    server: {
-      name: serverInfo?.name,
-      version: serverInfo?.version,
-    },
-    tools: result.tools.map((t) => ({
-      name: t.name,
-      description: clampDescription(t.description, maxDescriptionChars),
-      inputSchema: t.inputSchema,
-    })),
-  };
+	return {
+		schema: INVENTORY_SCHEMA,
+		scanned_at: new Date().toISOString(),
+		server: {
+			name: serverInfo?.name,
+			version: serverInfo?.version,
+		},
+		tools: result.tools.map((t) => ({
+			name: t.name,
+			description: clampDescription(t.description, maxDescriptionChars),
+			inputSchema: t.inputSchema,
+		})),
+	};
 }
