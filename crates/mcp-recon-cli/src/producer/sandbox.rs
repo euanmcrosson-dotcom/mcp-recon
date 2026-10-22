@@ -21,7 +21,7 @@
 use anyhow::{anyhow, Context, Result};
 use mcp_recon_core::{McpServer, SideEffect, Tool, Transport};
 use serde_json::Value;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
@@ -170,6 +170,92 @@ fn format_extra_args(extra: &[String]) -> String {
     out
 }
 
+/// Spawn `cmd`, feed it `stdin_data`, and collect its output under a
+/// wall-clock `deadline`.
+///
+/// stdout and stderr are drained on their own threads *while* the child
+/// runs. That is not a nicety: a child writing more than the OS pipe
+/// buffer (~64 KiB) blocks mid-write until someone reads, so waiting for
+/// exit before reading deadlocks. The previous implementation polled
+/// `try_wait()` and only called `wait_with_output()` after the child had
+/// exited, which meant any server with a large `tools/list` could never
+/// finish and always hit the budget — no matter how large the budget was.
+fn spawn_drain_wait(
+    mut cmd: Command,
+    stdin_data: &[u8],
+    deadline: Duration,
+) -> Result<std::process::Output> {
+    cmd.stdin(Stdio::piped());
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd.spawn().context("spawning child process")?;
+
+    // Drain both pipes immediately, before anything can block.
+    let mut out_pipe = child
+        .stdout
+        .take()
+        .ok_or_else(|| anyhow!("child: no stdout"))?;
+    let mut err_pipe = child
+        .stderr
+        .take()
+        .ok_or_else(|| anyhow!("child: no stderr"))?;
+    let out_reader = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let _ = out_pipe.read_to_end(&mut buf);
+        buf
+    });
+    let err_reader = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let _ = err_pipe.read_to_end(&mut buf);
+        buf
+    });
+
+    // Writing stdin can itself block if the child isn't reading yet, so
+    // it happens after the readers are live. Dropping the handle closes
+    // stdin, which the shim relies on to see EOF.
+    {
+        let mut stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| anyhow!("child: no stdin"))?;
+        stdin
+            .write_all(stdin_data)
+            .context("writing script to child stdin")?;
+    }
+
+    let start = std::time::Instant::now();
+    let status = loop {
+        match child.try_wait()? {
+            Some(s) => break s,
+            None => {
+                if start.elapsed() > deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    // Join so the reader threads don't outlive this call.
+                    let _ = out_reader.join();
+                    let _ = err_reader.join();
+                    return Err(anyhow!("timed out after {}s", deadline.as_secs()));
+                }
+                std::thread::sleep(Duration::from_millis(250));
+            }
+        }
+    };
+
+    let stdout = out_reader
+        .join()
+        .map_err(|_| anyhow!("stdout reader thread panicked"))?;
+    let stderr = err_reader
+        .join()
+        .map_err(|_| anyhow!("stderr reader thread panicked"))?;
+
+    Ok(std::process::Output {
+        status,
+        stdout,
+        stderr,
+    })
+}
+
 /// Run a prepared shell script inside an ephemeral container. Returns
 /// the container's combined stdout for the marker-parser.
 fn run_docker(
@@ -209,29 +295,19 @@ fn run_docker(
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
-    let mut child = cmd.spawn().context("spawning docker run")?;
-    child
-        .stdin
-        .take()
-        .ok_or_else(|| anyhow!("docker run: no stdin"))?
-        .write_all(script.as_bytes())
-        .context("writing sandbox script to docker stdin")?;
-
-    let start = std::time::Instant::now();
-    let deadline = Duration::from_secs(u64::from(config.timeout_secs));
-    let output = loop {
-        match child.try_wait()? {
-            Some(_) => break child.wait_with_output()?,
-            None => {
-                if start.elapsed() > deadline {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    return Err(anyhow!("sandbox timed out after {}s", config.timeout_secs));
-                }
-                std::thread::sleep(Duration::from_millis(250));
-            }
+    let output = spawn_drain_wait(
+        cmd,
+        script.as_bytes(),
+        Duration::from_secs(u64::from(config.timeout_secs)),
+    )
+    .map_err(|e| {
+        // Preserve the historical message so callers/logs are unchanged.
+        if e.to_string().contains("timed out") {
+            anyhow!("sandbox timed out after {}s", config.timeout_secs)
+        } else {
+            e
         }
-    };
+    })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -312,6 +388,72 @@ fn infer_side_effects(name: &str) -> Vec<SideEffect> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// A server whose `tools/list` is larger than the OS pipe buffer
+    /// (~64 KiB) must still be captured.
+    ///
+    /// Regression test for a deadlock: `run_docker` used to write the
+    /// script to stdin and then poll `try_wait()` without draining
+    /// stdout, only calling `wait_with_output()` once the child had
+    /// already exited. A child that writes more than the pipe buffer
+    /// blocks mid-write, so it can never exit, so `try_wait()` never
+    /// returns `Some` — the run always hit the wall-clock budget no
+    /// matter how large the budget was. firecrawl-mcp@3.34.1 emits
+    /// ~83 KiB and was silently dropped from every leaderboard run.
+    #[test]
+    fn captures_child_output_larger_than_the_pipe_buffer() {
+        if std::process::Command::new("node")
+            .arg("-v")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_err()
+        {
+            eprintln!("skipping: node not on PATH");
+            return;
+        }
+        const BYTES: usize = 200_000; // comfortably over any pipe buffer
+        let mut cmd = Command::new("node");
+        cmd.arg("-e")
+            .arg(format!("process.stdout.write('x'.repeat({BYTES}))"));
+
+        // A short deadline keeps the failure mode a clean timeout error
+        // rather than a hung test run.
+        let out = spawn_drain_wait(cmd, b"", Duration::from_secs(20))
+            .expect("child writing 200 KiB should complete, not deadlock");
+
+        assert!(out.status.success(), "child exited non-zero");
+        assert_eq!(
+            out.stdout.len(),
+            BYTES,
+            "stdout truncated: got {} of {BYTES} bytes",
+            out.stdout.len()
+        );
+    }
+
+    /// The deadline must still fire for a child that genuinely hangs.
+    #[test]
+    fn still_times_out_on_a_child_that_never_exits() {
+        if std::process::Command::new("node")
+            .arg("-v")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_err()
+        {
+            eprintln!("skipping: node not on PATH");
+            return;
+        }
+        let mut cmd = Command::new("node");
+        cmd.arg("-e").arg("setInterval(() => {}, 1000)");
+
+        let err = spawn_drain_wait(cmd, b"", Duration::from_secs(2))
+            .expect_err("a child that never exits must hit the deadline");
+        assert!(
+            err.to_string().contains("timed out"),
+            "unexpected error: {err}"
+        );
+    }
 
     #[test]
     fn extracts_tools_list_between_markers() {

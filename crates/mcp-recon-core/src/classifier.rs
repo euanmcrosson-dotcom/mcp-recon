@@ -245,11 +245,46 @@ fn token_matches_verb(token: &str, verb: &str) -> bool {
     }
 }
 
+/// Verbs that, when they *lead* a tool name, establish the tool as a read.
+///
+/// A later mutation-verb token is then a noun qualifying what is being read,
+/// not what the tool does: `view_ship_buy_orders` views buy-orders, it does
+/// not buy; `estimate_purchase` estimates a purchase, it does not purchase.
+/// Both scored false-positive R3 Highs on SpaceMolt before this guard.
+const READ_VERBS: &[&str] = &[
+    "get", "list", "view", "browse", "search", "find", "read", "show", "estimate", "check",
+    "lookup", "query", "fetch", "describe", "count", "preview", "inspect",
+];
+
+/// True if the *first verb* in the tool name is a read verb.
+///
+/// "First verb" rather than "first token", because real servers namespace
+/// their tools with a domain prefix that is not a verb at all:
+/// `forum_get_thread` → [forum, **get**, thread] reads, while
+/// `delete_search_index` → [**delete**, search, index] mutates. Whichever
+/// verb appears first governs; non-verb tokens are skipped.
+fn name_leads_with_read_verb(tool_name: &str) -> bool {
+    for tok in tokenize(tool_name) {
+        if READ_VERBS.iter().any(|v| token_matches_verb(&tok, v)) {
+            return true;
+        }
+        if MUTATION_VERBS.iter().any(|v| token_matches_verb(&tok, v)) {
+            return false;
+        }
+    }
+    false
+}
+
 /// True if any *token* of `tool_name` is a mutation verb. Token-bounded rather
 /// than a bare substring, so a verb's letters appearing inside an unrelated
 /// word (`issue` in `issues`, `set` in `reset`, `pay` in `payment`) no longer
 /// trigger a false match.
+///
+/// A leading read verb short-circuits the whole rule — see [`READ_VERBS`].
 fn name_implies_mutation(tool_name: &str) -> bool {
+    if name_leads_with_read_verb(tool_name) {
+        return false;
+    }
     tokenize(tool_name)
         .iter()
         .any(|tok| MUTATION_VERBS.iter().any(|v| token_matches_verb(tok, v)))
@@ -317,6 +352,11 @@ const MONEY_PARAM_NAMES: &[&str] = &[
     // Real spend caps (`max_amount`) are still caught via "amount".
 ];
 
+/// Parameter names that are pagination/windowing controls rather than
+/// spend. Exempt from R4 only when the tool itself is a read — see
+/// [`name_leads_with_read_verb`].
+const PAGINATION_PARAM_NAMES: &[&str] = &["limit", "offset", "page", "per_page", "page_size"];
+
 /// Numeric parameters whose name looks money/quota-shaped and carry no
 /// `maximum`. Shared by R4 and the caveat emitter so both agree on exactly
 /// which arguments need a cap. Returns sorted, owned names.
@@ -337,6 +377,22 @@ pub fn unbounded_money_params(tool: &Tool) -> Vec<String> {
         }
         let lower = name.to_ascii_lowercase();
         if !MONEY_PARAM_NAMES.iter().any(|m| lower.contains(m)) {
+            continue;
+        }
+        // A `max_`/`min_`-prefixed param IS the bound. `browse_ships(max_price)`
+        // scored a false-positive R4 High on SpaceMolt — "add a maximum to
+        // max_price" is incoherent, and an unbounded search ceiling moves no
+        // money. Real spend caps keep their own params (`amount`, `total`).
+        if lower.starts_with("max_") || lower.starts_with("min_") {
+            continue;
+        }
+        // On a read tool, `limit`/`offset`/`page` are pagination, not a quota
+        // that spends anything. SpaceMolt's `forum_get_thread(limit)` scored a
+        // false-positive R4 High. Scoped to these param names only, so a read-
+        // named tool with a genuine money param (`get_quotes(amount)`) still
+        // fires, and a mutating tool's `limit` still fires.
+        if PAGINATION_PARAM_NAMES.contains(&lower.as_str()) && name_leads_with_read_verb(&tool.name)
+        {
             continue;
         }
         if schema.get("maximum").is_none() {
@@ -590,6 +646,61 @@ const NON_EXECUTION_DISCLAIMERS: &[&str] = &[
     "formatted in a markdown code block",
 ];
 
+/// Byte offsets of every occurrence of `needle` in `hay` that starts at a
+/// word boundary — the very start, or preceded by a non-alphanumeric char.
+///
+/// Guards against a mid-word substring hit. SpaceMolt's read-only
+/// `get_wrecks` scored a false-positive R7 **Critical** because the token
+/// `"spawn a"` matched inside "de[spawn a]fter 10 minutes". Only the start of
+/// the needle is bounded: tokens like `"execute_"`, `"eval("` and
+/// `"run code"` carry their own trailing delimiter.
+fn word_start_matches<'a>(hay: &'a str, needle: &'a str) -> impl Iterator<Item = usize> + 'a {
+    hay.match_indices(needle)
+        .filter(|(i, _)| {
+            *i == 0
+                || !hay[..*i]
+                    .chars()
+                    .next_back()
+                    .is_some_and(|c| c.is_alphanumeric())
+        })
+        .map(|(i, _)| i)
+}
+
+/// Phrases that negate an execution claim when they immediately precede
+/// one. Checked in the window just before the matched token.
+const NEGATION_MARKERS: &[&str] = &[
+    "does not",
+    "doesn't",
+    "do not",
+    "don't",
+    "cannot",
+    "can not",
+    "can't",
+    "never",
+    "will not",
+    "won't",
+    "without",
+    "no ability to",
+    "not able to",
+];
+
+/// How far back to look for a negation. Wide enough for "discovery does
+/// not execute", tight enough that an unrelated earlier "cannot" in the
+/// same paragraph doesn't reach the match.
+const NEGATION_WINDOW: usize = 24;
+
+/// True if the execution token at `pos` is negated by preceding text.
+fn is_negated_at(hay: &str, pos: usize) -> bool {
+    let start = hay[..pos]
+        .char_indices()
+        .rev()
+        .take(NEGATION_WINDOW)
+        .last()
+        .map_or(0, |(i, _)| i);
+    let window = &hay[start..pos];
+    NEGATION_MARKERS.iter().any(|n| window.contains(n))
+}
+
 /// True if name+description (lowercased) implies code/command execution.
 ///
 /// Hit suppression: even if an EXECUTION_TOKEN matches, the rule does NOT
@@ -602,7 +713,24 @@ fn implies_code_execution(tool: &Tool) -> bool {
     if let Some(d) = &tool.description {
         hay.push_str(&d.to_ascii_lowercase());
     }
-    if !EXECUTION_TOKENS.iter().any(|t| hay.contains(t)) {
+    // Collect every word-boundary execution-token hit, then decide. A
+    // description that only ever *denies* execution ("discovery does not
+    // execute providers") must not read as an admission — firecrawl's
+    // `find_tools` scored a false-positive Critical exactly that way.
+    // Suppression requires ALL hits to be negated: one un-negated hit
+    // ("Execute arbitrary code in a sandbox. Does not execute on the
+    // host") still fires.
+    let mut saw_hit = false;
+    let mut all_negated = true;
+    for token in EXECUTION_TOKENS {
+        for pos in word_start_matches(&hay, token) {
+            saw_hit = true;
+            if !is_negated_at(&hay, pos) {
+                all_negated = false;
+            }
+        }
+    }
+    if !saw_hit || all_negated {
         return false;
     }
     // Don't double-check against name — disclaimers belong in descriptions,
@@ -1108,6 +1236,250 @@ mod tests {
                 "R3 should fire on mutation tool `{name}`; got {findings:?}"
             );
         }
+    }
+
+    #[test]
+    fn r7_silent_when_the_description_denies_execution() {
+        // firecrawl_find_tools scored a false-positive R7 Critical on a
+        // description that explicitly DENIES execution: the token
+        // "execute " matched inside "discovery does not execute
+        // providers." Negations must not read as admissions.
+        let tool = Tool {
+            name: "firecrawl_find_tools".into(),
+            description: Some(
+                "Browse Alexandria data providers and workflows or read a selected \
+                 contract. Discovery does not execute providers. Use firecrawl_search \
+                 when you also need web results."
+                    .into(),
+            ),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r7")).count(),
+            0,
+            "R7 should not fire on a description that denies execution; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r7_still_fires_when_execution_is_merely_qualified() {
+        // Regression guard: the negation suppression must be narrow. A
+        // tool that DOES execute, with a caveat, stays Critical.
+        let tool = Tool {
+            name: "sandbox_eval".into(),
+            description: Some(
+                "Execute arbitrary code in a sandbox. Does not execute on the host, \
+                 but runs the submitted program in a container."
+                    .into(),
+            ),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r7")).count(),
+            1,
+            "R7 must still fire when the tool genuinely executes; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r7_silent_when_execution_token_is_a_substring_of_another_word() {
+        // SpaceMolt's `get_wrecks` scored a false-positive R7 Critical because
+        // the EXECUTION_TOKEN "spawn a" matched inside "de[spawn a]fter 10
+        // minutes". A read-only list tool must not be flagged as an execution
+        // surface by a mid-word substring hit.
+        let tool = Tool {
+            name: "get_wrecks".into(),
+            description: Some(
+                "List all wrecks at your current POI. Jettison containers despawn after 10 \
+                 minutes; their cargo settles back into any matching deposit at the POI."
+                    .into(),
+            ),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r7")).count(),
+            0,
+            "R7 should not fire on `get_wrecks`; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r7_still_fires_on_genuine_subprocess_spawn() {
+        // Regression guard for the fix above: a real "spawn a subprocess"
+        // description must stay Critical.
+        let tool = Tool {
+            name: "launch_worker".into(),
+            description: Some("Spawn a subprocess to handle the job.".into()),
+            parameters: None,
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r7")).count(),
+            1,
+            "R7 must still fire on a genuine subprocess spawn; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r3_silent_when_leading_verb_is_a_read() {
+        // SpaceMolt false positives: `view_ship_buy_orders` tokenises to
+        // [view, ship, buy, orders] and `estimate_purchase` to [estimate,
+        // purchase]. Both carry a genuine mutation-verb *token*, but the
+        // leading verb governs what the tool does, and both are reads.
+        for name in [
+            "view_ship_buy_orders",
+            "estimate_purchase",
+            "get_transfer_status",
+            "list_pending_payments",
+            "search_deleted_notes",
+        ] {
+            let tool = Tool {
+                name: name.into(),
+                description: Some("Read-only lookup.".into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r3")).count(),
+                0,
+                "R3 should not fire on read tool `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r3_still_fires_when_a_read_verb_is_not_leading() {
+        // Regression guard: a read verb appearing *later* in the name must not
+        // buy a mutation tool an exemption.
+        for name in ["delete_search_index", "update_list_settings"] {
+            let tool = Tool {
+                name: name.into(),
+                description: Some("does something".into()),
+                parameters: None,
+                side_effects: vec![],
+                auth_required: Some(true),
+                rate_limited: None,
+            };
+            let findings = classify(&inventory_with_one_tool(tool));
+            assert_eq!(
+                findings.iter().filter(|f| f.id.contains("r3")).count(),
+                1,
+                "R3 must still fire on mutation tool `{name}`; got {findings:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn r4_silent_on_max_prefixed_filter_param() {
+        // SpaceMolt's `browse_ships(max_price)` scored a false-positive R4
+        // High. A `max_`-prefixed param IS the bound — telling the author to
+        // "add a maximum to max_price" is incoherent, and an unbounded search
+        // ceiling moves no money.
+        let tool = Tool {
+            name: "browse_ships".into(),
+            description: Some("Search ships for sale.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "max_price": { "type": "integer" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r4")).count(),
+            0,
+            "R4 should not fire on `max_price`; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r4_silent_on_pagination_limit_of_a_read_tool() {
+        // SpaceMolt's `forum_get_thread(limit)` scored a false-positive R4
+        // High. On a read tool, `limit` is pagination, not a quota that moves
+        // money.
+        let tool = Tool {
+            name: "forum_get_thread".into(),
+            description: Some("Read a forum thread.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "limit": { "type": "integer" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r4")).count(),
+            0,
+            "R4 should not fire on a read tool's pagination `limit`; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r4_still_fires_on_limit_of_a_mutating_tool() {
+        // Regression guard: `limit` on a tool that actually spends is still a
+        // real unbounded quota.
+        let tool = Tool {
+            name: "create_buy_order".into(),
+            description: Some("Place a buy order.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "limit": { "type": "integer" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r4")).count(),
+            1,
+            "R4 must still fire on a mutating tool's unbounded `limit`; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn r4_still_fires_on_unbounded_amount_of_a_read_named_tool() {
+        // Regression guard: the read-verb exemption is scoped to pagination
+        // params only. Chainflip's `get_quotes(amount)` must stay flagged.
+        let tool = Tool {
+            name: "get_quotes".into(),
+            description: Some("Quote a swap.".into()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": { "amount": { "type": "number" } }
+            })),
+            side_effects: vec![],
+            auth_required: Some(true),
+            rate_limited: None,
+        };
+        let findings = classify(&inventory_with_one_tool(tool));
+        assert_eq!(
+            findings.iter().filter(|f| f.id.contains("r4")).count(),
+            1,
+            "R4 must still fire on `get_quotes(amount)`; got {findings:?}"
+        );
     }
 
     #[test]
