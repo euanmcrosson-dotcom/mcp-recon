@@ -41,6 +41,11 @@ pub struct SandboxOverrides {
     /// Environment variables forwarded to `docker run -e KEY=VALUE`.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub env: BTreeMap<String, String>,
+    /// Extra pip requirement specifiers installed alongside a PyPI entry
+    /// (e.g. `"mcp<2"` when a pinned server breaks against a newer SDK).
+    /// Ignored for npm entries.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pip_constraints: Vec<String>,
 }
 
 /// Parse a corpus JSON document. Accepts either a bare array or
@@ -232,5 +237,14 @@ mod tests {
     #[test]
     fn rejects_empty_name() {
         assert!(ParsedHandle::from_handle("npm:@1.0.0").is_err());
+    }
+
+    #[test]
+    fn parses_sandbox_pip_constraints() {
+        let body = r#"[{"handle":"pypi:mcp-server-time@2026.1.26",
+                        "sandbox":{"pip_constraints":["mcp<2"]}}]"#;
+        let entries = parse(body).unwrap();
+        let sb = entries[0].sandbox.as_ref().unwrap();
+        assert_eq!(sb.pip_constraints, vec!["mcp<2".to_string()]);
     }
 }

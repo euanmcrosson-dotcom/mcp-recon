@@ -242,7 +242,8 @@ def main() -> None:
 
     if not captured:
         # If we got past the spawn but never saw tools/list, surface stderr.
-        sys.stderr.write(
+        # stderr_buf holds raw bytes, so write to the binary buffer.
+        sys.stderr.buffer.write(
             b"CAPFRAME_NO_RESULT: handshake did not return tools/list\n"
             + b"".join(stderr_buf)
         )

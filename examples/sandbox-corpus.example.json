@@ -53,15 +53,18 @@
   },
   {
     "handle": "pypi:mcp-server-time@2026.1.26",
-    "name": "mcp-server-time"
+    "name": "mcp-server-time",
+    "sandbox": { "pip_constraints": ["mcp<2"] }
   },
   {
     "handle": "pypi:mcp-server-fetch@2025.4.7",
-    "name": "mcp-server-fetch"
+    "name": "mcp-server-fetch",
+    "sandbox": { "pip_constraints": ["mcp<2"] }
   },
   {
     "handle": "pypi:mcp-server-sqlite@2025.4.25",
-    "name": "mcp-server-sqlite"
+    "name": "mcp-server-sqlite",
+    "sandbox": { "pip_constraints": ["mcp<2"] }
   },
   {
     "handle": "pypi:mcp-atlassian@0.21.1",

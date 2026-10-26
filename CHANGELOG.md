@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **PyPI sandbox: handshake failures no longer crash the shim.**
+  `sandbox_shim.py` wrote its raw-bytes stderr buffer to the text-mode
+  `sys.stderr`, so every PyPI handshake failure died with `TypeError:
+  write() argument must be str, not bytes` and the real cause was lost.
+  The daily leaderboard run logged that `TypeError` for
+  `mcp-server-time`, `mcp-server-fetch` and `mcp-server-sqlite` every day.
+  Now writes to `sys.stderr.buffer` and exits 7 with `CAPFRAME_NO_RESULT`
+  as documented. Added `sandbox_shim_test.py` (run in CI) as a regression
+  guard.
+- **PyPI sandbox: per-entry `pip_constraints`.** With the shim fixed, the
+  real failure surfaced: those three reference servers import `McpError`,
+  which the `mcp` SDK renamed in 2.x, so a fresh install crashes on import.
+  Corpus entries can now declare `"sandbox": { "pip_constraints": [...] }`,
+  installed (single-quoted) alongside the pinned package; the three
+  servers use `["mcp<2"]` and are graded from their live surface again
+  instead of falling back to registry-only findings.
+
 - **Sandbox producer: bin names containing a slash now launch.** The
   sandbox shim resolved a package's launcher at `.bin/<binName>` using the
   declared bin name verbatim. npm names the launcher after the *basename*
