@@ -81,7 +81,8 @@ pub fn fetch_server_pypi(
     config: &SandboxConfig,
 ) -> Result<McpServer> {
     let (extra_args, env) = split_overrides(overrides);
-    let script = build_pypi_script(name, version, extra_args);
+    let constraints = overrides.map_or(&[][..], |o| o.pip_constraints.as_slice());
+    let script = build_pypi_script(name, version, extra_args, constraints);
     let raw = run_docker(&script, &config.image_pypi, env, config)
         .with_context(|| format!("sandbox docker run for pypi:{name}@{version}"))?;
     finalize(name, &raw)
@@ -129,16 +130,22 @@ node /w/shim.js {name}{args}
     )
 }
 
-fn build_pypi_script(name: &str, version: &str, extra_args: &[String]) -> String {
+fn build_pypi_script(
+    name: &str,
+    version: &str,
+    extra_args: &[String],
+    pip_constraints: &[String],
+) -> String {
     // python:3.12-slim has pip but is otherwise minimal. We install
     // into /usr (system site-packages) for simplicity — this is a
     // throwaway container.
     let args = format_extra_args(extra_args);
+    let constraints = format_extra_args(pip_constraints);
     format!(
         r#"set -e
 mkdir -p /w
 cd /w
-pip install --quiet --root-user-action=ignore "{name}=={version}" >/tmp/install.log 2>&1 || (cat /tmp/install.log >&2; exit 8)
+pip install --quiet --root-user-action=ignore "{name}=={version}"{constraints} >/tmp/install.log 2>&1 || (cat /tmp/install.log >&2; exit 8)
 cat > /w/shim.py <<'EOSHIM_CAPFRAME'
 {SHIM_PY}
 EOSHIM_CAPFRAME
@@ -398,12 +405,22 @@ mod tests {
 
     #[test]
     fn pypi_script_uses_pip_install_with_pin() {
-        let s = build_pypi_script("mcp-server-git", "1.2.3", &[]);
+        let s = build_pypi_script("mcp-server-git", "1.2.3", &[], &[]);
         assert!(s.contains("pip install"));
         assert!(s.contains("\"mcp-server-git==1.2.3\""));
         assert!(s.contains("python /w/shim.py mcp-server-git"));
         // Marker heredoc must terminate cleanly.
         assert!(s.contains("EOSHIM_CAPFRAME"));
+    }
+
+    #[test]
+    fn pypi_script_installs_quoted_pip_constraints_alongside_the_pin() {
+        // mcp-server-time 2026.1.26 imports `McpError`, which mcp>=2 renamed;
+        // a fresh install crashes unless the corpus constrains the SDK.
+        let s = build_pypi_script("mcp-server-time", "2026.1.26", &[], &["mcp<2".to_string()]);
+        assert!(s.contains(
+            "pip install --quiet --root-user-action=ignore \"mcp-server-time==2026.1.26\" 'mcp<2' >"
+        ));
     }
 
     #[test]

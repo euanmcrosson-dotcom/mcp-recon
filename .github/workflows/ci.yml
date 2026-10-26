@@ -65,6 +65,10 @@ jobs:
       - name: Test sandbox shim (bin resolution)
         run: node crates/mcp-recon-cli/src/producer/sandbox_shim.test.js
 
+      # Same for the PyPI shim. ubuntu-latest ships python3 with pip.
+      - name: Test sandbox shim (PyPI failure reporting)
+        run: python3 crates/mcp-recon-cli/src/producer/sandbox_shim_test.py
+
       - name: Upload test results (best-effort)
         if: always()
         continue-on-error: true
